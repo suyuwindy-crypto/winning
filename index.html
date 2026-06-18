@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>위닝일레븐 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0B0E16;--bg2:#121726;--panel:#161C2C;--panel2:#1C2438;
+  --line:rgba(255,255,255,0.08);
+  --txt:#EEF2F8;--txt2:#9AA5BC;--muted:#5C6680;
+  --red:#FF4133;--blue:#2D8CFF;--grass:#22B85C;--warn:#FFB020;--gold:#FFD24A;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--txt);font-family:'Malgun Gothic','Apple SD Gothic Neo',-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+.num{font-family:'Oswald',sans-serif;font-feature-settings:"tnum"}
+.wrap{max-width:440px;margin:0 auto;min-height:100vh;background:var(--bg);position:relative;padding-bottom:74px}
+
+/* setup */
+#setup{position:fixed;inset:0;background:var(--bg);z-index:999;display:flex;align-items:center;justify-content:center;padding:22px}
+.setup-box{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:28px 24px;max-width:400px;width:100%}
+.setup-t{font-family:'Oswald';font-size:21px;font-weight:700;margin-bottom:6px}
+.setup-t .yr{color:var(--gold)}
+.setup-s{font-size:13px;color:var(--txt2);line-height:1.6;margin-bottom:18px}
+.url-in{width:100%;background:var(--bg2);border:1px solid var(--line);color:var(--txt);padding:13px 14px;border-radius:11px;font-size:14px;margin-bottom:12px;font-family:inherit}
+.url-in:focus{outline:none;border-color:var(--blue)}
+.btn-go{width:100%;background:var(--blue);color:#fff;border:none;padding:13px;border-radius:11px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit}
+
+/* top */
+.top{display:flex;align-items:center;gap:10px;padding:16px 18px 12px;position:sticky;top:0;z-index:20;background:linear-gradient(180deg,var(--bg) 75%,transparent)}
+.brand{font-family:'Oswald';font-weight:700;font-size:19px;letter-spacing:.5px}
+.brand .yr{color:var(--gold)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--grass);margin-left:auto}
+.dot.spin{background:var(--warn);animation:blink 1s infinite}
+.dot.err{background:var(--red)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+.rfs{background:var(--panel);border:1px solid var(--line);color:var(--txt2);width:32px;height:32px;border-radius:9px;cursor:pointer;font-size:14px}
+
+.page{display:none;animation:fade .35s}
+.page.on{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+.picker{padding:4px 18px 16px}
+.picker-lbl{font-size:11px;color:var(--txt2);font-weight:700;margin-bottom:7px;letter-spacing:.04em}
+.sel{width:100%;appearance:none;background:var(--panel);color:var(--txt);border:1px solid var(--line);border-radius:13px;padding:13px 42px 13px 15px;font-size:15px;font-weight:700;font-family:inherit;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%239AA5BC' stroke-width='3'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 16px center}
+
+.card{margin:0 18px;border-radius:22px;padding:22px 22px 20px;position:relative;overflow:hidden;box-shadow:0 18px 40px -16px rgba(0,0,0,.7);animation:rise .5s cubic-bezier(.2,.8,.2,1)}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.card.red{background:radial-gradient(120% 120% at 0% 0%,#FF5247 0%,#C21A0E 55%,#7E0F06 100%)}
+.card.blue{background:radial-gradient(120% 120% at 0% 0%,#3C97FF 0%,#0C56D0 55%,#063A8C 100%)}
+.card::after{content:"";position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Cpath d='M0 20h40M20 0v40' stroke='%23ffffff' stroke-width='.5' opacity='.06'/%3E%3C/svg%3E");pointer-events:none}
+.card-top{display:flex;align-items:center;gap:12px;position:relative;z-index:1}
+.posbox{background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.25);border-radius:11px;padding:7px 0;width:52px;text-align:center;flex-shrink:0}
+.posbox .p{font-family:'Oswald';font-weight:700;font-size:17px;line-height:1;color:#fff}
+.posbox .n{font-size:9px;color:rgba(255,255,255,.7);margin-top:3px;font-weight:700}
+.pavatar{width:52px;height:52px;border-radius:12px;object-fit:cover;border:1px solid rgba(255,255,255,.3);flex-shrink:0;background:rgba(0,0,0,.2)}
+.who{flex:1;min-width:0}
+.team-tag{font-size:11px;font-weight:800;color:rgba(255,255,255,.85);letter-spacing:.08em}
+.pname{font-size:26px;font-weight:800;line-height:1.1;margin-top:1px;color:#fff}
+.captain{display:inline-block;margin-left:6px;font-size:10px;font-weight:800;background:var(--gold);color:#3a2b00;padding:2px 7px;border-radius:999px;vertical-align:middle}
+.captain.v{background:#cfd6e6;color:#2a3142}
+.pay{position:relative;z-index:1;margin-top:18px}
+.pay-lbl{font-size:11px;color:rgba(255,255,255,.75);font-weight:700;letter-spacing:.06em}
+.pay-val{font-family:'Oswald';font-weight:700;font-size:44px;line-height:1;color:#fff;margin-top:2px}
+.pay-val .unit{font-size:17px;margin-left:4px;color:rgba(255,255,255,.8)}
+.rankpill{display:inline-flex;align-items:center;gap:5px;margin-top:10px;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.2);border-radius:999px;padding:5px 12px;font-size:12px;font-weight:800;color:#fff}
+.mini{display:flex;gap:9px;margin-top:16px;position:relative;z-index:1}
+.mini .m{flex:1;background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.13);border-radius:13px;padding:11px 8px;text-align:center}
+.mini .mv{font-family:'Oswald';font-weight:700;font-size:22px;line-height:1;color:#fff}
+.mini .ml{font-size:10px;color:rgba(255,255,255,.78);margin-top:5px;font-weight:700}
+
+.status{margin:13px 18px 0;border-radius:14px;padding:13px 16px;display:flex;align-items:center;gap:11px;border:1px solid var(--line)}
+.status.safe{background:rgba(34,184,92,.12);border-color:rgba(34,184,92,.3)}
+.status.warn{background:rgba(255,176,32,.12);border-color:rgba(255,176,32,.35)}
+.status.danger{background:rgba(255,65,51,.14);border-color:rgba(255,65,51,.4)}
+.status .ico{font-size:20px}
+.status .st-t{font-size:13px;font-weight:800}
+.status .st-d{font-size:11px;color:var(--txt2);margin-top:1px}
+.status.safe .st-t{color:#4FE08A}.status.warn .st-t{color:var(--warn)}.status.danger .st-t{color:var(--red)}
+
+.sec{font-size:13px;font-weight:800;color:var(--txt);margin:24px 18px 11px;letter-spacing:.02em;display:flex;align-items:center;gap:7px}
+.sec .tag{font-size:10px;color:var(--muted);font-weight:700;margin-left:auto}
+.rounds{display:flex;gap:6px;padding:0 18px;overflow-x:auto;scrollbar-width:none}
+.rounds::-webkit-scrollbar{display:none}
+.chip{flex-shrink:0;width:52px;border-radius:12px;background:var(--panel);border:1px solid var(--line);padding:9px 0;text-align:center}
+.chip.out{opacity:.5}
+.chip .cr{font-size:10px;color:var(--muted);font-weight:700}
+.chip .cv{font-family:'Oswald';font-weight:700;font-size:15px;margin-top:3px;color:var(--grass)}
+.chip.out .cv{color:var(--muted);font-size:14px}
+
+.ttog{display:flex;gap:8px;padding:4px 18px 14px}
+.ttog button{flex:1;padding:11px;border-radius:12px;border:1px solid var(--line);background:var(--panel);color:var(--txt2);font-weight:800;font-size:14px;font-family:inherit;cursor:pointer}
+.ttog button.on.red{background:rgba(255,65,51,.16);border-color:var(--red);color:#FF6A5E}
+.ttog button.on.blue{background:rgba(45,140,255,.16);border-color:var(--blue);color:#6AB0FF}
+
+.pitch-cap{display:flex;align-items:center;gap:8px;margin:0 18px 10px}
+.pitch-cap .lock{font-size:11px;font-weight:700;color:var(--muted);background:var(--bg2);border:1px solid var(--line);padding:5px 11px;border-radius:999px}
+.pitch{position:relative;margin:0 18px;border-radius:18px;aspect-ratio:3/4;overflow:hidden;background:linear-gradient(170deg,#0f7a3a 0%,#0c6b33 50%,#0a5c2b 100%);border:1px solid rgba(255,255,255,.1);box-shadow:inset 0 0 60px rgba(0,0,0,.35)}
+.pitch .stripe{position:absolute;inset:0;background:repeating-linear-gradient(180deg,rgba(255,255,255,.04) 0 11%,transparent 11% 22%)}
+.pitch .lines i{position:absolute;border:1.5px solid rgba(255,255,255,.22)}
+.pl-circle{width:90px;height:90px;border-radius:50%;top:50%;left:50%;transform:translate(-50%,-50%)}
+.pl-mid{width:100%;height:0;border-width:0 0 1.5px 0 !important;top:50%;left:0}
+.pl-boxT{width:54%;height:13%;top:0;left:23%;border-top:0 !important}
+.pl-boxB{width:54%;height:13%;bottom:0;left:23%;border-bottom:0 !important}
+.node{position:absolute;transform:translate(-50%,-50%);width:62px;text-align:center;z-index:2}
+.node .nc{background:rgba(11,14,22,.82);border:1.5px solid rgba(255,255,255,.35);border-radius:10px;padding:6px 3px 5px;backdrop-filter:blur(3px)}
+.node.red .nc{border-color:rgba(255,65,51,.8)}
+.node.blue .nc{border-color:rgba(45,140,255,.85)}
+.node .npos{font-family:'Oswald';font-weight:700;font-size:10px;line-height:1;color:var(--gold)}
+.node .nname{font-size:11px;font-weight:800;margin-top:3px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.node .npay{font-family:'Oswald';font-weight:600;font-size:9px;color:rgba(255,255,255,.7);margin-top:1px}
+.bench{margin:14px 18px 0}
+.bench-t{font-size:12px;font-weight:800;color:var(--txt2);margin-bottom:9px}
+.bench-row{display:flex;gap:7px;flex-wrap:wrap}
+.bc{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:7px 11px;font-size:12px;font-weight:700}
+.bc .bp{font-family:'Oswald';color:var(--muted);font-size:10px;margin-right:5px}
+
+.clubvs{margin:4px 18px 8px;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px;display:flex;align-items:stretch;gap:12px}
+.cv-side{flex:1;text-align:center}
+.cv-side .cvt{font-size:12px;font-weight:800;letter-spacing:.05em}
+.cv-side.red .cvt{color:var(--red)}.cv-side.blue .cvt{color:var(--blue)}
+.cv-side .cvv{font-family:'Oswald';font-weight:700;font-size:24px;margin-top:6px;color:#fff}
+.cv-side .cvu{font-size:10px;color:var(--muted);margin-top:2px}
+.cv-side .cvsub{font-size:10px;color:var(--txt2);margin-top:7px;line-height:1.5}
+.cv-mid{display:flex;align-items:center;font-family:'Oswald';color:var(--muted);font-weight:700;font-size:13px}
+.rank-list{padding:0 18px}
+.rk{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:11px 14px;margin-bottom:8px}
+.rk.me{border-color:var(--gold);background:rgba(255,210,74,.07)}
+.rk .pos{font-family:'Oswald';font-weight:700;font-size:18px;width:24px;text-align:center;color:var(--txt2)}
+.rk .pos.top{color:var(--gold)}
+.rk .rname{font-size:14px;font-weight:800;flex:1}
+.rk .rposb{font-family:'Oswald';font-size:10px;color:var(--muted);background:var(--bg2);padding:2px 7px;border-radius:6px;margin-left:6px}
+.rk .rpay{font-family:'Oswald';font-weight:700;font-size:16px}
+.rk.red .rpay{color:#FF6A5E}.rk.blue .rpay{color:#6AB0FF}
+
+.matches{padding:0 18px}
+.match{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin-bottom:10px}
+.match-head{display:flex;align-items:center;gap:8px;margin-bottom:11px}
+.rbadge{font-family:'Oswald';font-weight:700;font-size:12px;color:var(--txt2);background:var(--bg2);border:1px solid var(--line);padding:3px 9px;border-radius:8px}
+.mdate{font-size:11px;color:var(--muted);font-weight:600}
+.mres{margin-left:auto;font-size:11px;font-weight:800;padding:3px 10px;border-radius:999px}
+.mres.r{background:rgba(255,65,51,.16);color:#FF6A5E}.mres.b{background:rgba(45,140,255,.16);color:#6AB0FF}.mres.d{background:rgba(255,255,255,.08);color:var(--txt2)}
+.score{display:flex;align-items:center;justify-content:center;gap:18px}
+.score .sd{text-align:center;flex:1}
+.score .sl{font-size:11px;font-weight:800;margin-bottom:5px}
+.score .sl.r{color:var(--red)}.score .sl.b{color:var(--blue)}
+.score .sv{font-family:'Oswald';font-weight:700;font-size:36px;line-height:1}
+.score .sv.win{color:#fff}.score .sv.lose{color:var(--muted)}
+.score .vs{font-family:'Oswald';color:var(--muted);font-size:14px}
+.scorers{margin-top:12px;padding-top:11px;border-top:1px solid var(--line);display:flex;gap:14px}
+.scorers .sc-side{flex:1;font-size:11px;color:var(--txt2);line-height:1.5}
+.scorers .sc-side.b{text-align:right}
+.scorers .sc-side .lab{font-weight:800;color:var(--muted);font-size:10px}
+
+.err-box{margin:30px 18px;background:rgba(255,65,51,.1);border:1px solid rgba(255,65,51,.3);border-radius:16px;padding:26px;text-align:center;color:#FF6A5E}
+.foot{text-align:center;color:var(--muted);font-size:11px;padding:20px 18px 12px;line-height:1.6}
+
+.tabbar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:440px;display:flex;background:rgba(13,17,27,.92);backdrop-filter:blur(16px);border-top:1px solid var(--line);z-index:30}
+.tb{flex:1;background:none;border:none;color:var(--muted);padding:9px 0 11px;font-family:inherit;font-size:10px;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px}
+.tb .ti{font-size:19px;line-height:1}
+.tb.on{color:var(--txt)}
+.tb.on .ti{filter:drop-shadow(0 0 8px rgba(255,210,74,.5))}
+</style>
+</head>
+<body>
+
+<div id="setup">
+  <div class="setup-box">
+    <div class="setup-t">⚽ 위닝일레븐 <span class="yr">2026</span></div>
+    <p class="setup-s">구글 시트와 연결합니다. Apps Script 배포 URL을 한 번만 입력하면 돼요.</p>
+    <input class="url-in" id="url-in" type="url" placeholder="https://script.google.com/macros/s/…/exec">
+    <button class="btn-go" onclick="connect()">연결</button>
+    <p style="font-size:11px;color:var(--muted);margin-top:10px">* URL은 이 브라우저에만 저장됩니다.</p>
+  </div>
+</div>
+
+<div class="wrap" id="app" style="display:none">
+  <div class="top">
+    <div class="brand">위닝일레븐 <span class="yr">2026</span></div>
+    <div class="dot" id="dot"></div>
+    <button class="rfs" onclick="load()">↻</button>
+    <button class="rfs" onclick="resetUrl()" title="URL 변경">⚙</button>
+  </div>
+
+  <div class="page on" id="p-me">
+    <div class="picker">
+      <div class="picker-lbl">내 선수</div>
+      <select class="sel" id="sel" onchange="onSelMe()"></select>
+    </div>
+    <div id="card-host"></div>
+    <div id="status-host"></div>
+    <div class="sec">라운드별 수당 <span class="tag">초록=출전 · 회색=결장</span></div>
+    <div class="rounds" id="rounds"></div>
+    <div class="foot">기록보다 <b style="color:var(--txt2)">마켓 밸류</b>가 먼저</div>
+  </div>
+
+  <div class="page" id="p-line">
+    <div class="ttog" id="ttog-line">
+      <button class="on red" data-t="red" onclick="setLineTeam('red')">🔴 레드</button>
+      <button data-t="blue" onclick="setLineTeam('blue')">🔵 블루</button>
+    </div>
+    <div class="pitch-cap"><span class="lock">📋 포지션 기반 자동 배치</span></div>
+    <div class="pitch" id="pitch">
+      <div class="stripe"></div>
+      <div class="lines"><i class="pl-mid"></i><i class="pl-circle"></i><i class="pl-boxT"></i><i class="pl-boxB"></i></div>
+    </div>
+    <div class="bench" id="bench"></div>
+    <div class="foot">주장이 직접 배치·공유하는 기능은 다음 단계에서 추가돼요</div>
+  </div>
+
+  <div class="page" id="p-rank">
+    <div class="sec" style="margin-top:14px">구단 가치 <span class="tag">선수 MV 합 + 가용자금</span></div>
+    <div class="clubvs" id="clubvs"></div>
+    <div class="ttog" id="ttog-rank" style="padding-top:8px">
+      <button class="on red" data-t="red" onclick="setRankTeam('red')">🔴 레드 MV랭크</button>
+      <button data-t="blue" onclick="setRankTeam('blue')">🔵 블루 MV랭크</button>
+    </div>
+    <div class="rank-list" id="rank-list"></div>
+    <div class="foot">노란 테두리 = 내 선수</div>
+  </div>
+
+  <div class="page" id="p-match">
+    <div class="sec" style="margin-top:14px">경기 결과</div>
+    <div class="matches" id="matches"></div>
+  </div>
+
+  <div class="tabbar">
+    <button class="tb on" data-p="me" onclick="sw(this)"><span class="ti">👤</span>나</button>
+    <button class="tb" data-p="line" onclick="sw(this)"><span class="ti">⚽</span>라인업</button>
+    <button class="tb" data-p="rank" onclick="sw(this)"><span class="ti">🏆</span>랭킹</button>
+    <button class="tb" data-p="match" onclick="sw(this)"><span class="ti">📋</span>경기</button>
+  </div>
+</div>
+
+<script>
+// ===== 설정 =====
+const WIN_BONUS=20000, DRAW_BONUS=10000, ABSENCE_LIMIT=3;
+const VICE={red:'문현민', blue:'권호연'};   // 부주장
+// ▼▼▼ Apps Script 배포 URL (운영자만 수정) ▼▼▼
+const DEFAULT_URL='https://script.google.com/macros/s/AKfycbxBkdHr-M1JGpN1vvhS-ui9FdR9tyIUZUU8H9-2D5Xz46zSnRzuqCpQfPNMGTWjxQWe/exec';
+// ▲▲▲ 여기만 바꾸면 모든 접속자에게 반영 ▲▲▲
+let URL=DEFAULT_URL||localStorage.getItem('we26_url')||'';
+let MY=localStorage.getItem('we26_me')||'';
+let D=null;
+
+// 포지션 좌표
+const POS_Y={GK:86,LB:68,CB:68,RB:68,LWB:60,RWB:60,LDM:56,CDM:56,RDM:56,DM:56,LM:46,CM:46,RM:46,CAM:36,LW:34,RW:34,LST:20,ST:20,RST:20,CF:22};
+const POS_X={GK:50,LB:22,CB:50,RB:78,LWB:18,RWB:82,LDM:32,CDM:50,RDM:68,DM:50,LM:22,CM:50,RM:78,CAM:50,LW:18,RW:82,LST:36,ST:50,RST:64,CF:50};
+
+function connect(){
+  const u=document.getElementById('url-in').value.trim();
+  if(!u.includes('script.google.com')){alert('올바른 Apps Script URL을 입력하세요.');return;}
+  URL=u;localStorage.setItem('we26_url',u);
+  document.getElementById('setup').style.display='none';
+  document.getElementById('app').style.display='block';
+  load();
+}
+function resetUrl(){
+  const u=prompt('Apps Script 배포 URL을 입력하세요:', URL);
+  if(u===null)return;
+  const v=u.trim();
+  if(!v.includes('script.google.com')){alert('올바른 URL이 아니에요.');return;}
+  URL=v;localStorage.setItem('we26_url',v);load();
+}
+// URL이 있으면(코드 내장 or 저장됨) 입력창 건너뛰고 바로 시작
+if(URL){
+  document.getElementById('setup').style.display='none';
+  document.getElementById('app').style.display='block';
+  load();
+}
+
+async function load(){
+  setDot('spin');
+  try{
+    const sep=URL.includes('?')?'&':'?';
+    const r=await fetch(URL+sep+'action=data');
+    const j=await r.json();
+    if(!j.ok) throw new Error(j.error||'데이터 오류');
+    D=j.data;
+    normalize();
+    renderAll();
+    setDot('ok');
+    setTimeout(load,60000);
+  }catch(e){setDot('err');showErr(e.message);}
+}
+function setDot(s){document.getElementById('dot').className='dot'+(s==='spin'?' spin':s==='err'?' err':'');}
+function showErr(m){document.getElementById('card-host').innerHTML=`<div class="err-box"><div style="font-size:22px;margin-bottom:8px">⚠</div><b>데이터 로드 실패</b><div style="font-size:12px;margin-top:6px;opacity:.85">${m}</div></div>`;}
+
+// ===== 데이터 정규화 =====
+const LEADERS={red:'서범종', blue:'이호진'};   // 팀 주장
+function normalize(){
+  if(!D||!D.players)return;
+  // 1) 시트 명단에 주장이 없으면 수당 0 주장 카드 추가
+  Object.keys(LEADERS).forEach(team=>{
+    const nm=LEADERS[team];
+    let p=D.players.find(x=>x.team===team&&x.name===nm);
+    if(!p){
+      D.players.unshift({name:nm,team,role:'팀장',status:'active',traded:false,position:'',imageUrl:'',
+        allowances:[],totalAllowance:0,participated:0});
+    }else{ p.role='팀장'; }
+  });
+}
+
+// ===== 헬퍼 =====
+function fmt(n){return Number(n||0).toLocaleString('ko-KR');}
+function consec(p){let s=0;const a=p.allowances||[];for(let i=a.length-1;i>=0;i--){if(!a[i])s++;else break;}return s;}
+function goals(name){if(!D)return 0;return D.matches.reduce((s,m)=>s+m.redGoals.filter(x=>x===name).length+m.blueGoals.filter(x=>x===name).length,0);}
+function roleOf(p){if(p.role==='팀장')return 'C';if(VICE[p.team]===p.name)return 'V';return '';}
+// 이적 나감(traded)·강퇴(released)는 제외, 주장은 항상 포함
+function activePlayers(team){return D.players.filter(p=>p.team===team&&!p.traded&&(p.role==='팀장'||p.status==='active'));}
+function teamRank(team,name){const arr=activePlayers(team).slice().sort((a,b)=>b.totalAllowance-a.totalAllowance);return arr.findIndex(p=>p.name===name)+1;}
+function winBonus(team){const w=D.matches.filter(m=>team==='red'?m.winner==='red':m.winner==='blue').length;const d=D.matches.filter(m=>m.winner==='draw').length;return{w,d,bonus:w*WIN_BONUS+d*DRAW_BONUS};}
+
+function renderAll(){if(!D)return;buildPicker();renderMe();setLineTeam(lineTeam);renderClub();setRankTeam(rankTeam);renderMatches();}
+
+function buildPicker(){
+  const sel=document.getElementById('sel');
+  const list=[...activePlayers('red'),...activePlayers('blue')];
+  sel.innerHTML=list.map(p=>`<option value="${p.name}">${p.team==='red'?'🔴':'🔵'} ${p.name}${p.role==='팀장'?' (주장)':VICE[p.team]===p.name?' (부주장)':''}</option>`).join('');
+  if(MY&&list.find(p=>p.name===MY))sel.value=MY; else MY=sel.value;
+}
+function onSelMe(){MY=document.getElementById('sel').value;localStorage.setItem('we26_me',MY);renderMe();}
+
+function renderMe(){
+  const p=D.players.find(x=>x.name===MY);
+  if(!p){document.getElementById('card-host').innerHTML='<div class="foot">선수를 선택하세요</div>';return;}
+  const st=consec(p),tot=p.totalAllowance,g=p.participated,gl=goals(p.name);
+  const rk=teamRank(p.team,p.name),cnt=activePlayers(p.team).length;
+  const cap=p.role==='팀장'?'<span class="captain">주장</span>':VICE[p.team]===p.name?'<span class="captain v">부주장</span>':'';
+  const ava=p.imageUrl?`<img class="pavatar" src="${p.imageUrl}" onerror="this.outerHTML='<div class=\\'posbox\\'><div class=\\'p\\'>${p.position||'-'}</div><div class=\\'n\\'>선수</div></div>'">`:`<div class="posbox"><div class="p">${p.position||'-'}</div><div class="n">선수</div></div>`;
+  document.getElementById('card-host').innerHTML=`
+    <div class="card ${p.team}">
+      <div class="card-top">${ava}
+        <div class="who"><div class="team-tag">${p.team==='red'?'RED TEAM':'BLUE TEAM'}</div>
+        <div class="pname">${p.name}${cap}</div></div></div>
+      <div class="pay"><div class="pay-lbl">시즌 마켓 밸류 (MV)</div>
+        <div class="pay-val num">${fmt(tot)}<span class="unit">BRO</span></div>
+        <span class="rankpill">🏆 팀 내 ${rk}위 / ${cnt}명</span></div>
+      <div class="mini">
+        <div class="m"><div class="mv num">${g}</div><div class="ml">출전</div></div>
+        <div class="m"><div class="mv num">${gl}</div><div class="ml">골</div></div>
+        <div class="m"><div class="mv num">${st}</div><div class="ml">연속결장</div></div>
+      </div></div>`;
+  let cls,ico,t,d;
+  if(st>=ABSENCE_LIMIT){cls='danger';ico='🚨';t='방출 대상';d=`연속 ${st}경기 결장 — 규정상 방출`;}
+  else if(st===ABSENCE_LIMIT-1){cls='warn';ico='⚠️';t='경고';d='다음 경기 결장 시 방출';}
+  else if(st>0){cls='safe';ico='🟢';t='안전';d=`연속 ${st}경기 결장 · 여유 있음`;}
+  else{cls='safe';ico='✅';t='안전';d='최근 경기 출전 중';}
+  document.getElementById('status-host').innerHTML=`<div class="status ${cls}"><span class="ico">${ico}</span><div style="flex:1"><div class="st-t">${t}</div><div class="st-d">${d}</div></div></div>`;
+  document.getElementById('rounds').innerHTML=(p.allowances||[]).map((v,i)=>`<div class="chip ${!v?'out':''}"><div class="cr">R${i+1}</div><div class="cv num">${v?fmt(v):'✗'}</div></div>`).join('')||'<div class="foot">기록 없음</div>';
+}
+
+let lineTeam='red';
+function setLineTeam(t){lineTeam=t;document.querySelectorAll('#ttog-line button').forEach(b=>b.className=b.dataset.t===t?('on '+t):'');renderLine();}
+function renderLine(){
+  const pitch=document.getElementById('pitch');
+  pitch.querySelectorAll('.node').forEach(n=>n.remove());
+  const tp=activePlayers(lineTeam);
+  const placed=[],bench=[];
+  const usedSlots={};
+  tp.forEach(p=>{
+    const pos=(p.position||'').toUpperCase();
+    if(POS_Y[pos]!=null){placed.push({p,pos});}else{bench.push(p);}
+  });
+  // 같은 포지션 겹치면 x 분산
+  const posCount={};placed.forEach(o=>posCount[o.pos]=(posCount[o.pos]||0)+1);
+  const posIdx={};
+  placed.forEach(o=>{
+    const{p,pos}=o;let x=POS_X[pos],y=POS_Y[pos];
+    const n=posCount[pos];if(n>1){posIdx[pos]=(posIdx[pos]||0);const spread=18;x=POS_X[pos]-spread*(n-1)/2+spread*posIdx[pos];posIdx[pos]++;}
+    const node=document.createElement('div');
+    node.className='node '+lineTeam;node.style.left=Math.max(10,Math.min(90,x))+'%';node.style.top=y+'%';
+    node.innerHTML=`<div class="nc"><div class="npos">${pos}</div><div class="nname">${p.name}</div><div class="npay num">${fmt(p.totalAllowance)}</div></div>`;
+    pitch.appendChild(node);
+  });
+  document.getElementById('bench').innerHTML=`<div class="bench-t">포지션 미지정 · 벤치 (${bench.length})</div><div class="bench-row">${bench.map(p=>`<span class="bc"><span class="bp">${p.position||'-'}</span>${p.name}</span>`).join('')||'<span style="color:var(--muted);font-size:12px">없음</span>'}</div>`;
+}
+
+function clubValue(team){const squad=activePlayers(team).reduce((s,p)=>s+p.totalAllowance,0);const av=(D.teamInfo&&D.teamInfo[team]&&D.teamInfo[team].availFunds)||0;return{squad,av,total:squad+av};}
+function renderClub(){
+  const r=clubValue('red'),b=clubValue('blue'),rw=winBonus('red'),bw=winBonus('blue');
+  document.getElementById('clubvs').innerHTML=`
+    <div class="cv-side red"><div class="cvt">🔴 레드</div><div class="cvv num">${fmt(r.total)}</div><div class="cvu">구단 가치</div>
+      <div class="cvsub">선수MV ${fmt(r.squad)}<br>가용 ${fmt(r.av)} · ${rw.w}승${rw.d}무</div></div>
+    <div class="cv-mid">VS</div>
+    <div class="cv-side blue"><div class="cvt">🔵 블루</div><div class="cvv num">${fmt(b.total)}</div><div class="cvu">구단 가치</div>
+      <div class="cvsub">선수MV ${fmt(b.squad)}<br>가용 ${fmt(b.av)} · ${bw.w}승${bw.d}무</div></div>`;
+}
+let rankTeam='red';
+function setRankTeam(t){rankTeam=t;document.querySelectorAll('#ttog-rank button').forEach(b=>b.className=b.dataset.t===t?('on '+t):'');renderRank();}
+function renderRank(){
+  const arr=activePlayers(rankTeam).slice().sort((a,b)=>b.totalAllowance-a.totalAllowance);
+  document.getElementById('rank-list').innerHTML=arr.map((p,i)=>{
+    const r=roleOf(p);
+    return `<div class="rk ${rankTeam} ${p.name===MY?'me':''}"><span class="pos num ${i<3?'top':''}">${i+1}</span>
+      <span class="rname">${p.name}${r==='C'?' 🅒':r==='V'?' Ⓥ':''}<span class="rposb">${p.position||'-'}</span></span>
+      <span class="rpay num">${fmt(p.totalAllowance)}</span></div>`;
+  }).join('')||'<div class="foot">선수 없음</div>';
+}
+
+function renderMatches(){
+  const ms=D.matches.slice().reverse();
+  document.getElementById('matches').innerHTML=ms.map(m=>{
+    const win=m.winner==='red'?'r':m.winner==='blue'?'b':'d';
+    const ru=[...new Set(m.redGoals)],bu=[...new Set(m.blueGoals)];
+    const rs=ru.map(n=>{const c=m.redGoals.filter(x=>x===n).length;return c>1?`${n}(${c})`:n;}).join(', ')||'-';
+    const bs=bu.map(n=>{const c=m.blueGoals.filter(x=>x===n).length;return c>1?`${n}(${c})`:n;}).join(', ')||'-';
+    return `<div class="match"><div class="match-head"><span class="rbadge">R${m.round}</span><span class="mdate">${m.date}</span>
+      <span class="mres ${win}">${win==='r'?'🔴 레드 승':win==='b'?'🔵 블루 승':'무승부'}</span></div>
+      <div class="score"><div class="sd"><div class="sl r">레드</div><div class="sv num ${win==='r'?'win':'lose'}">${m.redScore}</div></div>
+      <div class="vs num">VS</div>
+      <div class="sd"><div class="sl b">블루</div><div class="sv num ${win==='b'?'win':'lose'}">${m.blueScore}</div></div></div>
+      <div class="scorers"><div class="sc-side"><span class="lab">레드 득점</span><br>${rs}</div><div class="sc-side b"><span class="lab">블루 득점</span><br>${bs}</div></div>
+    </div>`;
+  }).join('')||'<div class="foot">경기 기록 없음</div>';
+}
+
+function sw(btn){document.querySelectorAll('.tb').forEach(t=>t.classList.remove('on'));document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));btn.classList.add('on');document.getElementById('p-'+btn.dataset.p).classList.add('on');}
+</script>
+</body>
+</html>
