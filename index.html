@@ -178,6 +178,10 @@ body{background:var(--bg);color:var(--txt);font-family:'Malgun Gothic','Apple SD
 .adm-badge.op{color:var(--gold);background:rgba(255,210,74,.14);border:1px solid rgba(255,210,74,.35)}
 .adm-badge.red{color:#FF6A5E;background:rgba(255,65,51,.14);border:1px solid rgba(255,65,51,.35)}
 .adm-badge.blue{color:#6AB0FF;background:rgba(45,140,255,.14);border:1px solid rgba(45,140,255,.35)}
+.adm-save-top{background:var(--grass);color:#04210f;border:none;border-radius:10px;padding:9px 18px;font-size:14px;font-weight:800;font-family:inherit;cursor:pointer}
+.adm-save-top:disabled{background:var(--muted);opacity:.6;cursor:not-allowed}
+.adm-summary{padding:9px 18px;font-size:12px;color:var(--txt2);background:var(--bg2);border-bottom:1px solid var(--line);position:sticky;top:53px;z-index:4}
+.adm-summary b{color:var(--txt);font-family:'Oswald';font-size:14px}
 .adm-body{padding:16px 18px 0}
 .adm-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px}
 .adm-card-t{font-size:15px;font-weight:800;margin-bottom:6px}
@@ -224,6 +228,10 @@ body{background:var(--bg);color:var(--txt);font-family:'Malgun Gothic','Apple SD
 .amt input{width:62px;background:var(--bg2);border:1px solid var(--line);border-radius:9px;color:var(--txt);padding:8px 6px;font-size:14px;font-family:'Oswald';font-weight:700;text-align:right}
 .amt input:disabled{opacity:.4}
 .amt .u{font-size:10px;color:var(--muted);font-weight:700}
+.savebar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:440px;padding:12px 18px calc(12px + env(safe-area-inset-bottom));background:rgba(13,17,27,.97);backdrop-filter:blur(16px);border-top:1px solid var(--line);display:flex;align-items:center;gap:12px;z-index:210}
+.savebar .sum{font-size:12px;color:var(--txt2)}
+.savebar .sum b{color:var(--txt);font-family:'Oswald';font-size:14px}
+.savebar .save{margin-left:auto;background:var(--grass);color:#04210f;border:none;border-radius:12px;padding:13px 24px;font-size:15px;font-weight:800;font-family:inherit;cursor:pointer}
 .savebar .save:disabled{background:var(--muted);opacity:.6;cursor:not-allowed}
 </style>
 </head>
@@ -304,7 +312,9 @@ body{background:var(--bg);color:var(--txt);font-family:'Malgun Gothic','Apple SD
     <button class="adm-back" onclick="closeAdmin()">‹</button>
     <div class="adm-t">운영 패널</div>
     <div class="adm-badge" id="adm-badge"></div>
+    <button class="adm-save-top" id="adm-save" onclick="saveAllowance()" style="display:none">저장</button>
   </div>
+  <div class="adm-summary" id="adm-summary" style="display:none">출전 <b id="adm-cnt">0</b>명 · 지급 <b id="adm-sum">0</b> BRO</div>
 
   <!-- 로그인 -->
   <div id="adm-login" class="adm-body">
@@ -332,12 +342,7 @@ body{background:var(--bg);color:var(--txt);font-family:'Malgun Gothic','Apple SD
     <div class="budget" id="adm-budget"></div>
     <div class="hint" id="adm-hint">💡 출전한 선수만 토글을 켜고 금액을 넣으세요. 결장은 끄면 빈칸 처리돼요.</div>
     <div class="plist" id="adm-plist"></div>
-    <div style="height:80px"></div>
-  </div>
-
-  <div class="savebar" id="adm-savebar" style="display:none">
-    <div class="sum">출전 <b id="adm-cnt">0</b>명 · 지급 <b id="adm-sum">0</b></div>
-    <button class="save" id="adm-save" onclick="saveAllowance()">저장</button>
+    <div style="height:40px"></div>
   </div>
 </div>
 
@@ -547,7 +552,8 @@ function adminLogin(){
   // 권한 판별은 저장 시 서버가 최종 확인. 여기선 화면 진입만.
   document.getElementById('adm-login').style.display='none';
   document.getElementById('adm-main').style.display='block';
-  document.getElementById('adm-savebar').style.display='flex';
+  document.getElementById('adm-save').style.display='block';
+  document.getElementById('adm-summary').style.display='block';
   // 기본 팀: 데이터상 내 선수 팀 or red
   admSetTeam('red');
 }
@@ -563,7 +569,7 @@ function buildRoundChips(){
   const total=D?D.matches.length:0;
   let html='';
   for(let r=1;r<=total;r++) html+=`<div class="rchip ${r===admRound?'on':''}" onclick="admPickRound(${r})">R${r}</div>`;
-  html+=`<div class="rchip new" onclick="admPickRound(${total+1})">＋새</div>`;
+  html+=`<div class="rchip new" onclick="admPickRound(${total+1})">＋NEW</div>`;
   document.getElementById('adm-rchips').innerHTML=html;
 }
 
@@ -639,11 +645,16 @@ async function saveAllowance(){
   const saveBtn=document.getElementById('adm-save');
   saveBtn.disabled=true;saveBtn.textContent='저장 중…';
   try{
-    const res=await fetch(URL,{
-      method:'POST',
-      headers:{'Content-Type':'text/plain;charset=utf-8'},
-      body:JSON.stringify({action:'saveAllowance',password:admPw,team:admTeam,round:admRound,date,entries})
+    const params=new URLSearchParams({
+      action:'saveAllowance',
+      password:admPw,
+      team:admTeam,
+      round:admRound,
+      date:date,
+      entries:JSON.stringify(entries)
     });
+    const sep=URL.includes('?')?'&':'?';
+    const res=await fetch(URL+sep+params.toString());
     const j=await res.json();
     if(!j.ok)throw new Error(j.error||'저장 실패');
     saveBtn.textContent='✓ 저장됨';
