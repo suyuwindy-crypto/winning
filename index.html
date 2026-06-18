@@ -182,6 +182,29 @@ body{background:var(--bg);color:var(--txt);font-family:'Malgun Gothic','Apple SD
 .adm-save-top:disabled{background:var(--muted);opacity:.6;cursor:not-allowed}
 .adm-summary{padding:9px 18px;font-size:12px;color:var(--txt2);background:var(--bg2);border-bottom:1px solid var(--line);position:sticky;top:53px;z-index:4}
 .adm-summary b{color:var(--txt);font-family:'Oswald';font-size:14px}
+/* 메뉴 탭 */
+.adm-menu{display:flex;gap:8px;padding:12px 18px 4px}
+.adm-menu button{flex:1;padding:11px;border-radius:11px;border:1px solid var(--line);background:var(--panel);color:var(--txt2);font-weight:800;font-size:13px;font-family:inherit;cursor:pointer}
+.adm-menu button.on{background:var(--gold);border-color:var(--gold);color:#3a2b00}
+/* 경기 등록 */
+.mscore{display:flex;align-items:center;gap:14px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:10px}
+.mscore-side{flex:1;text-align:center}
+.mscore-side .msl{font-size:12px;font-weight:800;margin-bottom:6px}
+.mscore-side.red .msl{color:var(--red)}.mscore-side.blue .msl{color:var(--blue)}
+.mscore-side .msv{font-family:'Oswald';font-weight:700;font-size:42px;line-height:1;color:#fff}
+.mscore-vs{font-family:'Oswald';color:var(--muted);font-size:15px}
+.mbonus{text-align:center;font-size:12px;font-weight:700;color:var(--grass);background:rgba(34,184,92,.1);border:1px solid rgba(34,184,92,.25);border-radius:11px;padding:10px;margin-bottom:14px}
+.adm-add-manual{width:100%;background:var(--bg2);border:1px dashed var(--line);color:var(--txt2);border-radius:11px;padding:11px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;margin-bottom:10px}
+.glist{}
+.grow{display:flex;align-items:center;gap:11px;background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:11px 13px;margin-bottom:8px}
+.grow.has{border-color:rgba(255,210,74,.4);background:rgba(255,210,74,.06)}
+.grow .gn{flex:1;font-size:14px;font-weight:800}
+.grow .gn .gp{font-family:'Oswald';font-size:10px;color:var(--muted);background:var(--bg2);padding:2px 6px;border-radius:5px;margin-left:6px}
+.grow .gn .gm{font-family:'Oswald';font-size:10px;color:#3a2b00;background:var(--gold);padding:2px 6px;border-radius:5px;margin-left:6px}
+.gctl{display:flex;align-items:center;gap:10px}
+.gctl button{width:32px;height:32px;border-radius:9px;border:1px solid var(--line);background:var(--bg2);color:var(--txt);font-size:18px;font-weight:700;cursor:pointer;font-family:'Oswald';line-height:1}
+.gctl .gcount{font-family:'Oswald';font-weight:700;font-size:18px;min-width:20px;text-align:center}
+.gctl .gcount.zero{color:var(--muted)}
 .adm-body{padding:16px 18px 0}
 .adm-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px}
 .adm-card-t{font-size:15px;font-weight:800;margin-bottom:6px}
@@ -312,7 +335,7 @@ body{background:var(--bg);color:var(--txt);font-family:'Malgun Gothic','Apple SD
     <button class="adm-back" onclick="closeAdmin()">‹</button>
     <div class="adm-t">운영 패널</div>
     <div class="adm-badge" id="adm-badge"></div>
-    <button class="adm-save-top" id="adm-save" onclick="saveAllowance()" style="display:none">저장</button>
+    <button class="adm-save-top" id="adm-save" onclick="admSave()" style="display:none">저장</button>
   </div>
   <div class="adm-summary" id="adm-summary" style="display:none">출전 <b id="adm-cnt">0</b>명 · 지급 <b id="adm-sum">0</b> BRO</div>
 
@@ -325,6 +348,12 @@ body{background:var(--bg);color:var(--txt);font-family:'Malgun Gothic','Apple SD
       <button class="adm-btn" onclick="adminLogin()">로그인</button>
       <div class="adm-msg" id="adm-login-msg"></div>
     </div>
+  </div>
+
+  <!-- 메뉴 탭 -->
+  <div class="adm-menu" id="adm-menu" style="display:none">
+    <button class="on" data-m="allowance" onclick="admMenu('allowance')">💰 수당 입력</button>
+    <button data-m="match" onclick="admMenu('match')">⚽ 경기 등록</button>
   </div>
 
   <!-- 수당 입력 -->
@@ -342,6 +371,30 @@ body{background:var(--bg);color:var(--txt);font-family:'Malgun Gothic','Apple SD
     <div class="budget" id="adm-budget"></div>
     <div class="hint" id="adm-hint">💡 출전한 선수만 토글을 켜고 금액을 넣으세요. 결장은 끄면 빈칸 처리돼요.</div>
     <div class="plist" id="adm-plist"></div>
+    <div style="height:40px"></div>
+  </div>
+
+  <!-- 경기 등록 -->
+  <div id="adm-match" class="adm-body" style="display:none">
+    <div class="rsel">
+      <div class="rsel-top"><span class="rsel-lbl" id="adm-m-round">새 경기 · R—</span></div>
+      <div class="rsel-date">경기일 <input type="text" id="adm-m-date" placeholder="2026. 6. 28."></div>
+    </div>
+
+    <div class="mscore">
+      <div class="mscore-side red"><div class="msl">🔴 레드</div><div class="msv num" id="adm-m-rs">0</div></div>
+      <div class="mscore-vs num">VS</div>
+      <div class="mscore-side blue"><div class="msl">🔵 블루</div><div class="msv num" id="adm-m-bs">0</div></div>
+    </div>
+    <div class="mbonus" id="adm-m-bonus"></div>
+
+    <div class="ttog" id="adm-m-tog" style="margin:0 0 12px">
+      <button class="on red" data-t="red" onclick="admMSetTeam('red')">🔴 레드 득점</button>
+      <button data-t="blue" onclick="admMSetTeam('blue')">🔵 블루 득점</button>
+    </div>
+    <div class="hint">💡 골 넣은 선수를 탭하면 골 +1 (멀티골은 여러 번 탭). 명단에 없으면 ＋수기 입력.</div>
+    <button class="adm-add-manual" onclick="admAddManual()">＋ 수기 입력 (신입·게스트)</button>
+    <div class="glist" id="adm-glist"></div>
     <div style="height:40px"></div>
   </div>
 </div>
@@ -549,13 +602,22 @@ function adminLogin(){
   const pw=document.getElementById('adm-pw').value.trim();
   if(!pw){return;}
   admPw=pw;
-  // 권한 판별은 저장 시 서버가 최종 확인. 여기선 화면 진입만.
   document.getElementById('adm-login').style.display='none';
-  document.getElementById('adm-main').style.display='block';
+  document.getElementById('adm-menu').style.display='flex';
+  admMenu('allowance');
+}
+
+function admMenu(m){
+  document.querySelectorAll('#adm-menu button').forEach(b=>b.classList.toggle('on',b.dataset.m===m));
+  const isAllow=m==='allowance';
+  document.getElementById('adm-main').style.display=isAllow?'block':'none';
+  document.getElementById('adm-match').style.display=isAllow?'none':'block';
+  // 상단 저장버튼/요약
   document.getElementById('adm-save').style.display='block';
-  document.getElementById('adm-summary').style.display='block';
-  // 기본 팀: 데이터상 내 선수 팀 or red
-  admSetTeam('red');
+  document.getElementById('adm-save').setAttribute('data-mode',m);
+  document.getElementById('adm-summary').style.display=isAllow?'block':'none';
+  if(isAllow){ admSetTeam(admTeam); }
+  else{ initMatchForm(); }
 }
 
 function admSetTeam(t){
@@ -659,6 +721,105 @@ async function saveAllowance(){
     if(!j.ok)throw new Error(j.error||'저장 실패');
     saveBtn.textContent='✓ 저장됨';
     setTimeout(()=>{saveBtn.textContent='저장';saveBtn.disabled=false;load();},1200);
+  }catch(e){
+    alert('저장 실패: '+e.message);
+    saveBtn.textContent='저장';saveBtn.disabled=false;
+  }
+}
+
+// ===== 경기 등록 =====
+let mTeam='red', mGoals={red:{}, blue:{}}, mManual={red:[], blue:[]};
+function admSave(){
+  const mode=document.getElementById('adm-save').getAttribute('data-mode');
+  if(mode==='match') saveMatch(); else saveAllowance();
+}
+
+function initMatchForm(){
+  mGoals={red:{}, blue:{}}; mManual={red:[], blue:[]};
+  const nextRound=(D?D.matches.length:0)+1;
+  document.getElementById('adm-m-round').textContent='새 경기 · R'+nextRound;
+  document.getElementById('adm-m-date').value='';
+  mTeam='red';
+  admMSetTeam('red');
+  updateScore();
+}
+function admMSetTeam(t){
+  mTeam=t;
+  document.querySelectorAll('#adm-m-tog button').forEach(b=>b.className=b.dataset.t===t?('on '+t):'');
+  renderGoalList();
+}
+function renderGoalList(){
+  const players=activePlayers(mTeam);
+  let html=players.map(p=>{
+    const c=mGoals[mTeam][p.name]||0;
+    return `<div class="grow ${c>0?'has':''}">
+      <div class="gn">${p.name}<span class="gp">${p.position||'-'}</span></div>
+      <div class="gctl">
+        <button onclick="goalMinus('${mTeam}','${p.name}')">−</button>
+        <span class="gcount num ${c===0?'zero':''}">${c}</span>
+        <button onclick="goalPlus('${mTeam}','${p.name}')">＋</button>
+      </div></div>`;
+  }).join('');
+  // 수기 입력 선수
+  mManual[mTeam].forEach((nm,idx)=>{
+    const c=mGoals[mTeam][nm]||0;
+    html+=`<div class="grow ${c>0?'has':''}">
+      <div class="gn">${nm}<span class="gm">수기</span></div>
+      <div class="gctl">
+        <button onclick="goalMinus('${mTeam}','${nm}')">−</button>
+        <span class="gcount num ${c===0?'zero':''}">${c}</span>
+        <button onclick="goalPlus('${mTeam}','${nm}')">＋</button>
+      </div></div>`;
+  });
+  document.getElementById('adm-glist').innerHTML=html;
+}
+function goalPlus(team,name){mGoals[team][name]=(mGoals[team][name]||0)+1;renderGoalList();updateScore();}
+function goalMinus(team,name){if(mGoals[team][name]>0)mGoals[team][name]--;renderGoalList();updateScore();}
+function admAddManual(){
+  const nm=prompt('선수 이름을 입력하세요 (명단에 없는 신입·게스트):');
+  if(!nm||!nm.trim())return;
+  const name=nm.trim();
+  if(!mManual[mTeam].includes(name))mManual[mTeam].push(name);
+  mGoals[mTeam][name]=(mGoals[mTeam][name]||0)+1;
+  renderGoalList();updateScore();
+}
+function teamScore(team){return Object.values(mGoals[team]).reduce((s,v)=>s+v,0);}
+function updateScore(){
+  const rs=teamScore('red'), bs=teamScore('blue');
+  document.getElementById('adm-m-rs').textContent=rs;
+  document.getElementById('adm-m-bs').textContent=bs;
+  let txt='';
+  if(rs>bs) txt=`🔴 레드 승 → 레드 +${fmt(WIN_BONUS)} BRO`;
+  else if(bs>rs) txt=`🔵 블루 승 → 블루 +${fmt(WIN_BONUS)} BRO`;
+  else txt=`무승부 → 양 팀 +${fmt(DRAW_BONUS)} BRO`;
+  document.getElementById('adm-m-bonus').textContent=txt;
+}
+
+async function saveMatch(){
+  const date=document.getElementById('adm-m-date').value.trim();
+  if(!date){alert('경기일을 입력하세요');return;}
+  const rs=teamScore('red'), bs=teamScore('blue');
+  if(rs===0&&bs===0){alert('득점자를 입력하세요');return;}
+  // 득점자 배열 만들기 (멀티골은 이름 반복)
+  const redGoals=[], blueGoals=[];
+  Object.keys(mGoals.red).forEach(nm=>{for(let i=0;i<mGoals.red[nm];i++)redGoals.push(nm);});
+  Object.keys(mGoals.blue).forEach(nm=>{for(let i=0;i<mGoals.blue[nm];i++)blueGoals.push(nm);});
+  const round=(D?D.matches.length:0)+1;
+
+  const saveBtn=document.getElementById('adm-save');
+  saveBtn.disabled=true;saveBtn.textContent='저장 중…';
+  try{
+    const params=new URLSearchParams({
+      action:'saveMatch', password:admPw, round, date,
+      redScore:rs, blueScore:bs,
+      redGoals:JSON.stringify(redGoals), blueGoals:JSON.stringify(blueGoals)
+    });
+    const sep=URL.includes('?')?'&':'?';
+    const res=await fetch(URL+sep+params.toString());
+    const j=await res.json();
+    if(!j.ok)throw new Error(j.error||'저장 실패');
+    saveBtn.textContent='✓ 저장됨';
+    setTimeout(()=>{saveBtn.textContent='저장';saveBtn.disabled=false;load();setTimeout(initMatchForm,800);},1200);
   }catch(e){
     alert('저장 실패: '+e.message);
     saveBtn.textContent='저장';saveBtn.disabled=false;
