@@ -54,31 +54,28 @@ body{background:var(--bg);color:var(--txt);font-family:'Malgun Gothic','Apple SD
 .card.red{background:linear-gradient(160deg,#FF5247 0%,#C21A0E 55%,#7E0F06 100%)}
 .card.blue{background:linear-gradient(160deg,#3C97FF 0%,#0C56D0 55%,#063A8C 100%)}
 .card::after{content:"";position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Cpath d='M0 20h40M20 0v40' stroke='%23ffffff' stroke-width='.5' opacity='.06'/%3E%3C/svg%3E");pointer-events:none;z-index:0}
-/* 카드 상단: 피파식 좌측 스택 + 사진 */
-.fifa{position:relative;z-index:1;display:flex;min-height:180px;padding:18px 0 0 18px}
-.fifa-left{display:flex;flex-direction:column;align-items:center;width:62px;flex-shrink:0;gap:5px;z-index:2}
-.fifa-ovr{font-family:'Oswald';font-weight:700;font-size:46px;line-height:.9;color:#fff;text-shadow:0 2px 6px rgba(0,0,0,.3)}
-.fifa-pos{font-family:'Oswald';font-weight:700;font-size:18px;color:rgba(255,255,255,.95);line-height:1}
-.fifa-div{width:30px;height:1.5px;background:rgba(255,255,255,.4);margin:3px 0}
-.fifa-emb{font-size:20px;margin-top:2px}
-.fifa-photo{position:absolute;right:0;bottom:0;top:0;width:62%;display:flex;align-items:flex-end;justify-content:center;z-index:1}
-.fifa-photo img{height:100%;width:100%;object-fit:cover;object-position:top center;mask-image:linear-gradient(to left,#000 60%,transparent);-webkit-mask-image:linear-gradient(to left,#000 60%,transparent)}
-.fifa-silhouette{font-size:90px;opacity:.18;align-self:center;margin-bottom:10px}
-/* 하단 이름 띠 */
-.fifa-name{position:relative;z-index:2;margin:10px 16px 0;padding:10px 0 14px;border-top:1.5px solid rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;gap:8px}
-.fifa-name .nm{font-size:24px;font-weight:800;color:#fff;letter-spacing:-.01em}
-.captain{display:inline-block;font-size:10px;font-weight:800;background:var(--gold);color:#3a2b00;padding:2px 8px;border-radius:999px;vertical-align:middle}
+/* 가로 구도: 왼쪽 카드 + 오른쪽 정보 */
+.card-row{position:relative;z-index:1;display:flex;gap:14px;padding:16px}
+.cardimg{width:118px;flex-shrink:0;aspect-ratio:3/4;border-radius:13px;overflow:hidden;background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center}
+.cardimg img{width:100%;height:100%;object-fit:cover}
+.cardimg .ph{text-align:center;color:rgba(255,255,255,.55);padding:8px}
+.cardimg .ph .pi{font-size:34px;opacity:.5}
+.cardimg .ph .pp{font-family:'Oswald';font-weight:700;font-size:20px;margin-top:6px;color:rgba(255,255,255,.8)}
+.cardimg .ph .pt{font-size:9px;margin-top:6px;letter-spacing:.04em}
+.cardinfo{flex:1;min-width:0;display:flex;flex-direction:column}
+.team-tag{font-size:10px;font-weight:800;color:rgba(255,255,255,.8);letter-spacing:.08em}
+.pname{font-size:22px;font-weight:800;color:#fff;line-height:1.15;margin-top:2px}
+.captain{display:inline-block;margin-left:5px;font-size:9px;font-weight:800;background:var(--gold);color:#3a2b00;padding:2px 7px;border-radius:999px;vertical-align:middle}
 .captain.v{background:#cfd6e6;color:#2a3142}
-/* MV 영역 */
-.pay{position:relative;z-index:2;padding:0 18px 4px;text-align:center}
-.pay-lbl{font-size:11px;color:rgba(255,255,255,.75);font-weight:700;letter-spacing:.06em}
-.pay-val{font-family:'Oswald';font-weight:700;font-size:40px;line-height:1;color:#fff;margin-top:2px}
-.pay-val .unit{font-size:16px;margin-left:4px;color:rgba(255,255,255,.8)}
-.rankpill{display:inline-flex;align-items:center;gap:5px;margin-top:9px;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.2);border-radius:999px;padding:5px 12px;font-size:12px;font-weight:800;color:#fff}
-.mini{display:flex;gap:9px;margin:16px 18px 0;padding-bottom:18px;position:relative;z-index:2}
-.mini .m{flex:1;background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.13);border-radius:13px;padding:11px 8px;text-align:center}
-.mini .mv{font-family:'Oswald';font-weight:700;font-size:22px;line-height:1;color:#fff}
-.mini .ml{font-size:10px;color:rgba(255,255,255,.78);margin-top:5px;font-weight:700}
+.pay{margin-top:12px}
+.pay-lbl{font-size:10px;color:rgba(255,255,255,.75);font-weight:700;letter-spacing:.04em}
+.pay-val{font-family:'Oswald';font-weight:700;font-size:34px;line-height:1;color:#fff;margin-top:1px}
+.pay-val .unit{font-size:14px;margin-left:3px;color:rgba(255,255,255,.8)}
+.rankpill{display:inline-flex;align-items:center;gap:4px;margin-top:9px;align-self:flex-start;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.2);border-radius:999px;padding:4px 11px;font-size:11px;font-weight:800;color:#fff}
+.mini{display:flex;gap:7px;margin-top:auto;padding-top:12px}
+.mini .m{flex:1;background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.13);border-radius:11px;padding:8px 4px;text-align:center}
+.mini .mv{font-family:'Oswald';font-weight:700;font-size:18px;line-height:1;color:#fff}
+.mini .ml{font-size:9px;color:rgba(255,255,255,.78);margin-top:4px;font-weight:700}
 
 .status{margin:13px 18px 0;border-radius:14px;padding:13px 16px;display:flex;align-items:center;gap:11px;border:1px solid var(--line)}
 .status.safe{background:rgba(34,184,92,.12);border-color:rgba(34,184,92,.3)}
@@ -439,30 +436,27 @@ function renderMe(){
   const st=consec(p),tot=p.totalAllowance,g=p.participated,gl=goals(p.name);
   const rk=teamRank(p.team,p.name),cnt=activePlayers(p.team).length;
   const cap=p.role==='팀장'?'<span class="captain">주장</span>':VICE[p.team]===p.name?'<span class="captain v">부주장</span>':'';
-  const emb=p.team==='red'?'🔴':'🔵';
-  const photo=p.imageUrl
-    ? `<div class="fifa-photo"><img src="${p.imageUrl}" onerror="this.parentElement.innerHTML='<div class=\\'fifa-silhouette\\'>👤</div>'"></div>`
-    : `<div class="fifa-photo"><div class="fifa-silhouette">👤</div></div>`;
+  const cardImg=p.imageUrl
+    ? `<div class="cardimg"><img src="${p.imageUrl}" onerror="this.parentElement.innerHTML='<div class=\\'ph\\'><div class=\\'pi\\'>🃏</div><div class=\\'pp\\'>${p.position||'-'}</div><div class=\\'pt\\'>카드 준비중</div></div>'"></div>`
+    : `<div class="cardimg"><div class="ph"><div class="pi">🃏</div><div class="pp">${p.position||'-'}</div><div class="pt">카드 준비중</div></div></div>`;
   document.getElementById('card-host').innerHTML=`
     <div class="card ${p.team}">
-      <div class="fifa">
-        <div class="fifa-left">
-          <div class="fifa-ovr num">99</div>
-          <div class="fifa-pos">${p.position||'-'}</div>
-          <div class="fifa-div"></div>
-          <div class="fifa-emb">${emb}</div>
+      <div class="card-row">
+        ${cardImg}
+        <div class="cardinfo">
+          <div class="team-tag">${p.team==='red'?'RED TEAM':'BLUE TEAM'}</div>
+          <div class="pname">${p.name}${cap}</div>
+          <div class="pay"><div class="pay-lbl">마켓 밸류 (MV)</div>
+            <div class="pay-val num">${fmt(tot)}<span class="unit">BRO</span></div></div>
+          <span class="rankpill">🏆 팀 내 ${rk}위 / ${cnt}명</span>
+          <div class="mini">
+            <div class="m"><div class="mv num">${g}</div><div class="ml">출전</div></div>
+            <div class="m"><div class="mv num">${gl}</div><div class="ml">골</div></div>
+            <div class="m"><div class="mv num">${st}</div><div class="ml">결장</div></div>
+          </div>
         </div>
-        ${photo}
       </div>
-      <div class="fifa-name"><span class="nm">${p.name}</span>${cap}</div>
-      <div class="pay"><div class="pay-lbl">시즌 마켓 밸류 (MV)</div>
-        <div class="pay-val num">${fmt(tot)}<span class="unit">BRO</span></div>
-        <span class="rankpill">🏆 팀 내 ${rk}위 / ${cnt}명</span></div>
-      <div class="mini">
-        <div class="m"><div class="mv num">${g}</div><div class="ml">출전</div></div>
-        <div class="m"><div class="mv num">${gl}</div><div class="ml">골</div></div>
-        <div class="m"><div class="mv num">${st}</div><div class="ml">연속결장</div></div>
-      </div></div>`;
+    </div>`;
   let cls,ico,t,d;
   if(st>=ABSENCE_LIMIT){cls='danger';ico='🚨';t='방출 대상';d=`연속 ${st}경기 결장 — 규정상 방출`;}
   else if(st===ABSENCE_LIMIT-1){cls='warn';ico='⚠️';t='경고';d='다음 경기 결장 시 방출';}
