@@ -49,28 +49,34 @@ body{background:var(--bg);color:var(--txt);font-family:'Malgun Gothic','Apple SD
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%239AA5BC' stroke-width='3'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
   background-repeat:no-repeat;background-position:right 16px center}
 
-.card{margin:0 18px;border-radius:22px;padding:22px 22px 20px;position:relative;overflow:hidden;box-shadow:0 18px 40px -16px rgba(0,0,0,.7);animation:rise .5s cubic-bezier(.2,.8,.2,1)}
+.card{margin:0 18px;border-radius:20px;position:relative;overflow:hidden;box-shadow:0 18px 40px -16px rgba(0,0,0,.7);animation:rise .5s cubic-bezier(.2,.8,.2,1)}
 @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
-.card.red{background:radial-gradient(120% 120% at 0% 0%,#FF5247 0%,#C21A0E 55%,#7E0F06 100%)}
-.card.blue{background:radial-gradient(120% 120% at 0% 0%,#3C97FF 0%,#0C56D0 55%,#063A8C 100%)}
-.card::after{content:"";position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Cpath d='M0 20h40M20 0v40' stroke='%23ffffff' stroke-width='.5' opacity='.06'/%3E%3C/svg%3E");pointer-events:none}
-.card-top{display:flex;align-items:center;gap:12px;position:relative;z-index:1}
-.posbox{background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.25);border-radius:11px;padding:7px 0;width:52px;text-align:center;flex-shrink:0}
-.posbox .p{font-family:'Oswald';font-weight:700;font-size:17px;line-height:1;color:#fff}
-.posbox .n{font-size:9px;color:rgba(255,255,255,.7);margin-top:3px;font-weight:700}
-.pavatar{width:52px;height:52px;border-radius:12px;object-fit:cover;border:1px solid rgba(255,255,255,.3);flex-shrink:0;background:rgba(0,0,0,.2)}
-.who{flex:1;min-width:0}
-.team-tag{font-size:11px;font-weight:800;color:rgba(255,255,255,.85);letter-spacing:.08em}
-.pname{font-size:26px;font-weight:800;line-height:1.1;margin-top:1px;color:#fff}
-.captain{display:inline-block;margin-left:6px;font-size:10px;font-weight:800;background:var(--gold);color:#3a2b00;padding:2px 7px;border-radius:999px;vertical-align:middle}
+.card.red{background:linear-gradient(160deg,#FF5247 0%,#C21A0E 55%,#7E0F06 100%)}
+.card.blue{background:linear-gradient(160deg,#3C97FF 0%,#0C56D0 55%,#063A8C 100%)}
+.card::after{content:"";position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Cpath d='M0 20h40M20 0v40' stroke='%23ffffff' stroke-width='.5' opacity='.06'/%3E%3C/svg%3E");pointer-events:none;z-index:0}
+/* 카드 상단: 피파식 좌측 스택 + 사진 */
+.fifa{position:relative;z-index:1;display:flex;min-height:180px;padding:18px 0 0 18px}
+.fifa-left{display:flex;flex-direction:column;align-items:center;width:62px;flex-shrink:0;gap:5px;z-index:2}
+.fifa-ovr{font-family:'Oswald';font-weight:700;font-size:46px;line-height:.9;color:#fff;text-shadow:0 2px 6px rgba(0,0,0,.3)}
+.fifa-pos{font-family:'Oswald';font-weight:700;font-size:18px;color:rgba(255,255,255,.95);line-height:1}
+.fifa-div{width:30px;height:1.5px;background:rgba(255,255,255,.4);margin:3px 0}
+.fifa-emb{font-size:20px;margin-top:2px}
+.fifa-photo{position:absolute;right:0;bottom:0;top:0;width:62%;display:flex;align-items:flex-end;justify-content:center;z-index:1}
+.fifa-photo img{height:100%;width:100%;object-fit:cover;object-position:top center;mask-image:linear-gradient(to left,#000 60%,transparent);-webkit-mask-image:linear-gradient(to left,#000 60%,transparent)}
+.fifa-silhouette{font-size:90px;opacity:.18;align-self:center;margin-bottom:10px}
+/* 하단 이름 띠 */
+.fifa-name{position:relative;z-index:2;margin:10px 16px 0;padding:10px 0 14px;border-top:1.5px solid rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;gap:8px}
+.fifa-name .nm{font-size:24px;font-weight:800;color:#fff;letter-spacing:-.01em}
+.captain{display:inline-block;font-size:10px;font-weight:800;background:var(--gold);color:#3a2b00;padding:2px 8px;border-radius:999px;vertical-align:middle}
 .captain.v{background:#cfd6e6;color:#2a3142}
-.pay{position:relative;z-index:1;margin-top:18px}
+/* MV 영역 */
+.pay{position:relative;z-index:2;padding:0 18px 4px;text-align:center}
 .pay-lbl{font-size:11px;color:rgba(255,255,255,.75);font-weight:700;letter-spacing:.06em}
-.pay-val{font-family:'Oswald';font-weight:700;font-size:44px;line-height:1;color:#fff;margin-top:2px}
-.pay-val .unit{font-size:17px;margin-left:4px;color:rgba(255,255,255,.8)}
-.rankpill{display:inline-flex;align-items:center;gap:5px;margin-top:10px;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.2);border-radius:999px;padding:5px 12px;font-size:12px;font-weight:800;color:#fff}
-.mini{display:flex;gap:9px;margin-top:16px;position:relative;z-index:1}
-.mini .m{flex:1;background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.13);border-radius:13px;padding:11px 8px;text-align:center}
+.pay-val{font-family:'Oswald';font-weight:700;font-size:40px;line-height:1;color:#fff;margin-top:2px}
+.pay-val .unit{font-size:16px;margin-left:4px;color:rgba(255,255,255,.8)}
+.rankpill{display:inline-flex;align-items:center;gap:5px;margin-top:9px;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.2);border-radius:999px;padding:5px 12px;font-size:12px;font-weight:800;color:#fff}
+.mini{display:flex;gap:9px;margin:16px 18px 0;padding-bottom:18px;position:relative;z-index:2}
+.mini .m{flex:1;background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.13);border-radius:13px;padding:11px 8px;text-align:center}
 .mini .mv{font-family:'Oswald';font-weight:700;font-size:22px;line-height:1;color:#fff}
 .mini .ml{font-size:10px;color:rgba(255,255,255,.78);margin-top:5px;font-weight:700}
 
@@ -165,6 +171,63 @@ body{background:var(--bg);color:var(--txt);font-family:'Malgun Gothic','Apple SD
 .tb .ti{font-size:19px;line-height:1}
 .tb.on{color:var(--txt)}
 .tb.on .ti{filter:drop-shadow(0 0 8px rgba(255,210,74,.5))}
+
+/* ===== 어드민 ===== */
+#admin{position:fixed;inset:0;background:var(--bg);z-index:200;max-width:440px;margin:0 auto;overflow-y:auto}
+.adm-head{display:flex;align-items:center;gap:10px;padding:16px 18px 12px;position:sticky;top:0;background:var(--bg);z-index:5;border-bottom:1px solid var(--line)}
+.adm-back{font-size:22px;color:var(--txt2);background:none;border:none;cursor:pointer;line-height:1}
+.adm-t{font-family:'Oswald';font-weight:700;font-size:18px}
+.adm-badge{margin-left:auto;font-size:11px;font-weight:800;padding:5px 11px;border-radius:999px}
+.adm-badge.op{color:var(--gold);background:rgba(255,210,74,.14);border:1px solid rgba(255,210,74,.35)}
+.adm-badge.red{color:#FF6A5E;background:rgba(255,65,51,.14);border:1px solid rgba(255,65,51,.35)}
+.adm-badge.blue{color:#6AB0FF;background:rgba(45,140,255,.14);border:1px solid rgba(45,140,255,.35)}
+.adm-body{padding:16px 18px 0}
+.adm-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px}
+.adm-card-t{font-size:15px;font-weight:800;margin-bottom:6px}
+.adm-desc{font-size:12px;color:var(--txt2);line-height:1.5;margin-bottom:16px}
+.adm-in{width:100%;background:var(--bg2);border:1px solid var(--line);color:var(--txt);padding:13px 14px;border-radius:11px;font-size:15px;font-family:inherit;margin-bottom:12px}
+.adm-in:focus{outline:none;border-color:var(--blue)}
+.adm-btn{width:100%;background:var(--blue);color:#fff;border:none;padding:13px;border-radius:11px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit}
+.adm-msg{font-size:13px;margin-top:12px;text-align:center;font-weight:700}
+.adm-msg.err{color:var(--red)}.adm-msg.ok{color:var(--grass)}
+
+.rsel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:12px}
+.rsel-top{display:flex;align-items:center;gap:8px;margin-bottom:11px}
+.rsel-lbl{font-size:12px;font-weight:800;color:var(--txt2)}
+.rchips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+.rchips::-webkit-scrollbar{display:none}
+.rchip{flex-shrink:0;min-width:44px;text-align:center;padding:9px 0;border-radius:10px;border:1px solid var(--line);background:var(--bg2);font-family:'Oswald';font-weight:700;font-size:15px;color:var(--txt2);cursor:pointer}
+.rchip.on{background:rgba(45,140,255,.18);border-color:var(--blue);color:#fff}
+.rchip.new{color:var(--grass);border-color:rgba(34,184,92,.4)}
+.rsel-date{margin-top:11px;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:8px}
+.rsel-date input{background:var(--bg2);border:1px solid var(--line);border-radius:9px;color:var(--txt);padding:7px 11px;font-size:13px;font-family:inherit;flex:1}
+
+.budget{margin-bottom:12px;border-radius:13px;padding:13px 16px;border:1px solid var(--line);display:flex;align-items:center;gap:10px;background:var(--panel)}
+.budget.over{background:rgba(255,65,51,.12);border-color:var(--red)}
+.budget.warn{background:rgba(255,176,32,.1);border-color:rgba(255,176,32,.4)}
+.budget .bl{font-size:11px;color:var(--txt2);font-weight:700}
+.budget .bv{font-family:'Oswald';font-weight:700;font-size:17px;margin-left:auto}
+.budget .bv.red{color:var(--red)}.budget .bv.ok{color:var(--grass)}
+
+.hint{font-size:12px;color:var(--txt2);background:rgba(45,140,255,.08);border:1px solid rgba(45,140,255,.2);border-radius:11px;padding:11px 14px;line-height:1.5;margin-bottom:12px}
+.plist{}
+.prow{display:flex;align-items:center;gap:11px;background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:11px 13px;margin-bottom:8px}
+.prow.off{opacity:.5}
+.tg{width:46px;height:28px;border-radius:999px;background:var(--bg2);border:1px solid var(--line);position:relative;flex-shrink:0;cursor:pointer;transition:.2s}
+.tg::after{content:"";position:absolute;top:2px;left:2px;width:22px;height:22px;border-radius:50%;background:var(--muted);transition:.2s}
+.tg.on{background:rgba(34,184,92,.3);border-color:var(--grass)}
+.tg.on::after{left:21px;background:var(--grass)}
+.pinfo{flex:1;min-width:0}
+.pn{font-size:14px;font-weight:800}
+.pn .pp{font-family:'Oswald';font-size:10px;color:var(--muted);background:var(--bg2);padding:2px 6px;border-radius:5px;margin-left:6px}
+.quick{display:flex;gap:5px;margin-top:8px}
+.qc{font-family:'Oswald';font-weight:700;font-size:11px;color:var(--txt2);background:var(--bg2);border:1px solid var(--line);border-radius:7px;padding:4px 9px;cursor:pointer}
+.qc.on{background:rgba(255,210,74,.15);border-color:var(--gold);color:var(--gold)}
+.amt{display:flex;align-items:center;gap:5px;flex-shrink:0}
+.amt input{width:62px;background:var(--bg2);border:1px solid var(--line);border-radius:9px;color:var(--txt);padding:8px 6px;font-size:14px;font-family:'Oswald';font-weight:700;text-align:right}
+.amt input:disabled{opacity:.4}
+.amt .u{font-size:10px;color:var(--muted);font-weight:700}
+.savebar .save:disabled{background:var(--muted);opacity:.6;cursor:not-allowed}
 </style>
 </head>
 <body>
@@ -183,6 +246,7 @@ body{background:var(--bg);color:var(--txt);font-family:'Malgun Gothic','Apple SD
   <div class="top">
     <div class="brand">위닝일레븐 <span class="yr">2026</span></div>
     <div class="dot" id="dot"></div>
+    <button class="rfs" onclick="openAdmin()" title="운영">🔒</button>
     <button class="rfs" onclick="load()">↻</button>
     <button class="rfs" onclick="resetUrl()" title="URL 변경">⚙</button>
   </div>
@@ -234,6 +298,49 @@ body{background:var(--bg);color:var(--txt);font-family:'Malgun Gothic','Apple SD
     <button class="tb" data-p="line" onclick="sw(this)"><span class="ti">⚽</span>라인업</button>
     <button class="tb" data-p="rank" onclick="sw(this)"><span class="ti">🏆</span>랭킹</button>
     <button class="tb" data-p="match" onclick="sw(this)"><span class="ti">📋</span>경기</button>
+  </div>
+</div>
+
+<!-- ===== 어드민 오버레이 ===== -->
+<div id="admin" style="display:none">
+  <div class="adm-head">
+    <button class="adm-back" onclick="closeAdmin()">‹</button>
+    <div class="adm-t">운영 패널</div>
+    <div class="adm-badge" id="adm-badge"></div>
+  </div>
+
+  <!-- 로그인 -->
+  <div id="adm-login" class="adm-body">
+    <div class="adm-card">
+      <div class="adm-card-t">🔒 운영 로그인</div>
+      <p class="adm-desc">비밀번호를 입력하세요. 권한에 따라 수정 가능한 팀이 달라요.</p>
+      <input class="adm-in" id="adm-pw" type="password" placeholder="비밀번호" autocomplete="off">
+      <button class="adm-btn" onclick="adminLogin()">로그인</button>
+      <div class="adm-msg" id="adm-login-msg"></div>
+    </div>
+  </div>
+
+  <!-- 수당 입력 -->
+  <div id="adm-main" class="adm-body" style="display:none">
+    <div class="rsel">
+      <div class="rsel-top"><span class="rsel-lbl">팀 / 라운드 선택</span></div>
+      <div class="ttog" id="adm-team-tog" style="padding:0 0 12px">
+        <button class="on red" data-t="red" onclick="admSetTeam('red')">🔴 레드</button>
+        <button data-t="blue" onclick="admSetTeam('blue')">🔵 블루</button>
+      </div>
+      <div class="rchips" id="adm-rchips"></div>
+      <div class="rsel-date">경기일 <input type="text" id="adm-date" placeholder="2026. 6. 14."></div>
+    </div>
+
+    <div class="budget" id="adm-budget"></div>
+    <div class="hint" id="adm-hint">💡 출전한 선수만 토글을 켜고 금액을 넣으세요. 결장은 끄면 빈칸 처리돼요.</div>
+    <div class="plist" id="adm-plist"></div>
+    <div style="height:80px"></div>
+  </div>
+
+  <div class="savebar" id="adm-savebar" style="display:none">
+    <div class="sum">출전 <b id="adm-cnt">0</b>명 · 지급 <b id="adm-sum">0</b></div>
+    <button class="save" id="adm-save" onclick="saveAllowance()">저장</button>
   </div>
 </div>
 
@@ -332,12 +439,22 @@ function renderMe(){
   const st=consec(p),tot=p.totalAllowance,g=p.participated,gl=goals(p.name);
   const rk=teamRank(p.team,p.name),cnt=activePlayers(p.team).length;
   const cap=p.role==='팀장'?'<span class="captain">주장</span>':VICE[p.team]===p.name?'<span class="captain v">부주장</span>':'';
-  const ava=p.imageUrl?`<img class="pavatar" src="${p.imageUrl}" onerror="this.outerHTML='<div class=\\'posbox\\'><div class=\\'p\\'>${p.position||'-'}</div><div class=\\'n\\'>선수</div></div>'">`:`<div class="posbox"><div class="p">${p.position||'-'}</div><div class="n">선수</div></div>`;
+  const emb=p.team==='red'?'🔴':'🔵';
+  const photo=p.imageUrl
+    ? `<div class="fifa-photo"><img src="${p.imageUrl}" onerror="this.parentElement.innerHTML='<div class=\\'fifa-silhouette\\'>👤</div>'"></div>`
+    : `<div class="fifa-photo"><div class="fifa-silhouette">👤</div></div>`;
   document.getElementById('card-host').innerHTML=`
     <div class="card ${p.team}">
-      <div class="card-top">${ava}
-        <div class="who"><div class="team-tag">${p.team==='red'?'RED TEAM':'BLUE TEAM'}</div>
-        <div class="pname">${p.name}${cap}</div></div></div>
+      <div class="fifa">
+        <div class="fifa-left">
+          <div class="fifa-ovr num">99</div>
+          <div class="fifa-pos">${p.position||'-'}</div>
+          <div class="fifa-div"></div>
+          <div class="fifa-emb">${emb}</div>
+        </div>
+        ${photo}
+      </div>
+      <div class="fifa-name"><span class="nm">${p.name}</span>${cap}</div>
       <div class="pay"><div class="pay-lbl">시즌 마켓 밸류 (MV)</div>
         <div class="pay-val num">${fmt(tot)}<span class="unit">BRO</span></div>
         <span class="rankpill">🏆 팀 내 ${rk}위 / ${cnt}명</span></div>
@@ -421,6 +538,127 @@ function renderMatches(){
 }
 
 function sw(btn){document.querySelectorAll('.tb').forEach(t=>t.classList.remove('on'));document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));btn.classList.add('on');document.getElementById('p-'+btn.dataset.p).classList.add('on');}
+
+// ===== 어드민 =====
+let admRole=null, admPw='', admTeam='red', admRound=1, admState={};
+const QUICK=[1000,2000,3000,4000];
+
+function openAdmin(){document.getElementById('admin').style.display='block';}
+function closeAdmin(){document.getElementById('admin').style.display='none';}
+
+function adminLogin(){
+  const pw=document.getElementById('adm-pw').value.trim();
+  if(!pw){return;}
+  admPw=pw;
+  // 권한 판별은 저장 시 서버가 최종 확인. 여기선 화면 진입만.
+  document.getElementById('adm-login').style.display='none';
+  document.getElementById('adm-main').style.display='block';
+  document.getElementById('adm-savebar').style.display='flex';
+  // 기본 팀: 데이터상 내 선수 팀 or red
+  admSetTeam('red');
+}
+
+function admSetTeam(t){
+  admTeam=t;
+  document.querySelectorAll('#adm-team-tog button').forEach(b=>b.className=b.dataset.t===t?('on '+t):'');
+  buildRoundChips();
+  admPickRound(admRound);
+}
+
+function buildRoundChips(){
+  const total=D?D.matches.length:0;
+  let html='';
+  for(let r=1;r<=total;r++) html+=`<div class="rchip ${r===admRound?'on':''}" onclick="admPickRound(${r})">R${r}</div>`;
+  html+=`<div class="rchip new" onclick="admPickRound(${total+1})">＋새</div>`;
+  document.getElementById('adm-rchips').innerHTML=html;
+}
+
+function admPickRound(r){
+  admRound=r;
+  buildRoundChips();
+  // 날짜 자동 채움 (기존 라운드면 그 날짜)
+  const m=D.matches.find(x=>x.round===r);
+  document.getElementById('adm-date').value=m?m.date:'';
+  buildPlayerInputs();
+}
+
+function buildPlayerInputs(){
+  const players=activePlayers(admTeam).filter(p=>p.role!=='팀장'||p.totalAllowance>0||p.allowances.length);
+  admState={};
+  const html=players.map((p,i)=>{
+    const prev=(p.allowances&&p.allowances[admRound-1])||0;  // 기존 입력값
+    const on=prev>0;
+    admState[p.name]={on, amount:prev||1000};
+    return `<div class="prow ${on?'':'off'}" id="arow${i}">
+      <div class="tg ${on?'on':''}" onclick="admToggle(${i},'${p.name}')" id="atg${i}"></div>
+      <div class="pinfo">
+        <div class="pn">${p.name}<span class="pp">${p.position||'-'}</span></div>
+        <div class="quick" id="aq${i}" style="${on?'':'display:none'}">
+          ${QUICK.map(q=>`<span class="qc ${q===(prev||1000)?'on':''}" onclick="admSetAmt(${i},'${p.name}',${q})">${q/1000}천</span>`).join('')}
+        </div>
+      </div>
+      <div class="amt"><input type="number" id="aamt${i}" value="${prev||1000}" ${on?'':'disabled'} oninput="admInput(${i},'${p.name}')"><span class="u">BRO</span></div>
+    </div>`;
+  }).join('');
+  document.getElementById('adm-plist').innerHTML=html||'<div class="foot">선수 없음</div>';
+  admRecalc();
+}
+
+function admToggle(i,name){
+  const s=admState[name];s.on=!s.on;
+  document.getElementById('arow'+i).classList.toggle('off',!s.on);
+  document.getElementById('atg'+i).classList.toggle('on',s.on);
+  document.getElementById('aamt'+i).disabled=!s.on;
+  document.getElementById('aq'+i).style.display=s.on?'flex':'none';
+  admRecalc();
+}
+function admSetAmt(i,name,v){
+  document.getElementById('aamt'+i).value=v;admState[name].amount=v;
+  document.querySelectorAll('#aq'+i+' .qc').forEach(c=>c.classList.toggle('on',c.textContent===(v/1000)+'천'));
+  admRecalc();
+}
+function admInput(i,name){admState[name].amount=parseInt(document.getElementById('aamt'+i).value)||0;admRecalc();}
+
+function admRecalc(){
+  let cnt=0,sum=0;
+  Object.values(admState).forEach(s=>{if(s.on){cnt++;sum+=s.amount||0;}});
+  document.getElementById('adm-cnt').textContent=cnt;
+  document.getElementById('adm-sum').textContent=fmt(sum);
+  // 예산 체크
+  const avail=(D.teamInfo&&D.teamInfo[admTeam]&&D.teamInfo[admTeam].availFunds)||0;
+  // 이 라운드 기존 지급액은 환원되므로: 실질 잔액 = avail + 기존 라운드합 - 새 합
+  let oldRound=0;activePlayers(admTeam).forEach(p=>{oldRound+=(p.allowances&&p.allowances[admRound-1])||0;});
+  const after=avail+oldRound-sum;
+  const bEl=document.getElementById('adm-budget');
+  const saveBtn=document.getElementById('adm-save');
+  let cls='',vcls='ok';
+  if(after<0){cls='over';vcls='red';saveBtn.disabled=true;}
+  else if(after<10000){cls='warn';vcls='ok';saveBtn.disabled=false;}
+  else{saveBtn.disabled=false;}
+  bEl.className='budget '+cls;
+  bEl.innerHTML=`<span class="bl">${admTeam==='red'?'🔴 레드':'🔵 블루'} 지급 후 잔액</span><span class="bv ${vcls}">${fmt(after)} BRO</span>`;
+}
+
+async function saveAllowance(){
+  const date=document.getElementById('adm-date').value.trim();
+  const entries=Object.keys(admState).map(name=>({name, amount:admState[name].on?(admState[name].amount||0):0}));
+  const saveBtn=document.getElementById('adm-save');
+  saveBtn.disabled=true;saveBtn.textContent='저장 중…';
+  try{
+    const res=await fetch(URL,{
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({action:'saveAllowance',password:admPw,team:admTeam,round:admRound,date,entries})
+    });
+    const j=await res.json();
+    if(!j.ok)throw new Error(j.error||'저장 실패');
+    saveBtn.textContent='✓ 저장됨';
+    setTimeout(()=>{saveBtn.textContent='저장';saveBtn.disabled=false;load();},1200);
+  }catch(e){
+    alert('저장 실패: '+e.message);
+    saveBtn.textContent='저장';saveBtn.disabled=false;
+  }
+}
 </script>
 </body>
 </html>
