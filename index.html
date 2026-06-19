@@ -205,6 +205,14 @@ body{background:var(--bg);color:var(--txt);font-family:'Malgun Gothic','Apple SD
 .gctl button{width:32px;height:32px;border-radius:9px;border:1px solid var(--line);background:var(--bg2);color:var(--txt);font-size:18px;font-weight:700;cursor:pointer;font-family:'Oswald';line-height:1}
 .gctl .gcount{font-family:'Oswald';font-weight:700;font-size:18px;min-width:20px;text-align:center}
 .gctl .gcount.zero{color:var(--muted)}
+/* 선수 관리 명단 */
+.rlist{padding:0 18px}
+.ritem{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:10px 13px;margin-bottom:7px}
+.ritem .rnm{flex:1;font-size:14px;font-weight:700}
+.ritem .rnm .rp{font-family:'Oswald';font-size:10px;color:var(--muted);background:var(--bg2);padding:2px 6px;border-radius:5px;margin-left:6px}
+.ritem .rtag{font-size:10px;font-weight:800;padding:2px 8px;border-radius:999px}
+.ritem .rtag.cap{background:var(--gold);color:#3a2b00}
+.ritem .rtag.new{background:rgba(34,184,92,.18);color:#4FE08A}
 .adm-body{padding:16px 18px 0}
 .adm-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px}
 .adm-card-t{font-size:15px;font-weight:800;margin-bottom:6px}
@@ -352,8 +360,9 @@ body{background:var(--bg);color:var(--txt);font-family:'Malgun Gothic','Apple SD
 
   <!-- 메뉴 탭 -->
   <div class="adm-menu" id="adm-menu" style="display:none">
-    <button class="on" data-m="allowance" onclick="admMenu('allowance')">💰 수당 입력</button>
-    <button data-m="match" onclick="admMenu('match')">⚽ 경기 등록</button>
+    <button class="on" data-m="match" onclick="admMenu('match')">⚽ 경기</button>
+    <button data-m="allowance" onclick="admMenu('allowance')">💰 수당</button>
+    <button data-m="roster" onclick="admMenu('roster')">👥 선수</button>
   </div>
 
   <!-- 수당 입력 -->
@@ -395,6 +404,26 @@ body{background:var(--bg);color:var(--txt);font-family:'Malgun Gothic','Apple SD
     <div class="hint">💡 골 넣은 선수를 탭하면 골 +1 (멀티골은 여러 번 탭). 명단에 없으면 ＋수기 입력.</div>
     <button class="adm-add-manual" onclick="admAddManual()">＋ 수기 입력 (신입·게스트)</button>
     <div class="glist" id="adm-glist"></div>
+    <div style="height:40px"></div>
+  </div>
+
+  <!-- 선수 관리 -->
+  <div id="adm-roster" class="adm-body" style="display:none">
+    <div class="rsel">
+      <div class="rsel-top"><span class="rsel-lbl">신규 선수 추가</span></div>
+      <div class="ttog" id="adm-r-tog" style="padding:0 0 12px">
+        <button class="on red" data-t="red" onclick="admRSetTeam('red')">🔴 레드</button>
+        <button data-t="blue" data-t="blue" onclick="admRSetTeam('blue')">🔵 블루</button>
+      </div>
+      <div style="display:flex;gap:8px">
+        <input class="adm-in" id="adm-r-name" type="text" placeholder="선수 이름" style="margin-bottom:0;flex:1">
+        <button class="adm-save-top" onclick="addPlayer()" style="flex-shrink:0">추가</button>
+      </div>
+      <div class="adm-msg" id="adm-r-msg" style="text-align:left"></div>
+    </div>
+    <div class="hint">💡 이름만 넣으면 해당 팀 명단에 추가돼요. 포지션·사진은 나중에 시트에서 채울 수 있어요.</div>
+    <div class="sec" style="margin:16px 18px 11px;color:var(--txt)">현재 명단 <span id="adm-r-count" style="color:var(--muted);font-weight:700"></span></div>
+    <div class="rlist" id="adm-rlist"></div>
     <div style="height:40px"></div>
   </div>
 </div>
@@ -604,20 +633,22 @@ function adminLogin(){
   admPw=pw;
   document.getElementById('adm-login').style.display='none';
   document.getElementById('adm-menu').style.display='flex';
-  admMenu('allowance');
+  admMenu('match');
 }
 
 function admMenu(m){
   document.querySelectorAll('#adm-menu button').forEach(b=>b.classList.toggle('on',b.dataset.m===m));
-  const isAllow=m==='allowance';
-  document.getElementById('adm-main').style.display=isAllow?'block':'none';
-  document.getElementById('adm-match').style.display=isAllow?'none':'block';
-  // 상단 저장버튼/요약
-  document.getElementById('adm-save').style.display='block';
-  document.getElementById('adm-save').setAttribute('data-mode',m);
-  document.getElementById('adm-summary').style.display=isAllow?'block':'none';
-  if(isAllow){ admSetTeam(admTeam); }
-  else{ initMatchForm(); }
+  document.getElementById('adm-main').style.display=m==='allowance'?'block':'none';
+  document.getElementById('adm-match').style.display=m==='match'?'block':'none';
+  document.getElementById('adm-roster').style.display=m==='roster'?'block':'none';
+  // 상단 저장버튼: 선수관리는 자체 추가버튼 쓰므로 숨김
+  const saveBtn=document.getElementById('adm-save');
+  saveBtn.style.display=m==='roster'?'none':'block';
+  saveBtn.setAttribute('data-mode',m);
+  document.getElementById('adm-summary').style.display=m==='allowance'?'block':'none';
+  if(m==='allowance'){ admSetTeam(admTeam); }
+  else if(m==='match'){ initMatchForm(); }
+  else if(m==='roster'){ admRSetTeam('red'); }
 }
 
 function admSetTeam(t){
@@ -823,6 +854,43 @@ async function saveMatch(){
   }catch(e){
     alert('저장 실패: '+e.message);
     saveBtn.textContent='저장';saveBtn.disabled=false;
+  }
+}
+
+// ===== 선수 관리 =====
+let rTeam='red';
+function admRSetTeam(t){
+  rTeam=t;
+  document.querySelectorAll('#adm-r-tog button').forEach(b=>b.className=b.dataset.t===t?('on '+t):'');
+  document.getElementById('adm-r-msg').textContent='';
+  renderRoster();
+}
+function renderRoster(){
+  const players=activePlayers(rTeam);
+  document.getElementById('adm-r-count').textContent='('+players.length+'명)';
+  document.getElementById('adm-rlist').innerHTML=players.map(p=>{
+    const tag=p.role==='팀장'?'<span class="rtag cap">주장</span>':VICE[p.team]===p.name?'<span class="rtag cap">부주장</span>':'';
+    return `<div class="ritem"><div class="rnm">${p.name}${p.position?`<span class="rp">${p.position}</span>`:''}</div>${tag}</div>`;
+  }).join('')||'<div class="foot">선수 없음</div>';
+}
+async function addPlayer(){
+  const name=document.getElementById('adm-r-name').value.trim();
+  const msg=document.getElementById('adm-r-msg');
+  if(!name){msg.className='adm-msg err';msg.textContent='이름을 입력하세요';return;}
+  // 중복 체크
+  if(activePlayers(rTeam).some(p=>p.name===name)){msg.className='adm-msg err';msg.textContent='이미 있는 선수예요';return;}
+  msg.className='adm-msg';msg.textContent='추가 중…';
+  try{
+    const params=new URLSearchParams({action:'addPlayer',password:admPw,team:rTeam,name});
+    const sep=URL.includes('?')?'&':'?';
+    const res=await fetch(URL+sep+params.toString());
+    const j=await res.json();
+    if(!j.ok)throw new Error(j.error||'추가 실패');
+    msg.className='adm-msg ok';msg.textContent='✓ '+name+' 추가됨';
+    document.getElementById('adm-r-name').value='';
+    setTimeout(()=>{load();setTimeout(renderRoster,800);},1000);
+  }catch(e){
+    msg.className='adm-msg err';msg.textContent='실패: '+e.message;
   }
 }
 </script>
