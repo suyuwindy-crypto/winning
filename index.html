@@ -164,6 +164,19 @@ body{background:var(--bg);color:var(--txt);font-family:'Malgun Gothic','Apple SD
 .foot{text-align:center;color:var(--muted);font-size:11px;padding:20px 18px 12px;line-height:1.6}
 
 .tabbar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:440px;display:flex;background:rgba(13,17,27,.92);backdrop-filter:blur(16px);border-top:1px solid var(--line);z-index:30}
+/* 어드민 하단 플로팅 배너 */
+.adm-banner{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:440px;z-index:60;background:rgba(13,17,27,.94);backdrop-filter:blur(18px);border-top:2px solid var(--line);padding:11px 16px calc(11px + env(safe-area-inset-bottom,0px));display:flex;gap:12px}
+.adm-banner .abx{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;border-radius:11px;padding:9px 12px;border:1px solid var(--line);background:var(--panel)}
+.adm-banner .abx.red{border-color:rgba(255,65,51,.4);background:rgba(255,65,51,.08)}
+.adm-banner .abx.blue{border-color:rgba(45,140,255,.4);background:rgba(45,140,255,.08)}
+.adm-banner .ab-top{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:800}
+.adm-banner .ab-top .ab-nm{color:var(--txt)}
+.adm-banner .ab-cap{font-size:10px;color:var(--muted);font-weight:600;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.adm-banner .ab-stat{display:flex;gap:10px;margin-top:2px}
+.adm-banner .ab-stat span{font-size:11px;color:var(--txt2);font-weight:700}
+.adm-banner .ab-stat b{font-family:'Oswald';font-weight:700;font-size:13px}
+.adm-banner .abx.red .ab-stat b{color:var(--red)}
+.adm-banner .abx.blue .ab-stat b{color:var(--blue)}
 .tb{flex:1;background:none;border:none;color:var(--muted);padding:9px 0 11px;font-family:inherit;font-size:10px;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px}
 .tb .ti{font-size:19px;line-height:1}
 .tb.on{color:var(--txt)}
@@ -233,7 +246,7 @@ body{background:var(--bg);color:var(--txt);font-family:'Malgun Gothic','Apple SD
 .titem .tbtn{margin-top:5px;background:var(--blue);color:#fff;border:none;border-radius:9px;padding:6px 14px;font-size:12px;font-weight:800;font-family:inherit;cursor:pointer}
 .titem .tbtn:disabled{background:var(--muted);opacity:.6;cursor:not-allowed}
 .titem .tlock{font-size:10px;color:var(--warn);font-weight:700;margin-top:5px}
-.adm-body{padding:16px 18px 0}
+.adm-body{padding:16px 18px 90px}
 .adm-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px}
 .adm-card-t{font-size:15px;font-weight:800;margin-bottom:6px}
 .adm-desc{font-size:12px;color:var(--txt2);line-height:1.5;margin-bottom:16px}
@@ -457,6 +470,9 @@ body{background:var(--bg);color:var(--txt);font-family:'Malgun Gothic','Apple SD
     <div class="tlist" id="adm-tlist"></div>
     <div style="height:40px"></div>
   </div>
+
+  <!-- 하단 플로팅 배너 (로그인 후 표시) -->
+  <div class="adm-banner" id="adm-banner" style="display:none"></div>
 </div>
 
 <script>
@@ -540,7 +556,7 @@ function releasedPlayers(){return D.players.filter(p=>p.status==='released'&&!p.
 function teamRank(team,name){const arr=activePlayers(team).slice().sort((a,b)=>b.totalAllowance-a.totalAllowance);return arr.findIndex(p=>p.name===name)+1;}
 function winBonus(team){const w=D.matches.filter(m=>team==='red'?m.winner==='red':m.winner==='blue').length;const d=D.matches.filter(m=>m.winner==='draw').length;return{w,d,bonus:w*WIN_BONUS+d*DRAW_BONUS};}
 
-function renderAll(){if(!D)return;buildPicker();renderMe();setLineTeam(lineTeam);renderClub();setRankTeam(rankTeam);renderMatches();}
+function renderAll(){if(!D)return;buildPicker();renderMe();setLineTeam(lineTeam);renderClub();setRankTeam(rankTeam);renderMatches();if(document.getElementById('adm-banner').style.display!=='none')renderBanner();}
 
 function buildPicker(){
   const sel=document.getElementById('sel');
@@ -658,7 +674,28 @@ let admRole=null, admPw='', admTeam='red', admRound=1, admState={};
 const QUICK=[1000,2000,3000,4000];
 
 function openAdmin(){document.getElementById('admin').style.display='block';}
-function closeAdmin(){document.getElementById('admin').style.display='none';}
+function closeAdmin(){document.getElementById('admin').style.display='none';document.getElementById('adm-banner').style.display='none';}
+// 하단 플로팅 배너: 운영자는 양팀, 주장은 자기팀
+function renderBanner(){
+  if(!D)return;
+  const box=document.getElementById('adm-banner');
+  const teams = admRole==='operator' ? ['red','blue'] : [admRole];
+  box.innerHTML = teams.map(t=>{
+    const info=D.teamInfo&&D.teamInfo[t]||{};
+    const players=activePlayers(t);
+    const cap=players.find(p=>p.role==='팀장');
+    const capName=cap?cap.name:(info.leaderName||'-');
+    const viceName=VICE[t]||'-';
+    const avail=info.availFunds||0;
+    const emoji=t==='red'?'🔴':'🔵';
+    const teamNm=t==='red'?'레드':'블루';
+    return `<div class="abx ${t}">
+      <div class="ab-top"><span>${emoji}</span><span class="ab-nm">${teamNm}</span></div>
+      <div class="ab-cap">C ${capName} · V ${viceName}</div>
+      <div class="ab-stat"><span>👥 <b>${players.length}</b></span><span>💰 <b>${fmt(avail)}</b></span></div>
+    </div>`;
+  }).join('');
+}
 
 async function adminLogin(){
   const pw=document.getElementById('adm-pw').value.trim();
@@ -680,6 +717,8 @@ async function adminLogin(){
     else{badge.className='adm-badge blue';badge.textContent='🔵 블루 주장';}
     document.getElementById('adm-login').style.display='none';
     document.getElementById('adm-menu').style.display='flex';
+    document.getElementById('adm-banner').style.display='flex';
+    renderBanner();
     admMenu('match');
   }catch(e){
     msg.className='adm-msg err';msg.textContent=e.message||'로그인 실패';
