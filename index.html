@@ -627,16 +627,38 @@ const QUICK=[1000,2000,3000,4000];
 function openAdmin(){document.getElementById('admin').style.display='block';}
 function closeAdmin(){document.getElementById('admin').style.display='none';}
 
-function adminLogin(){
+async function adminLogin(){
   const pw=document.getElementById('adm-pw').value.trim();
+  const msg=document.getElementById('adm-login-msg');
   if(!pw){return;}
-  admPw=pw;
-  document.getElementById('adm-login').style.display='none';
-  document.getElementById('adm-menu').style.display='flex';
-  admMenu('match');
+  msg.className='adm-msg';msg.textContent='확인 중…';
+  try{
+    const sep=URL.includes('?')?'&':'?';
+    const res=await fetch(URL+sep+'action=login&password='+encodeURIComponent(pw));
+    const j=await res.json();
+    if(!j.ok||!j.role)throw new Error('비밀번호가 틀렸어요');
+    admPw=pw; admRole=j.role;
+    msg.textContent='';
+    document.getElementById('adm-pw').value='';
+    // 권한 뱃지
+    const badge=document.getElementById('adm-badge');
+    if(j.role==='operator'){badge.className='adm-badge op';badge.textContent='운영자';}
+    else if(j.role==='red'){badge.className='adm-badge red';badge.textContent='🔴 레드 주장';}
+    else{badge.className='adm-badge blue';badge.textContent='🔵 블루 주장';}
+    document.getElementById('adm-login').style.display='none';
+    document.getElementById('adm-menu').style.display='flex';
+    admMenu('match');
+  }catch(e){
+    msg.className='adm-msg err';msg.textContent=e.message||'로그인 실패';
+  }
 }
 
 function admMenu(m){
+  // 경기 등록은 운영자만
+  if(m==='match' && admRole!=='operator'){
+    alert('경기 등록은 운영자만 가능해요.');
+    m='allowance';
+  }
   document.querySelectorAll('#adm-menu button').forEach(b=>b.classList.toggle('on',b.dataset.m===m));
   document.getElementById('adm-main').style.display=m==='allowance'?'block':'none';
   document.getElementById('adm-match').style.display=m==='match'?'block':'none';
@@ -646,9 +668,10 @@ function admMenu(m){
   saveBtn.style.display=m==='roster'?'none':'block';
   saveBtn.setAttribute('data-mode',m);
   document.getElementById('adm-summary').style.display=m==='allowance'?'block':'none';
-  if(m==='allowance'){ admSetTeam(admTeam); }
+  const fixTeam=admRole==='red'?'red':admRole==='blue'?'blue':null;
+  if(m==='allowance'){ admSetTeam(fixTeam||admTeam); }
   else if(m==='match'){ initMatchForm(); }
-  else if(m==='roster'){ admRSetTeam('red'); }
+  else if(m==='roster'){ admRSetTeam(fixTeam||'red'); }
 }
 
 function admSetTeam(t){
