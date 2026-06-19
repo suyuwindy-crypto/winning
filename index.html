@@ -213,6 +213,22 @@ body{background:var(--bg);color:var(--txt);font-family:'Malgun Gothic','Apple SD
 .ritem .rtag{font-size:10px;font-weight:800;padding:2px 8px;border-radius:999px}
 .ritem .rtag.cap{background:var(--gold);color:#3a2b00}
 .ritem .rtag.new{background:rgba(34,184,92,.18);color:#4FE08A}
+/* 트레이드 */
+.info-trade{margin:0 18px 12px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:10px}
+.info-trade .it-l{font-size:11px;color:var(--txt2);font-weight:700}
+.info-trade .it-v{font-family:'Oswald';font-weight:700;font-size:18px;margin-left:auto;color:var(--grass)}
+.tlist{padding:0 18px}
+.titem{display:flex;align-items:center;gap:11px;background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:12px 14px;margin-bottom:8px}
+.titem.locked{opacity:.55}
+.titem .tnm{flex:1;min-width:0}
+.titem .tn{font-size:14px;font-weight:800}
+.titem .tn .tp{font-family:'Oswald';font-size:10px;color:var(--muted);background:var(--bg2);padding:2px 6px;border-radius:5px;margin-left:6px}
+.titem .tsub{font-size:11px;color:var(--muted);margin-top:3px}
+.titem .tprice{text-align:right;flex-shrink:0}
+.titem .tpv{font-family:'Oswald';font-weight:700;font-size:16px;color:var(--gold)}
+.titem .tbtn{margin-top:5px;background:var(--blue);color:#fff;border:none;border-radius:9px;padding:6px 14px;font-size:12px;font-weight:800;font-family:inherit;cursor:pointer}
+.titem .tbtn:disabled{background:var(--muted);opacity:.6;cursor:not-allowed}
+.titem .tlock{font-size:10px;color:var(--warn);font-weight:700;margin-top:5px}
 .adm-body{padding:16px 18px 0}
 .adm-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px}
 .adm-card-t{font-size:15px;font-weight:800;margin-bottom:6px}
@@ -363,6 +379,7 @@ body{background:var(--bg);color:var(--txt);font-family:'Malgun Gothic','Apple SD
     <button class="on" data-m="match" onclick="admMenu('match')">⚽ 경기</button>
     <button data-m="allowance" onclick="admMenu('allowance')">💰 수당</button>
     <button data-m="roster" onclick="admMenu('roster')">👥 선수</button>
+    <button data-m="trade" onclick="admMenu('trade')">🔄 영입</button>
   </div>
 
   <!-- 수당 입력 -->
@@ -424,6 +441,15 @@ body{background:var(--bg);color:var(--txt);font-family:'Malgun Gothic','Apple SD
     <div class="hint">💡 이름만 넣으면 해당 팀 명단에 추가돼요. 포지션·사진은 나중에 시트에서 채울 수 있어요.</div>
     <div class="sec" style="margin:16px 18px 11px;color:var(--txt)">현재 명단 <span id="adm-r-count" style="color:var(--muted);font-weight:700"></span></div>
     <div class="rlist" id="adm-rlist"></div>
+    <div style="height:40px"></div>
+  </div>
+
+  <!-- 트레이드(바이아웃) -->
+  <div id="adm-trade" class="adm-body" style="display:none">
+    <div class="info-trade" id="adm-t-myteam"></div>
+    <div class="hint">💰 바이아웃: 상대팀 선수를 <b>평균 수당 ×3</b>(100원 올림)에 즉시 영입. 주장·부주장은 영입 불가, 7일에 1명, 영입 후 2경기 보호.</div>
+    <div class="sec" style="margin:16px 18px 11px;color:var(--txt)">상대팀 선수 <span id="adm-t-oppname" style="color:var(--muted);font-weight:700"></span></div>
+    <div class="tlist" id="adm-tlist"></div>
     <div style="height:40px"></div>
   </div>
 </div>
@@ -663,15 +689,17 @@ function admMenu(m){
   document.getElementById('adm-main').style.display=m==='allowance'?'block':'none';
   document.getElementById('adm-match').style.display=m==='match'?'block':'none';
   document.getElementById('adm-roster').style.display=m==='roster'?'block':'none';
-  // 상단 저장버튼: 선수관리는 자체 추가버튼 쓰므로 숨김
+  document.getElementById('adm-trade').style.display=m==='trade'?'block':'none';
+  // 상단 저장버튼: 선수관리·영입은 자체 버튼 쓰므로 숨김
   const saveBtn=document.getElementById('adm-save');
-  saveBtn.style.display=m==='roster'?'none':'block';
+  saveBtn.style.display=(m==='roster'||m==='trade')?'none':'block';
   saveBtn.setAttribute('data-mode',m);
   document.getElementById('adm-summary').style.display=m==='allowance'?'block':'none';
   const fixTeam=admRole==='red'?'red':admRole==='blue'?'blue':null;
   if(m==='allowance'){ admSetTeam(fixTeam||admTeam); }
   else if(m==='match'){ initMatchForm(); }
   else if(m==='roster'){ admRSetTeam(fixTeam||'red'); }
+  else if(m==='trade'){ renderTrade(fixTeam||'red'); }
 }
 
 function admSetTeam(t){
@@ -914,6 +942,51 @@ async function addPlayer(){
     setTimeout(()=>{load();setTimeout(renderRoster,800);},1000);
   }catch(e){
     msg.className='adm-msg err';msg.textContent='실패: '+e.message;
+  }
+}
+
+// ===== 트레이드(바이아웃) =====
+function buyoutPrice(p){
+  if(!p.participated) return 0;
+  const avg=p.totalAllowance/p.participated;
+  return Math.ceil(avg*3/100)*100;  // ×3, 100원 올림
+}
+function renderTrade(myTeam){
+  const oppTeam=myTeam==='red'?'blue':'red';
+  const myAvail=(D.teamInfo&&D.teamInfo[myTeam]&&D.teamInfo[myTeam].availFunds)||0;
+  document.getElementById('adm-t-myteam').innerHTML=
+    `<span class="it-l">${myTeam==='red'?'🔴 레드':'🔵 블루'} (우리 팀) 가용자금</span><span class="it-v">${fmt(myAvail)} BRO</span>`;
+  document.getElementById('adm-t-oppname').textContent=`(${oppTeam==='red'?'🔴 레드':'🔵 블루'})`;
+  const targets=activePlayers(oppTeam).filter(p=>p.role!=='팀장'&&VICE[oppTeam]!==p.name);
+  document.getElementById('adm-tlist').innerHTML=targets.map(p=>{
+    const price=buyoutPrice(p);
+    const canAfford=myAvail>=price && price>0;
+    let lock='';
+    if(price===0) lock='출전 기록 없음';
+    else if(!canAfford) lock='자금 부족';
+    const avg=p.participated?Math.round(p.totalAllowance/p.participated):0;
+    return `<div class="titem ${(!canAfford||price===0)?'locked':''}">
+      <div class="tnm"><div class="tn">${p.name}<span class="tp">${p.position||'-'}</span></div>
+        <div class="tsub">MV ${fmt(p.totalAllowance)} · 출전 ${p.participated} · 평균 ${fmt(avg)}</div></div>
+      <div class="tprice"><div class="tpv">${price>0?fmt(price):'—'}</div>
+        ${(canAfford&&price>0)
+          ? `<button class="tbtn" onclick="doBuyout('${myTeam}','${oppTeam}','${p.name.replace(/'/g,"\\'")}',${price})">영입</button>`
+          : `<div class="tlock">${lock}</div>`}
+      </div></div>`;
+  }).join('')||'<div class="foot">영입 가능한 선수가 없어요</div>';
+}
+async function doBuyout(myTeam,oppTeam,name,price){
+  if(!confirm(`${name} 선수를 ${fmt(price)} BRO에 영입할까요?\n\n· 7일 내 추가 영입 불가\n· 영입 후 2경기 보호`))return;
+  try{
+    const params=new URLSearchParams({action:'buyout',password:admPw,buyer:myTeam,seller:oppTeam,name,price});
+    const sep=URL.includes('?')?'&':'?';
+    const res=await fetch(URL+sep+params.toString());
+    const j=await res.json();
+    if(!j.ok)throw new Error(j.error||'영입 실패');
+    alert(`✓ ${name} 영입 완료!\n${fmt(price)} BRO 지급`);
+    load();setTimeout(()=>renderTrade(myTeam),1000);
+  }catch(e){
+    alert('영입 실패: '+e.message);
   }
 }
 </script>
