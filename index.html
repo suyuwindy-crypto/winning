@@ -9,10 +9,11 @@
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#0B0E16;--bg2:#121726;--panel:#161C2C;--panel2:#1C2438;
-  --line:rgba(255,255,255,0.08);
-  --txt:#EEF2F8;--txt2:#9AA5BC;--muted:#5C6680;
-  --red:#FF4133;--blue:#2D8CFF;--grass:#22B85C;--warn:#FFB020;--gold:#FFD24A;
+  --bg:#070A10;--bg2:#0E131D;--panel:#131925;--panel2:#1A2230;
+  --line:rgba(255,255,255,0.07);--line2:rgba(255,255,255,0.12);
+  --txt:#F2F5FA;--txt2:#9AA5BC;--muted:#5C6680;
+  --red:#FF4D4D;--blue:#3D8BFF;--grass:#C6F432;--warn:#FFB020;--gold:#FFD24A;
+  --lime:#C6F432;--lime-dim:rgba(198,244,50,.14);--lime-glow:rgba(198,244,50,.35);
 }
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:var(--bg);color:var(--txt);font-family:'Malgun Gothic','Apple SD Gothic Neo',-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
@@ -163,7 +164,7 @@ body{background:var(--bg);color:var(--txt);font-family:'Malgun Gothic','Apple SD
 .err-box{margin:30px 18px;background:rgba(255,65,51,.1);border:1px solid rgba(255,65,51,.3);border-radius:16px;padding:26px;text-align:center;color:#FF6A5E}
 .foot{text-align:center;color:var(--muted);font-size:11px;padding:20px 18px 12px;line-height:1.6}
 
-.tabbar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:440px;display:flex;background:rgba(13,17,27,.92);backdrop-filter:blur(16px);border-top:1px solid var(--line);z-index:30}
+.tabbar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:440px;display:flex;background:rgba(7,10,16,.94);backdrop-filter:blur(18px);border-top:1px solid var(--line);z-index:30;padding-bottom:env(safe-area-inset-bottom,0px)}
 /* 장부 표 */
 .ledger-summary{display:flex;gap:8px;padding:0 14px 10px}
 .ledger-summary .ls-box{flex:1;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 10px;text-align:center}
@@ -197,8 +198,8 @@ body{background:var(--bg);color:var(--txt);font-family:'Malgun Gothic','Apple SD
 .adm-banner .abx.blue .ab-stat b{color:var(--blue)}
 .tb{flex:1;background:none;border:none;color:var(--muted);padding:9px 0 11px;font-family:inherit;font-size:10px;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px}
 .tb .ti{font-size:19px;line-height:1}
-.tb.on{color:var(--txt)}
-.tb.on .ti{filter:drop-shadow(0 0 8px rgba(255,210,74,.5))}
+.tb.on{color:var(--lime)}
+.tb.on .ti{filter:drop-shadow(0 0 8px var(--lime-glow))}
 
 /* ===== 어드민 ===== */
 #admin{position:fixed;inset:0;background:var(--bg);z-index:200;max-width:440px;margin:0 auto;overflow-y:auto}
@@ -506,7 +507,7 @@ body{background:var(--bg);color:var(--txt);font-family:'Malgun Gothic','Apple SD
     <div class="hint">💡 이름만 넣으면 해당 팀 명단에 추가돼요. 포지션·사진은 나중에 시트에서 채울 수 있어요.</div>
     <div class="rcln-row">
       <div class="sec" style="margin:0;color:var(--txt)">현재 명단 <span id="adm-r-count" style="color:var(--muted);font-weight:700"></span></div>
-      <button class="rcln-btn" onclick="cleanRoster()">🧹 명단 정리</button>
+      <button class="rcln-btn" id="adm-cln-btn" onclick="cleanRoster()" style="display:none">🧹 명단 정리</button>
     </div>
     <div class="hint" style="margin-top:0">최근 3경기 연속 결장(수당 0) 선수를 방출해요. 주장·부주장 제외.</div>
     <div class="rlist" id="adm-rlist"></div>
@@ -613,7 +614,7 @@ function releasedPlayers(){return D.players.filter(p=>p.status==='released'&&!p.
 function teamRank(team,name){const arr=activePlayers(team).slice().sort((a,b)=>b.totalAllowance-a.totalAllowance);return arr.findIndex(p=>p.name===name)+1;}
 function winBonus(team){const w=D.matches.filter(m=>team==='red'?m.winner==='red':m.winner==='blue').length;const d=D.matches.filter(m=>m.winner==='draw').length;return{w,d,bonus:w*WIN_BONUS+d*DRAW_BONUS};}
 
-function renderAll(){if(!D)return;buildPicker();renderMe();setLineTeam(lineTeam);renderClub();setRankTeam(rankTeam);renderMatches();if(document.getElementById('adm-banner').style.display!=='none')renderBanner();}
+function renderAll(){if(!D)return;buildPicker();renderMe();setLineTeam(lineTeam);renderClub();setRankTeam(rankTeam);renderMatches();if(document.getElementById('p-ledger').classList.contains('on'))renderLedger();if(document.getElementById('adm-banner').style.display!=='none')renderBanner();}
 
 function buildPicker(){
   const sel=document.getElementById('sel');
@@ -724,7 +725,58 @@ function renderMatches(){
   }).join('')||'<div class="foot">경기 기록 없음</div>';
 }
 
-function sw(btn){document.querySelectorAll('.tb').forEach(t=>t.classList.remove('on'));document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));btn.classList.add('on');document.getElementById('p-'+btn.dataset.p).classList.add('on');}
+function sw(btn){document.querySelectorAll('.tb').forEach(t=>t.classList.remove('on'));document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));btn.classList.add('on');document.getElementById('p-'+btn.dataset.p).classList.add('on');if(btn.dataset.p==='ledger')renderLedger();}
+
+// ===== 장부 (가로 스크롤 격자) =====
+let ledgerTeam='red';
+function setLedgerTeam(t){ledgerTeam=t;document.querySelectorAll('#ttog-ledger button').forEach(b=>b.className=b.dataset.t===t?('on '+t):'');renderLedger();}
+function renderLedger(){
+  if(!D)return;
+  const team=ledgerTeam;
+  const players=activePlayers(team);
+  const rounds=D.matches.map(m=>m.round);  // 라운드 번호 배열
+  const info=(D.teamInfo&&D.teamInfo[team])||{};
+
+  // 요약: 총 MV, 평균연봉, 가용자금, 인원
+  const totMV=players.reduce((s,p)=>s+p.totalAllowance,0);
+  const totPart=players.reduce((s,p)=>s+p.participated,0);
+  const avgPay=totPart?Math.round(totMV/totPart):0;
+  document.getElementById('ledger-summary').innerHTML=
+    `<div class="ls-box"><div class="ls-l">인원</div><div class="ls-v">${players.length}</div></div>
+     <div class="ls-box"><div class="ls-l">총 MV</div><div class="ls-v" style="color:var(--gold)">${fmt(totMV)}</div></div>
+     <div class="ls-box"><div class="ls-l">평균연봉</div><div class="ls-v" style="color:var(--txt2)">${fmt(avgPay)}</div></div>
+     <div class="ls-box"><div class="ls-l">가용자금</div><div class="ls-v" style="color:var(--grass)">${fmt(info.availFunds||0)}</div></div>`;
+
+  // 헤더
+  let head='<tr><th class="c-name">선수</th>';
+  rounds.forEach(r=>{ head+=`<th class="rd-h">R${r}</th>`; });
+  head+='<th>MV</th><th>출전</th><th>평균</th></tr>';
+
+  // 본문
+  let body='';
+  players.forEach(p=>{
+    const isCap=p.role==='팀장', isVice=VICE[p.team]===p.name;
+    const mark=isCap?' 🅒':isVice?' Ⓥ':'';
+    body+=`<tr class="${isCap?'cap-row':''}"><td class="c-name">${p.name}${mark}</td>`;
+    rounds.forEach((r,idx)=>{
+      const v=(p.allowances&&p.allowances[idx])||0;
+      body+= v>0 ? `<td class="paid">${fmt(v)}</td>` : `<td class="zero">·</td>`;
+    });
+    const avg=p.participated?Math.round(p.totalAllowance/p.participated):0;
+    body+=`<td class="c-mv">${fmt(p.totalAllowance)}</td><td class="c-num">${p.participated}</td><td class="c-num">${fmt(avg)}</td></tr>`;
+  });
+
+  // 합계 행
+  let foot='<tr><td class="c-name">합계</td>';
+  rounds.forEach((r,idx)=>{
+    const sum=players.reduce((s,p)=>s+((p.allowances&&p.allowances[idx])||0),0);
+    foot+=`<td>${sum>0?fmt(sum):'·'}</td>`;
+  });
+  foot+=`<td>${fmt(totMV)}</td><td>-</td><td>${fmt(avgPay)}</td></tr>`;
+
+  document.getElementById('ledger-wrap').innerHTML=
+    `<table class="ledger"><thead>${head}</thead><tbody>${body}</tbody><tfoot>${foot}</tfoot></table>`;
+}
 
 // ===== 어드민 =====
 let admRole=null, admPw='', admTeam='red', admRound=1, admState={};
@@ -1030,6 +1082,7 @@ function admRSetTeam(t){
 function renderRoster(){
   const players=activePlayers(rTeam);
   document.getElementById('adm-r-count').textContent='('+players.length+'명)';
+  document.getElementById('adm-cln-btn').style.display=(admRole==='operator')?'block':'none';
   const N=ABSENCE_LIMIT;
   document.getElementById('adm-rlist').innerHTML=players.map(p=>{
     const isCap=p.role==='팀장', isVice=VICE[p.team]===p.name;
