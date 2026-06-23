@@ -88,6 +88,7 @@ body{background:var(--bg);color:var(--txt);font-family:'Malgun Gothic','Apple SD
 .status.safe .st-t{color:#4FE08A}.status.warn .st-t{color:var(--warn)}.status.danger .st-t{color:var(--red)}
 
 .sec{font-size:13px;font-weight:800;color:var(--txt);margin:24px 18px 11px;letter-spacing:.02em;display:flex;align-items:center;gap:7px}
+.sec::before{content:'';width:3px;height:13px;background:var(--lime);border-radius:2px;flex-shrink:0}
 .sec .tag{font-size:10px;color:var(--muted);font-weight:700;margin-left:auto}
 .rounds{display:flex;gap:6px;padding:0 18px;overflow-x:auto;scrollbar-width:none}
 .rounds::-webkit-scrollbar{display:none}
@@ -98,9 +99,9 @@ body{background:var(--bg);color:var(--txt);font-family:'Malgun Gothic','Apple SD
 .chip.out .cv{color:var(--muted);font-size:14px}
 
 .ttog{display:flex;gap:8px;padding:4px 18px 14px}
-.ttog button{flex:1;padding:11px;border-radius:12px;border:1px solid var(--line);background:var(--panel);color:var(--txt2);font-weight:800;font-size:14px;font-family:inherit;cursor:pointer}
-.ttog button.on.red{background:rgba(255,65,51,.16);border-color:var(--red);color:#FF6A5E}
-.ttog button.on.blue{background:rgba(45,140,255,.16);border-color:var(--blue);color:#6AB0FF}
+.ttog button{flex:1;padding:11px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--txt2);font-weight:800;font-size:13.5px;font-family:inherit;cursor:pointer;transition:all .15s}
+.ttog button.on.red{background:rgba(255,77,77,.15);border-color:var(--red);color:#FF7A7A}
+.ttog button.on.blue{background:rgba(61,139,255,.15);border-color:var(--blue);color:#7AB0FF}
 
 .pitch-cap{display:flex;align-items:center;gap:8px;margin:0 18px 10px}
 .pitch-cap .lock{font-size:11px;font-weight:700;color:var(--muted);background:var(--bg2);border:1px solid var(--line);padding:5px 11px;border-radius:999px}
@@ -133,7 +134,7 @@ body{background:var(--bg);color:var(--txt);font-family:'Malgun Gothic','Apple SD
 .cv-side .cvsub{font-size:10px;color:var(--txt2);margin-top:7px;line-height:1.5}
 .cv-mid{display:flex;align-items:center;font-family:'Oswald';color:var(--muted);font-weight:700;font-size:13px}
 .rank-list{padding:0 18px}
-.rk{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:11px 14px;margin-bottom:8px}
+.rk{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 15px;margin-bottom:8px;transition:border-color .15s}
 .rk.me{border-color:var(--gold);background:rgba(255,210,74,.07)}
 .rk .pos{font-family:'Oswald';font-weight:700;font-size:18px;width:24px;text-align:center;color:var(--txt2)}
 .rk .pos.top{color:var(--gold)}
