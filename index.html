@@ -164,6 +164,24 @@ body{background:var(--bg);color:var(--txt);font-family:'Malgun Gothic','Apple SD
 .foot{text-align:center;color:var(--muted);font-size:11px;padding:20px 18px 12px;line-height:1.6}
 
 .tabbar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:440px;display:flex;background:rgba(13,17,27,.92);backdrop-filter:blur(16px);border-top:1px solid var(--line);z-index:30}
+/* 장부 표 */
+.ledger-summary{display:flex;gap:8px;padding:0 14px 10px}
+.ledger-summary .ls-box{flex:1;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 10px;text-align:center}
+.ledger-summary .ls-l{font-size:9px;color:var(--muted);font-weight:700}
+.ledger-summary .ls-v{font-family:'Oswald';font-weight:700;font-size:15px;margin-top:2px}
+.ledger-wrap{margin:0 0 0 14px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.ledger{border-collapse:collapse;font-size:11px;white-space:nowrap}
+.ledger th,.ledger td{border:1px solid var(--line);padding:5px 7px;text-align:center}
+.ledger thead th{background:var(--bg2);color:var(--txt2);font-weight:700;font-size:10px;position:sticky;top:0}
+.ledger .c-name{position:sticky;left:0;z-index:2;background:var(--panel);text-align:left;font-weight:800;min-width:62px;box-shadow:1px 0 0 var(--line)}
+.ledger thead .c-name{z-index:3;background:var(--bg2)}
+.ledger .c-mv{font-family:'Oswald';font-weight:700;color:var(--gold)}
+.ledger .c-num{font-family:'Oswald';color:var(--txt2)}
+.ledger td.paid{color:var(--grass);font-family:'Oswald';font-weight:600}
+.ledger td.zero{color:var(--line)}
+.ledger tr.cap-row .c-name{color:var(--gold)}
+.ledger tfoot td{background:var(--bg2);font-family:'Oswald';font-weight:700;border-top:2px solid var(--line)}
+.ledger .rd-h{min-width:34px}
 /* 어드민 하단 플로팅 배너 */
 .adm-banner{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:440px;z-index:60;background:rgba(13,17,27,.94);backdrop-filter:blur(18px);border-top:2px solid var(--line);padding:11px 16px calc(11px + env(safe-area-inset-bottom,0px));display:flex;gap:12px}
 .adm-banner .abx{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;border-radius:11px;padding:9px 12px;border:1px solid var(--line);background:var(--panel)}
@@ -230,22 +248,41 @@ body{background:var(--bg);color:var(--txt);font-family:'Malgun Gothic','Apple SD
 .ritem .rbtn.out{background:rgba(255,65,51,.16);color:var(--red)}
 .ritem .rbtn.red{background:var(--red);color:#fff}
 .ritem .rbtn.blue{background:var(--blue);color:#fff}
+/* 명단 정리 */
+.rcln-row{display:flex;align-items:center;justify-content:space-between;margin:16px 18px 4px}
+.rcln-btn{background:rgba(255,176,32,.16);color:var(--gold);border:1px solid rgba(255,176,32,.35);border-radius:9px;padding:6px 12px;font-size:12px;font-weight:800;font-family:inherit;cursor:pointer}
+/* 출결 점 */
+.ritem .att{display:flex;gap:3px;align-items:center;margin-left:auto;margin-right:4px}
+.ritem .att .dot{width:8px;height:8px;border-radius:50%;background:var(--line)}
+.ritem .att .dot.on{background:var(--grass)}
+.ritem .att .dot.miss{background:rgba(255,65,51,.5)}
+.ritem.danger-row{border-color:rgba(255,65,51,.45);background:rgba(255,65,51,.06)}
+.ritem .rbtn.out{background:rgba(255,65,51,.16);color:var(--red)}
 /* 트레이드 */
-.info-trade{margin:0 18px 12px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:10px}
+.info-trade{margin:0 18px 12px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 14px;display:flex;align-items:center;gap:10px}
 .info-trade .it-l{font-size:11px;color:var(--txt2);font-weight:700}
-.info-trade .it-v{font-family:'Oswald';font-weight:700;font-size:18px;margin-left:auto;color:var(--grass)}
+.info-trade .it-v{font-family:'Oswald';font-weight:700;font-size:17px;margin-left:auto;color:var(--grass)}
+.seg-row{padding:0 18px;margin-bottom:8px}
+.sec2{font-size:12px;font-weight:800;color:var(--txt)}
+.sec2 span{color:var(--muted);font-weight:700;font-size:11px;margin-left:3px}
 .tlist{padding:0 18px}
-.titem{display:flex;align-items:center;gap:11px;background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:12px 14px;margin-bottom:8px}
-.titem.locked{opacity:.55}
+/* 컴팩트 행 */
+.titem{display:flex;align-items:center;gap:9px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:7px 11px;margin-bottom:5px}
+.titem.locked{opacity:.5}
+.titem.danger{border-color:rgba(255,65,51,.5);background:rgba(255,65,51,.07)}
 .titem .tnm{flex:1;min-width:0}
-.titem .tn{font-size:14px;font-weight:800}
-.titem .tn .tp{font-family:'Oswald';font-size:10px;color:var(--muted);background:var(--bg2);padding:2px 6px;border-radius:5px;margin-left:6px}
-.titem .tsub{font-size:11px;color:var(--muted);margin-top:3px}
-.titem .tprice{text-align:right;flex-shrink:0}
-.titem .tpv{font-family:'Oswald';font-weight:700;font-size:16px;color:var(--gold)}
-.titem .tbtn{margin-top:5px;background:var(--blue);color:#fff;border:none;border-radius:9px;padding:6px 14px;font-size:12px;font-weight:800;font-family:inherit;cursor:pointer}
-.titem .tbtn:disabled{background:var(--muted);opacity:.6;cursor:not-allowed}
-.titem .tlock{font-size:10px;color:var(--warn);font-weight:700;margin-top:5px}
+.titem .tn{font-size:13px;font-weight:800;display:flex;align-items:center;gap:5px}
+.titem .tn .tp{font-family:'Oswald';font-size:9px;color:var(--muted);background:var(--bg2);padding:1px 5px;border-radius:4px}
+.titem .tsub{font-size:10px;color:var(--muted);margin-top:1px}
+.titem .tprice{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.titem .tpv{font-family:'Oswald';font-weight:700;font-size:15px;color:var(--gold);text-align:right;line-height:1}
+.titem .tpv small{display:block;font-size:8px;color:var(--muted);font-weight:600;font-family:inherit}
+.titem .tbtn{background:var(--blue);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:11px;font-weight:800;font-family:inherit;cursor:pointer;flex-shrink:0}
+.titem .tlock{font-size:9px;color:var(--muted);font-weight:700;flex-shrink:0;text-align:right;max-width:64px}
+.titem .tbadge{font-size:9px;font-weight:800;padding:2px 7px;border-radius:999px;flex-shrink:0}
+.titem .tbadge.safe{background:rgba(34,184,92,.16);color:#4FE08A}
+.titem .tbadge.risk{background:rgba(255,65,51,.18);color:var(--red)}
+.titem .tbadge.prot{background:var(--bg2);color:var(--muted)}
 .adm-body{padding:16px 18px 90px}
 .adm-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px}
 .adm-card-t{font-size:15px;font-weight:800;margin-bottom:6px}
@@ -362,10 +399,21 @@ body{background:var(--bg);color:var(--txt);font-family:'Malgun Gothic','Apple SD
     <div class="matches" id="matches"></div>
   </div>
 
+  <div class="page" id="p-ledger">
+    <div class="ttog" id="ttog-ledger" style="padding-top:14px">
+      <button class="on red" data-t="red" onclick="setLedgerTeam('red')">🔴 레드</button>
+      <button data-t="blue" onclick="setLedgerTeam('blue')">🔵 블루</button>
+    </div>
+    <div class="ledger-summary" id="ledger-summary"></div>
+    <div class="ledger-wrap" id="ledger-wrap"></div>
+    <div class="foot">← → 가로로 넘겨 라운드별 수당 확인</div>
+  </div>
+
   <div class="tabbar">
     <button class="tb on" data-p="me" onclick="sw(this)"><span class="ti">👤</span>나</button>
     <button class="tb" data-p="line" onclick="sw(this)"><span class="ti">⚽</span>라인업</button>
     <button class="tb" data-p="rank" onclick="sw(this)"><span class="ti">🏆</span>랭킹</button>
+    <button class="tb" data-p="ledger" onclick="sw(this)"><span class="ti">📊</span>장부</button>
     <button class="tb" data-p="match" onclick="sw(this)"><span class="ti">📋</span>경기</button>
   </div>
 </div>
@@ -456,7 +504,11 @@ body{background:var(--bg);color:var(--txt);font-family:'Malgun Gothic','Apple SD
       <div class="adm-msg" id="adm-r-msg" style="text-align:left"></div>
     </div>
     <div class="hint">💡 이름만 넣으면 해당 팀 명단에 추가돼요. 포지션·사진은 나중에 시트에서 채울 수 있어요.</div>
-    <div class="sec" style="margin:16px 18px 11px;color:var(--txt)">현재 명단 <span id="adm-r-count" style="color:var(--muted);font-weight:700"></span></div>
+    <div class="rcln-row">
+      <div class="sec" style="margin:0;color:var(--txt)">현재 명단 <span id="adm-r-count" style="color:var(--muted);font-weight:700"></span></div>
+      <button class="rcln-btn" onclick="cleanRoster()">🧹 명단 정리</button>
+    </div>
+    <div class="hint" style="margin-top:0">최근 3경기 연속 결장(수당 0) 선수를 방출해요. 주장·부주장 제외.</div>
     <div class="rlist" id="adm-rlist"></div>
     <div id="adm-free-host"></div>
     <div style="height:40px"></div>
@@ -465,10 +517,15 @@ body{background:var(--bg);color:var(--txt);font-family:'Malgun Gothic','Apple SD
   <!-- 트레이드(바이아웃) -->
   <div id="adm-trade" class="adm-body" style="display:none">
     <div class="info-trade" id="adm-t-myteam"></div>
-    <div class="hint">💰 바이아웃: 상대팀 선수를 <b>평균 수당 ×3</b>(100원 올림)에 즉시 영입. 주장·부주장은 영입 불가, 7일에 1명, 영입 후 2경기 보호.</div>
-    <div class="sec" style="margin:16px 18px 11px;color:var(--txt)">상대팀 선수 <span id="adm-t-oppname" style="color:var(--muted);font-weight:700"></span></div>
+    <div class="seg-row">
+      <div class="sec2">⚠️ 우리 팀 위험 <span id="adm-t-riskcnt"></span></div>
+    </div>
+    <div class="tlist" id="adm-t-mine"></div>
+    <div class="seg-row" style="margin-top:14px">
+      <div class="sec2">💸 영입 대상 <span id="adm-t-oppname"></span></div>
+    </div>
     <div class="tlist" id="adm-tlist"></div>
-    <div style="height:40px"></div>
+    <div style="height:20px"></div>
   </div>
 
   <!-- 하단 플로팅 배너 (로그인 후 표시) -->
@@ -973,10 +1030,22 @@ function admRSetTeam(t){
 function renderRoster(){
   const players=activePlayers(rTeam);
   document.getElementById('adm-r-count').textContent='('+players.length+'명)';
+  const N=ABSENCE_LIMIT;
   document.getElementById('adm-rlist').innerHTML=players.map(p=>{
     const isCap=p.role==='팀장', isVice=VICE[p.team]===p.name;
     const tag=isCap?'<span class="rtag cap">주장</span>':isVice?'<span class="rtag cap">부주장</span>':'';
-    return `<div class="ritem"><div class="rnm">${p.name}${p.position?`<span class="rp">${p.position}</span>`:''}</div>${tag}</div>`;
+    // 최근 N경기 출결 (수당>0 = 출전)
+    const a=p.allowances||[];
+    const recent=a.slice(-N);
+    while(recent.length<N) recent.unshift(0);  // 경기 수 부족하면 결장 취급
+    const dots=recent.map(v=>`<span class="dot ${v>0?'on':'miss'}"></span>`).join('');
+    const allMiss=recent.every(v=>!v);
+    const danger=allMiss && !isCap && !isVice;  // 방출 대상
+    // 버튼: 주장·부주장 빼고 방출 가능
+    const btn=(isCap||isVice)?'':`<button class="rbtn out" onclick="manualRelease('${rTeam}','${p.name.replace(/'/g,"\\'")}')">방출</button>`;
+    return `<div class="ritem ${danger?'danger-row':''}">
+      <div class="rnm">${p.name}${p.position?`<span class="rp">${p.position}</span>`:''}</div>
+      ${tag}<div class="att" title="최근 ${N}경기">${dots}</div>${btn}</div>`;
   }).join('')||'<div class="foot">선수 없음</div>';
 
   // 무소속 풀 (방출된 선수) — 팀 지정 복귀
@@ -1005,6 +1074,32 @@ async function recall(toTeam,name,fromTeam){
     alert(`✓ ${name} → ${tk} 복귀 완료`);
     load();setTimeout(renderRoster,900);
   }catch(e){alert('복귀 실패: '+e.message);}
+}
+// 개별 수동 방출
+async function manualRelease(team,name){
+  if(!confirm(`${name} 선수를 방출할까요?\n\n· 출전 명단에서 빠져요\n· 누적 수당(페이백)은 보존\n· 무소속 풀에서 복귀 가능`))return;
+  try{
+    const params=new URLSearchParams({action:'setRelease',password:admPw,team,name});
+    const sep=URL.includes('?')?'&':'?';
+    const res=await fetch(URL+sep+params.toString());
+    const j=await res.json();
+    if(!j.ok)throw new Error(j.error||'방출 실패');
+    load();setTimeout(renderRoster,900);
+  }catch(e){alert('방출 실패: '+e.message);}
+}
+// 명단 일괄 정리 (최근 3경기 연속 결장 방출)
+async function cleanRoster(){
+  if(!confirm(`최근 3경기 연속 결장(수당 0)한 선수를 모두 방출할까요?\n\n· 주장·부주장은 제외\n· 양 팀 전체 대상\n· 무소속 풀에서 복귀 가능`))return;
+  try{
+    const params=new URLSearchParams({action:'cleanRoster',password:admPw});
+    const sep=URL.includes('?')?'&':'?';
+    const res=await fetch(URL+sep+params.toString());
+    const j=await res.json();
+    if(!j.ok)throw new Error(j.error||'정리 실패');
+    const list=(j.released&&j.released.length)?j.released.join(', '):'없음';
+    alert(`✓ 명단 정리 완료\n방출: ${list}`);
+    load();setTimeout(renderRoster,900);
+  }catch(e){alert('정리 실패: '+e.message);}
 }
 async function addPlayer(){
   const name=document.getElementById('adm-r-name').value.trim();
@@ -1036,26 +1131,47 @@ function buyoutPrice(p){
 function renderTrade(myTeam){
   const oppTeam=myTeam==='red'?'blue':'red';
   const myAvail=(D.teamInfo&&D.teamInfo[myTeam]&&D.teamInfo[myTeam].availFunds)||0;
+  const oppAvail=(D.teamInfo&&D.teamInfo[oppTeam]&&D.teamInfo[oppTeam].availFunds)||0;
   document.getElementById('adm-t-myteam').innerHTML=
-    `<span class="it-l">${myTeam==='red'?'🔴 레드':'🔵 블루'} (우리 팀) 가용자금</span><span class="it-v">${fmt(myAvail)} BRO</span>`;
+    `<span class="it-l">${myTeam==='red'?'🔴 레드':'🔵 블루'} 가용</span><span class="it-v">${fmt(myAvail)}</span>`+
+    `<span class="it-l" style="margin-left:14px">${oppTeam==='red'?'🔴':'🔵'} 상대 가용</span><span class="it-v" style="color:var(--muted);margin-left:6px">${fmt(oppAvail)}</span>`;
+
+  // ── 우리 팀 위험 현황: 상대가 살 수 있나 ──
+  const mine=activePlayers(myTeam);
+  let riskN=0;
+  document.getElementById('adm-t-mine').innerHTML=mine.map(p=>{
+    const isCap=p.role==='팀장', isVice=VICE[myTeam]===p.name;
+    const avg=p.participated?Math.round(p.totalAllowance/p.participated):0;
+    const price=buyoutPrice(p);
+    let badge, danger=false;
+    if(isCap||isVice){ badge='<span class="tbadge prot">보호</span>'; }
+    else if(price===0){ badge='<span class="tbadge prot">기록없음</span>'; }
+    else if(oppAvail>=price){ badge='<span class="tbadge risk">위험</span>'; danger=true; riskN++; }
+    else{ badge='<span class="tbadge safe">안전</span>'; }
+    const pr=(isCap||isVice||price===0)?'':`<div class="tpv">${fmt(price)}<small>바이아웃가</small></div>`;
+    return `<div class="titem ${danger?'danger':''}">
+      <div class="tnm"><div class="tn">${p.name}${p.position?`<span class="tp">${p.position}</span>`:''}</div>
+        <div class="tsub">MV ${fmt(p.totalAllowance)} · 출전 ${p.participated} · 평균 ${fmt(avg)}</div></div>
+      <div class="tprice">${pr}${badge}</div></div>`;
+  }).join('')||'<div class="foot">선수 없음</div>';
+  document.getElementById('adm-t-riskcnt').textContent=riskN?`(${riskN}명 노출)`:'(안전)';
+
+  // ── 영입 대상: 상대 팀 ──
   document.getElementById('adm-t-oppname').textContent=`(${oppTeam==='red'?'🔴 레드':'🔵 블루'})`;
   const targets=activePlayers(oppTeam).filter(p=>p.role!=='팀장'&&VICE[oppTeam]!==p.name);
   document.getElementById('adm-tlist').innerHTML=targets.map(p=>{
     const price=buyoutPrice(p);
     const canAfford=myAvail>=price && price>0;
-    let lock='';
-    if(price===0) lock='출전 기록 없음';
-    else if(!canAfford) lock='자금 부족';
     const avg=p.participated?Math.round(p.totalAllowance/p.participated):0;
+    let right;
+    if(price===0) right='<div class="tlock">기록없음</div>';
+    else if(!canAfford) right='<div class="tlock">자금부족</div>';
+    else right=`<button class="tbtn" onclick="doBuyout('${myTeam}','${oppTeam}','${p.name.replace(/'/g,"\\'")}',${price})">${fmt(price)}</button>`;
     return `<div class="titem ${(!canAfford||price===0)?'locked':''}">
-      <div class="tnm"><div class="tn">${p.name}<span class="tp">${p.position||'-'}</span></div>
+      <div class="tnm"><div class="tn">${p.name}${p.position?`<span class="tp">${p.position}</span>`:''}</div>
         <div class="tsub">MV ${fmt(p.totalAllowance)} · 출전 ${p.participated} · 평균 ${fmt(avg)}</div></div>
-      <div class="tprice"><div class="tpv">${price>0?fmt(price):'—'}</div>
-        ${(canAfford&&price>0)
-          ? `<button class="tbtn" onclick="doBuyout('${myTeam}','${oppTeam}','${p.name.replace(/'/g,"\\'")}',${price})">바이아웃</button>`
-          : `<div class="tlock">${lock}</div>`}
-      </div></div>`;
-  }).join('')||'<div class="foot">바이아웃 가능한 선수가 없어요</div>';
+      <div class="tprice">${right}</div></div>`;
+  }).join('')||'<div class="foot">대상 없음</div>';
 }
 async function doBuyout(myTeam,oppTeam,name,price){
   if(!confirm(`${name} 선수를 ${fmt(price)} BRO에 바이아웃할까요?\n\n· 7일 내 추가 바이아웃 불가\n· 영입 후 2경기 보호`))return;
