@@ -88,7 +88,7 @@ body{background:var(--bg);color:var(--txt);font-family:'Pretendard','Inter',-app
 .status .st-d{font-size:11px;color:var(--txt2);margin-top:1px}
 .status.safe .st-t{color:#4FE08A}.status.warn .st-t{color:var(--warn)}.status.danger .st-t{color:var(--red)}
 
-.sec{font-size:13px;font-weight:800;color:var(--txt);margin:24px 18px 11px;letter-spacing:.02em;display:flex;align-items:center;gap:7px}
+.sec{font-size:13px;font-weight:800;color:var(--txt);margin:20px 18px 9px;letter-spacing:-0.01em;display:flex;align-items:center;gap:7px}
 .sec::before{content:'';width:3px;height:13px;background:var(--lime);border-radius:2px;flex-shrink:0}
 .sec .tag{font-size:10px;color:var(--muted);font-weight:700;margin-left:auto}
 .rounds{display:flex;gap:6px;padding:0 18px;overflow-x:auto;scrollbar-width:none}
@@ -134,9 +134,10 @@ body{background:var(--bg);color:var(--txt);font-family:'Pretendard','Inter',-app
 .cv-side .cvu{font-size:10px;color:var(--muted);margin-top:2px}
 .cv-side .cvsub{font-size:10px;color:var(--txt2);margin-top:7px;line-height:1.5}
 .cv-mid{display:flex;align-items:center;font-family:'Oswald';color:var(--muted);font-weight:700;font-size:13px}
-.rank-list{padding:0 18px}
-.rk{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 15px;margin-bottom:8px;transition:border-color .15s}
-.rk.me{border-color:var(--gold);background:rgba(255,210,74,.07)}
+.rank-list{margin:0 18px;background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.rk{display:flex;align-items:center;gap:12px;padding:11px 15px;border-bottom:1px solid var(--line);transition:background .15s}
+.rk:last-child{border-bottom:none}
+.rk.me{background:var(--lime-dim)}
 .rk .pos{font-family:'Oswald';font-weight:700;font-size:18px;width:24px;text-align:center;color:var(--txt2)}
 .rk .pos.top{color:var(--gold)}
 .rk .rname{font-size:14px;font-weight:800;flex:1}
@@ -240,8 +241,9 @@ body{background:var(--bg);color:var(--txt);font-family:'Pretendard','Inter',-app
 .gctl .gcount{font-family:'Oswald';font-weight:700;font-size:18px;min-width:20px;text-align:center}
 .gctl .gcount.zero{color:var(--muted)}
 /* 선수 관리 명단 */
-.rlist{padding:0 18px}
-.ritem{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:10px 13px;margin-bottom:7px}
+.rlist{margin:0 18px;background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.ritem{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line)}
+.ritem:last-child{border-bottom:none}
 .ritem .rnm{flex:1;font-size:14px;font-weight:700}
 .ritem .rnm .rp{font-family:'Oswald';font-size:10px;color:var(--muted);background:var(--bg2);padding:2px 6px;border-radius:5px;margin-left:6px}
 .ritem .rtag{font-size:10px;font-weight:800;padding:2px 8px;border-radius:999px}
@@ -259,7 +261,7 @@ body{background:var(--bg);color:var(--txt);font-family:'Pretendard','Inter',-app
 .ritem .att .dot{width:8px;height:8px;border-radius:50%;background:var(--line)}
 .ritem .att .dot.on{background:var(--grass)}
 .ritem .att .dot.miss{background:rgba(255,65,51,.5)}
-.ritem.danger-row{border-color:rgba(255,65,51,.45);background:rgba(255,65,51,.06)}
+.ritem.danger-row{background:rgba(255,77,77,.09)}
 .ritem .rbtn.out{background:rgba(255,65,51,.16);color:var(--red)}
 /* 트레이드 */
 .info-trade{margin:0 18px 12px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 14px;display:flex;align-items:center;gap:10px}
@@ -268,11 +270,12 @@ body{background:var(--bg);color:var(--txt);font-family:'Pretendard','Inter',-app
 .seg-row{padding:0 18px;margin-bottom:8px}
 .sec2{font-size:12px;font-weight:800;color:var(--txt)}
 .sec2 span{color:var(--muted);font-weight:700;font-size:11px;margin-left:3px}
-.tlist{padding:0 18px}
+.tlist{margin:0 18px;background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden}
 /* 컴팩트 행 */
-.titem{display:flex;align-items:center;gap:9px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:7px 11px;margin-bottom:5px}
+.titem{display:flex;align-items:center;gap:9px;padding:9px 13px;border-bottom:1px solid var(--line)}
+.titem:last-child{border-bottom:none}
 .titem.locked{opacity:.5}
-.titem.danger{border-color:rgba(255,65,51,.5);background:rgba(255,65,51,.07)}
+.titem.danger{background:rgba(255,77,77,.09)}
 .titem .tnm{flex:1;min-width:0}
 .titem .tn{font-size:13px;font-weight:800;display:flex;align-items:center;gap:5px}
 .titem .tn .tp{font-family:'Oswald';font-size:9px;color:var(--muted);background:var(--bg2);padding:1px 5px;border-radius:4px}
