@@ -186,11 +186,11 @@ body{background:var(--bg);color:var(--txt);font-family:'Pretendard','Inter',-app
 .ledger tfoot td{background:var(--bg2);font-family:'Oswald';font-weight:700;border-top:2px solid var(--line)}
 .ledger .rd-h{min-width:34px}
 /* 어드민 하단 플로팅 배너 */
-.adm-banner{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:440px;z-index:60;background:rgba(13,17,27,.94);backdrop-filter:blur(18px);border-top:2px solid var(--line);padding:11px 16px calc(11px + env(safe-area-inset-bottom,0px));display:flex;gap:12px}
-.adm-banner .abx{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;border-radius:11px;padding:9px 12px;border:1px solid var(--line);background:var(--panel)}
-.adm-banner .abx.red{border-color:rgba(255,65,51,.4);background:rgba(255,65,51,.08)}
-.adm-banner .abx.blue{border-color:rgba(45,140,255,.4);background:rgba(45,140,255,.08)}
-.adm-banner .ab-top{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:800}
+.adm-banner{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:440px;z-index:60;background:rgba(8,11,9,.95);backdrop-filter:blur(18px);border-top:1px solid var(--line);padding:11px 16px calc(11px + env(safe-area-inset-bottom,0px));display:flex;gap:10px}
+.adm-banner .abx{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;border-radius:13px;padding:10px 13px;border:1px solid var(--line);background:var(--panel)}
+.adm-banner .abx.red{border-color:rgba(255,77,77,.35);background:rgba(255,77,77,.07)}
+.adm-banner .abx.blue{border-color:rgba(61,139,255,.35);background:rgba(61,139,255,.07)}
+.adm-banner .ab-top{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:800;letter-spacing:-0.01em}
 .adm-banner .ab-top .ab-nm{color:var(--txt)}
 .adm-banner .ab-cap{font-size:10px;color:var(--muted);font-weight:600;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .adm-banner .ab-stat{display:flex;gap:10px;margin-top:2px}
@@ -205,21 +205,21 @@ body{background:var(--bg);color:var(--txt);font-family:'Pretendard','Inter',-app
 
 /* ===== 어드민 ===== */
 #admin{position:fixed;inset:0;background:var(--bg);z-index:200;max-width:440px;margin:0 auto;overflow-y:auto}
-.adm-head{display:flex;align-items:center;gap:10px;padding:16px 18px 12px;position:sticky;top:0;background:var(--bg);z-index:5;border-bottom:1px solid var(--line)}
-.adm-back{font-size:22px;color:var(--txt2);background:none;border:none;cursor:pointer;line-height:1}
-.adm-t{font-family:'Oswald';font-weight:700;font-size:18px}
-.adm-badge{margin-left:auto;font-size:11px;font-weight:800;padding:5px 11px;border-radius:999px}
-.adm-badge.op{color:var(--gold);background:rgba(255,210,74,.14);border:1px solid rgba(255,210,74,.35)}
+.adm-head{display:flex;align-items:center;gap:10px;padding:18px 18px 14px;position:sticky;top:0;background:rgba(8,11,9,.92);backdrop-filter:blur(16px);z-index:5;border-bottom:1px solid var(--line)}
+.adm-back{font-size:24px;color:var(--txt2);background:none;border:none;cursor:pointer;line-height:1}
+.adm-t{font-weight:700;font-size:18px;letter-spacing:-0.02em}
+.adm-badge{margin-left:auto;font-size:11px;font-weight:700;padding:5px 12px;border-radius:999px;letter-spacing:-0.01em}
+.adm-badge.op{color:var(--lime);background:var(--lime-dim);border:1px solid var(--lime-glow)}
 .adm-badge.red{color:#FF6A5E;background:rgba(255,65,51,.14);border:1px solid rgba(255,65,51,.35)}
 .adm-badge.blue{color:#6AB0FF;background:rgba(45,140,255,.14);border:1px solid rgba(45,140,255,.35)}
-.adm-save-top{background:var(--grass);color:#04210f;border:none;border-radius:10px;padding:9px 18px;font-size:14px;font-weight:800;font-family:inherit;cursor:pointer}
+.adm-save-top{background:var(--lime);color:#1a2400;border:none;border-radius:999px;padding:9px 18px;font-size:14px;font-weight:800;font-family:inherit;cursor:pointer;letter-spacing:-0.01em}
 .adm-save-top:disabled{background:var(--muted);opacity:.6;cursor:not-allowed}
 .adm-summary{padding:9px 18px;font-size:12px;color:var(--txt2);background:var(--bg2);border-bottom:1px solid var(--line);position:sticky;top:53px;z-index:4}
 .adm-summary b{color:var(--txt);font-family:'Oswald';font-size:14px}
 /* 메뉴 탭 */
-.adm-menu{display:flex;gap:8px;padding:12px 18px 4px}
-.adm-menu button{flex:1;padding:11px;border-radius:11px;border:1px solid var(--line);background:var(--panel);color:var(--txt2);font-weight:800;font-size:13px;font-family:inherit;cursor:pointer}
-.adm-menu button.on{background:var(--gold);border-color:var(--gold);color:#3a2b00}
+.adm-menu{display:flex;gap:7px;padding:14px 16px 6px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.adm-menu button{flex:1;white-space:nowrap;padding:9px 14px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--txt2);font-weight:700;font-size:13px;font-family:inherit;cursor:pointer;letter-spacing:-0.01em;transition:all .15s}
+.adm-menu button.on{background:var(--lime);border-color:var(--lime);color:#1a2400;font-weight:800}
 /* 경기 등록 */
 .mscore{display:flex;align-items:center;gap:14px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:10px}
 .mscore-side{flex:1;text-align:center}
@@ -870,7 +870,7 @@ function buildRoundChips(){
   const total=D?D.matches.length:0;
   let html='';
   for(let r=1;r<=total;r++) html+=`<div class="rchip ${r===admRound?'on':''}" onclick="admPickRound(${r})">R${r}</div>`;
-  html+=`<div class="rchip new" onclick="admPickRound(${total+1})">＋NEW</div>`;
+  if(total===0) html='<div class="foot" style="padding:8px 0">등록된 경기가 없어요. 먼저 경기를 등록하세요.</div>';
   document.getElementById('adm-rchips').innerHTML=html;
 }
 
