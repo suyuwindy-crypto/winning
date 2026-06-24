@@ -184,6 +184,9 @@ body{background:var(--bg);color:var(--txt);font-family:'Pretendard','Inter',-app
 .ledger td.paid{color:var(--grass);font-family:'Oswald';font-weight:600}
 .ledger td.zero{color:var(--line)}
 .ledger tr.cap-row .c-name{color:var(--gold)}
+.ledger tr.danger-row{background:rgba(255,77,77,.1)}
+.ledger tr.danger-row .c-name{color:#FF7A7A;background:rgba(255,77,77,.12)}
+.ledger .c-bo{font-family:'Oswald';font-weight:700;color:var(--lime)}
 .ledger tfoot td{background:var(--bg2);font-family:'Oswald';font-weight:700;border-top:2px solid var(--line)}
 .ledger .rd-h{min-width:34px}
 /* 어드민 하단 플로팅 배너 */
@@ -755,20 +758,26 @@ function renderLedger(){
   // 헤더
   let head='<tr><th class="c-name">선수</th>';
   rounds.forEach(r=>{ head+=`<th class="rd-h">R${r}</th>`; });
-  head+='<th>MV</th><th>출전</th><th>평균</th></tr>';
+  head+='<th>MV</th><th>출전</th><th>평균</th><th>BO가</th></tr>';
 
   // 본문
+  const N=ABSENCE_LIMIT;
   let body='';
   players.forEach(p=>{
     const isCap=p.role==='팀장', isVice=VICE[p.team]===p.name;
     const mark=isCap?' 🅒':isVice?' Ⓥ':'';
-    body+=`<tr class="${isCap?'cap-row':''}"><td class="c-name">${p.name}${mark}</td>`;
+    // 최근 N경기 연속 결장 = 방출 대상 (주장·부주장 제외)
+    const recent=(p.allowances||[]).slice(-N);
+    const allMiss=recent.length>=N && recent.every(v=>!v);
+    const danger=allMiss && !isCap && !isVice;
+    const avg=p.participated?Math.round(p.totalAllowance/p.participated):0;
+    const boPrice=(isCap||isVice||!p.participated)?0:Math.ceil(avg*3/100)*100;
+    body+=`<tr class="${isCap?'cap-row':''} ${danger?'danger-row':''}"><td class="c-name">${danger?'⚠️':''}${p.name}${mark}</td>`;
     rounds.forEach((r,idx)=>{
       const v=(p.allowances&&p.allowances[idx])||0;
       body+= v>0 ? `<td class="paid">${fmt(v)}</td>` : `<td class="zero">·</td>`;
     });
-    const avg=p.participated?Math.round(p.totalAllowance/p.participated):0;
-    body+=`<td class="c-mv">${fmt(p.totalAllowance)}</td><td class="c-num">${p.participated}</td><td class="c-num">${fmt(avg)}</td></tr>`;
+    body+=`<td class="c-mv">${fmt(p.totalAllowance)}</td><td class="c-num">${p.participated}</td><td class="c-num">${fmt(avg)}</td><td class="c-bo">${boPrice?fmt(boPrice):'—'}</td></tr>`;
   });
 
   // 합계 행
@@ -777,7 +786,7 @@ function renderLedger(){
     const sum=players.reduce((s,p)=>s+((p.allowances&&p.allowances[idx])||0),0);
     foot+=`<td>${sum>0?fmt(sum):'·'}</td>`;
   });
-  foot+=`<td>${fmt(totMV)}</td><td>-</td><td>${fmt(avgPay)}</td></tr>`;
+  foot+=`<td>${fmt(totMV)}</td><td>-</td><td>${fmt(avgPay)}</td><td>-</td></tr>`;
 
   document.getElementById('ledger-wrap').innerHTML=
     `<table class="ledger"><thead>${head}</thead><tbody>${body}</tbody><tfoot>${foot}</tfoot></table>`;
