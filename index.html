@@ -796,7 +796,6 @@ function renderMatches(){
   document.getElementById('matches').innerHTML=
     `<table class="dtbl mtbl"><thead><tr><th class="c">R</th><th class="c">스코어</th><th>득점자</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
-}
 
 function sw(btn){document.querySelectorAll('.tb').forEach(t=>t.classList.remove('on'));document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));btn.classList.add('on');document.getElementById('p-'+btn.dataset.p).classList.add('on');if(btn.dataset.p==='ledger')renderLedger();}
 
