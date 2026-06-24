@@ -430,7 +430,7 @@ body{background:var(--bg);color:var(--txt);font-family:'Pretendard','Inter',-app
   </div>
 
   <div class="page" id="p-rank">
-    <div class="sec" style="margin-top:14px">구단 가치 <span class="tag">선수 MV 합 + 가용자금</span></div>
+    <div class="sec" style="margin-top:14px">팀 자금 현황 <span class="tag">총획득 = 초기10만+경기+트레이드</span></div>
     <div class="clubvs" id="clubvs"></div>
     <div class="ttog" id="ttog-rank" style="padding-top:8px">
       <button class="on red" data-t="red" onclick="setRankTeam('red')">🔴 레드 MV랭크</button>
@@ -749,15 +749,21 @@ function renderLine(){
   document.getElementById('bench').innerHTML=`<div class="bench-t">포지션 미지정 · 벤치 (${bench.length})</div><div class="bench-row">${bench.map(p=>`<span class="bc"><span class="bp">${p.position||'-'}</span>${p.name}</span>`).join('')||'<span style="color:var(--muted);font-size:12px">없음</span>'}</div>`;
 }
 
-function clubValue(team){const squad=activePlayers(team).reduce((s,p)=>s+p.totalAllowance,0);const av=(D.teamInfo&&D.teamInfo[team]&&D.teamInfo[team].availFunds)||0;return{squad,av,total:squad+av};}
+function clubValue(team){
+  const squad=activePlayers(team).reduce((s,p)=>s+p.totalAllowance,0);
+  const av=(D.teamInfo&&D.teamInfo[team]&&D.teamInfo[team].availFunds)||0;
+  // 총획득자금 = 초기10만 + 라운드결과 + 트레이드± (parseFinance 계산값)
+  const earned=(D.finance&&D.finance[team])||0;
+  return{squad,av,earned,total:squad+av};
+}
 function renderClub(){
   const r=clubValue('red'),b=clubValue('blue'),rw=winBonus('red'),bw=winBonus('blue');
   document.getElementById('clubvs').innerHTML=`
-    <div class="cv-side red"><div class="cvt">🔴 레드</div><div class="cvv num">${fmt(r.total)}</div><div class="cvu">구단 가치</div>
-      <div class="cvsub">선수MV ${fmt(r.squad)}<br>가용 ${fmt(r.av)} · ${rw.w}승${rw.d}무</div></div>
+    <div class="cv-side red"><div class="cvt">🔴 레드</div><div class="cvv num">${fmt(r.earned)}</div><div class="cvu">총 획득자금</div>
+      <div class="cvsub">선수가치 ${fmt(r.squad)}<br>가용 ${fmt(r.av)} · ${rw.w}승${rw.d}무</div></div>
     <div class="cv-mid">VS</div>
-    <div class="cv-side blue"><div class="cvt">🔵 블루</div><div class="cvv num">${fmt(b.total)}</div><div class="cvu">구단 가치</div>
-      <div class="cvsub">선수MV ${fmt(b.squad)}<br>가용 ${fmt(b.av)} · ${bw.w}승${bw.d}무</div></div>`;
+    <div class="cv-side blue"><div class="cvt">🔵 블루</div><div class="cvv num">${fmt(b.earned)}</div><div class="cvu">총 획득자금</div>
+      <div class="cvsub">선수가치 ${fmt(b.squad)}<br>가용 ${fmt(b.av)} · ${bw.w}승${bw.d}무</div></div>`;
 }
 let rankTeam='red';
 function setRankTeam(t){rankTeam=t;document.querySelectorAll('#ttog-rank button').forEach(b=>b.className=b.dataset.t===t?('on '+t):'');renderRank();}
@@ -776,7 +782,7 @@ function renderRank(){
       <td class="r d-num">${fmt(avg)}</td></tr>`;
   }).join('');
   document.getElementById('rank-list').innerHTML=
-    `<table class="dtbl"><thead><tr><th class="c">#</th><th>선수</th><th class="r">MV</th><th class="r">출전</th><th class="r">평균</th></tr></thead><tbody>${rows}</tbody></table>`;
+    `<table class="dtbl"><thead><tr><th class="c">#</th><th>선수</th><th class="r">누적수당</th><th class="r">출전</th><th class="r">평균</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
 
 function renderMatches(){
