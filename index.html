@@ -619,6 +619,24 @@ function roleOf(p){if(p.role==='팀장')return 'C';if(VICE[p.team]===p.name)retu
 function activePlayers(team){return D.players.filter(p=>p.team===team&&!p.traded&&(p.role==='팀장'||p.status==='active'));}
 // 방출된 선수(강퇴 상태) = 무소속 풀. 어느 팀에서 방출됐는지(team) 포함
 function releasedPlayers(){return D.players.filter(p=>p.status==='released'&&!p.traded);}
+// 실제로 치러진 라운드 인덱스 (누군가 수당이 있는 라운드만). 빈 미래경기 제외
+function playedRoundIdx(team){
+  const ps=D.players.filter(p=>p.team===team);
+  const maxLen=ps.reduce((m,p)=>Math.max(m,(p.allowances||[]).length),0);
+  const idx=[];
+  for(let i=0;i<maxLen;i++){
+    if(ps.some(p=>(p.allowances&&p.allowances[i])>0)) idx.push(i);
+  }
+  return idx;
+}
+// 최근 N개 실제 경기에서 연속 결장인지 (방출 대상 판정)
+function isReleaseTarget(p){
+  if(p.role==='팀장'||VICE[p.team]===p.name) return false;
+  const played=playedRoundIdx(p.team);
+  const recent=played.slice(-ABSENCE_LIMIT);
+  if(recent.length<ABSENCE_LIMIT) return false;  // 아직 3경기 미만
+  return recent.every(i=>!(p.allowances&&p.allowances[i]>0));
+}
 function teamRank(team,name){const arr=activePlayers(team).slice().sort((a,b)=>b.totalAllowance-a.totalAllowance);return arr.findIndex(p=>p.name===name)+1;}
 function winBonus(team){const w=D.matches.filter(m=>team==='red'?m.winner==='red':m.winner==='blue').length;const d=D.matches.filter(m=>m.winner==='draw').length;return{w,d,bonus:w*WIN_BONUS+d*DRAW_BONUS};}
 
@@ -766,10 +784,8 @@ function renderLedger(){
   players.forEach(p=>{
     const isCap=p.role==='팀장', isVice=VICE[p.team]===p.name;
     const mark=isCap?' 🅒':isVice?' Ⓥ':'';
-    // 최근 N경기 연속 결장 = 방출 대상 (주장·부주장 제외)
-    const recent=(p.allowances||[]).slice(-N);
-    const allMiss=recent.length>=N && recent.every(v=>!v);
-    const danger=allMiss && !isCap && !isVice;
+    // 최근 N개 실제 경기 연속 결장 = 방출 대상 (빈 미래경기 제외)
+    const danger=isReleaseTarget(p);
     const avg=p.participated?Math.round(p.totalAllowance/p.participated):0;
     const boPrice=(isCap||isVice||!p.participated)?0:Math.ceil(avg*3/100)*100;
     body+=`<tr class="${isCap?'cap-row':''} ${danger?'danger-row':''}"><td class="c-name">${danger?'⚠️':''}${p.name}${mark}</td>`;
@@ -1101,13 +1117,12 @@ function renderRoster(){
   document.getElementById('adm-rlist').innerHTML=players.map(p=>{
     const isCap=p.role==='팀장', isVice=VICE[p.team]===p.name;
     const tag=isCap?'<span class="rtag cap">주장</span>':isVice?'<span class="rtag cap">부주장</span>':'';
-    // 최근 N경기 출결 (수당>0 = 출전)
-    const a=p.allowances||[];
-    const recent=a.slice(-N);
-    while(recent.length<N) recent.unshift(0);  // 경기 수 부족하면 결장 취급
+    // 최근 N개 실제 경기 출결 (빈 미래경기 제외)
+    const played=playedRoundIdx(rTeam).slice(-N);
+    const recent=played.map(i=>(p.allowances&&p.allowances[i])||0);
+    while(recent.length<N) recent.unshift(0);
     const dots=recent.map(v=>`<span class="dot ${v>0?'on':'miss'}"></span>`).join('');
-    const allMiss=recent.every(v=>!v);
-    const danger=allMiss && !isCap && !isVice;  // 방출 대상
+    const danger=isReleaseTarget(p);  // 방출 대상
     // 버튼: 주장·부주장 빼고 방출 가능
     const btn=(isCap||isVice)?'':`<button class="rbtn out" onclick="manualRelease('${rTeam}','${p.name.replace(/'/g,"\\'")}')">방출</button>`;
     return `<div class="ritem ${danger?'danger-row':''}">
