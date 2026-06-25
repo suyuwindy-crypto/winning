@@ -103,6 +103,14 @@ body{background:var(--bg);color:var(--txt);font-family:'Pretendard','Inter',-app
 .ttog button{flex:1;padding:11px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--txt2);font-weight:800;font-size:13.5px;font-family:inherit;cursor:pointer;transition:all .15s}
 .ttog button.on.red{background:rgba(255,77,77,.15);border-color:var(--red);color:#FF7A7A}
 .ttog button.on.blue{background:rgba(61,139,255,.15);border-color:var(--blue);color:#7AB0FF}
+/* [리뉴얼] 밑줄 탭 토글 (보기앱 선수·장부) — 테두리·채움 없음 */
+.ttog.seg{gap:0;padding:0;margin:8px 18px 12px;background:transparent;border-bottom:1px solid var(--line);border-radius:0}
+.ttog.seg button{flex:1;padding:11px 0 12px;border:none;border-radius:0;background:transparent;color:var(--txt2);font-weight:800;font-size:14px;font-family:inherit;letter-spacing:-0.01em;cursor:pointer;position:relative;transition:color .15s}
+.ttog.seg button::after{content:'';position:absolute;left:14%;right:14%;bottom:-1px;height:2.5px;border-radius:2px;background:transparent;transition:background .15s}
+.ttog.seg button.on.red{background:transparent;border-color:transparent;color:#FF7A7A}
+.ttog.seg button.on.red::after{background:var(--red)}
+.ttog.seg button.on.blue{background:transparent;border-color:transparent;color:#7AB0FF}
+.ttog.seg button.on.blue::after{background:var(--blue)}
 
 .pitch-cap{display:flex;align-items:center;gap:8px;margin:0 18px 10px}
 .pitch-cap .lock{font-size:11px;font-weight:700;color:var(--muted);background:var(--bg2);border:1px solid var(--line);padding:5px 11px;border-radius:999px}
@@ -469,7 +477,7 @@ body{background:var(--bg);color:var(--txt);font-family:'Pretendard','Inter',-app
 
   <!-- ===== 선수 ===== -->
   <div class="page" id="p-players">
-    <div class="ttog" id="ttog-players" style="padding-top:14px">
+    <div class="ttog seg" id="ttog-players">
       <button class="on red" data-t="red" onclick="setPlayersTeam('red')">🔴 레드</button>
       <button data-t="blue" onclick="setPlayersTeam('blue')">🔵 블루</button>
     </div>
@@ -482,7 +490,7 @@ body{background:var(--bg);color:var(--txt);font-family:'Pretendard','Inter',-app
   <div class="page" id="p-ledger">
     <div class="sec" style="margin-top:14px">팀 자금 현황 <span class="tag">총획득 = 초기10만+경기+트레이드</span></div>
     <div class="clubvs" id="clubvs"></div>
-    <div class="ttog" id="ttog-ledger" style="padding-top:6px">
+    <div class="ttog seg" id="ttog-ledger">
       <button class="on red" data-t="red" onclick="setLedgerTeam('red')">🔴 레드</button>
       <button data-t="blue" onclick="setLedgerTeam('blue')">🔵 블루</button>
     </div>
