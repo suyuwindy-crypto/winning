@@ -111,6 +111,14 @@ body{background:var(--bg);color:var(--txt);font-family:'Pretendard','Inter',-app
 .ttog.seg button.on.red::after{background:var(--red)}
 .ttog.seg button.on.blue{background:transparent;border-color:transparent;color:#7AB0FF}
 .ttog.seg button.on.blue::after{background:var(--blue)}
+/* [리뉴얼] 어드민 카드 내부용 밑줄 토글 (좌우 여백 없음) */
+.ttog.segc{gap:0;padding:0;margin:0 0 12px;background:transparent;border-bottom:1px solid var(--line);border-radius:0}
+.ttog.segc button{flex:1;padding:10px 0 11px;border:none;border-radius:0;background:transparent;color:var(--txt2);font-weight:800;font-size:13.5px;font-family:inherit;letter-spacing:-0.01em;cursor:pointer;position:relative;transition:color .15s}
+.ttog.segc button::after{content:'';position:absolute;left:14%;right:14%;bottom:-1px;height:2.5px;border-radius:2px;background:transparent;transition:background .15s}
+.ttog.segc button.on.red{background:transparent;border-color:transparent;color:#FF7A7A}
+.ttog.segc button.on.red::after{background:var(--red)}
+.ttog.segc button.on.blue{background:transparent;border-color:transparent;color:#7AB0FF}
+.ttog.segc button.on.blue::after{background:var(--blue)}
 
 .pitch-cap{display:flex;align-items:center;gap:8px;margin:0 18px 10px}
 .pitch-cap .lock{font-size:11px;font-weight:700;color:var(--muted);background:var(--bg2);border:1px solid var(--line);padding:5px 11px;border-radius:999px}
@@ -266,11 +274,13 @@ body{background:var(--bg);color:var(--txt);font-family:'Pretendard','Inter',-app
 .adm-summary{padding:9px 18px;font-size:12px;color:var(--txt2);background:var(--bg2);border-bottom:1px solid var(--line);position:sticky;top:53px;z-index:4}
 .adm-summary b{color:var(--txt);font-family:'Oswald';font-size:14px}
 /* 메뉴 탭 */
-.adm-menu{display:flex;gap:7px;padding:14px 16px 6px;overflow-x:auto;-webkit-overflow-scrolling:touch}
-.adm-menu button{flex:1;white-space:nowrap;padding:9px 14px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--txt2);font-weight:700;font-size:13px;font-family:inherit;cursor:pointer;letter-spacing:-0.01em;transition:all .15s}
-.adm-menu button.on{background:var(--lime);border-color:var(--lime);color:#1a2400;font-weight:800}
+.adm-menu{display:flex;gap:0;padding:6px 18px 0;border-bottom:1px solid var(--line);overflow-x:auto;-webkit-overflow-scrolling:touch}
+.adm-menu button{flex:1;white-space:nowrap;padding:11px 8px 12px;border:none;border-radius:0;background:transparent;color:var(--txt2);font-weight:800;font-size:13px;font-family:inherit;cursor:pointer;letter-spacing:-0.01em;position:relative;transition:color .15s}
+.adm-menu button::after{content:'';position:absolute;left:12%;right:12%;bottom:-1px;height:2.5px;border-radius:2px;background:transparent;transition:background .15s}
+.adm-menu button.on{color:var(--lime)}
+.adm-menu button.on::after{background:var(--lime)}
 /* 경기 등록 */
-.mscore{display:flex;align-items:center;gap:14px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:10px}
+.mscore{display:flex;align-items:center;gap:14px;border:1px solid var(--line2);border-radius:16px;padding:18px;margin-bottom:10px;background:radial-gradient(120% 120% at 0% 50%,rgba(255,77,77,.13),transparent 58%),radial-gradient(120% 120% at 100% 50%,rgba(61,139,255,.13),transparent 58%),var(--panel)}
 .mscore-side{flex:1;text-align:center}
 .mscore-side .msl{font-size:12px;font-weight:800;margin-bottom:6px}
 .mscore-side.red .msl{color:var(--red)}.mscore-side.blue .msl{color:var(--blue)}
@@ -342,8 +352,8 @@ body{background:var(--bg);color:var(--txt);font-family:'Pretendard','Inter',-app
 .adm-card-t{font-size:15px;font-weight:800;margin-bottom:6px}
 .adm-desc{font-size:12px;color:var(--txt2);line-height:1.5;margin-bottom:16px}
 .adm-in{width:100%;background:var(--bg2);border:1px solid var(--line);color:var(--txt);padding:13px 14px;border-radius:11px;font-size:15px;font-family:inherit;margin-bottom:12px}
-.adm-in:focus{outline:none;border-color:var(--blue)}
-.adm-btn{width:100%;background:var(--blue);color:#fff;border:none;padding:13px;border-radius:11px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit}
+.adm-in:focus{outline:none;border-color:var(--lime)}
+.adm-btn{width:100%;background:var(--lime);color:#1a2400;border:none;padding:13px;border-radius:11px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:-0.01em}
 .adm-msg{font-size:13px;margin-top:12px;text-align:center;font-weight:700}
 .adm-msg.err{color:var(--red)}.adm-msg.ok{color:var(--grass)}
 
@@ -539,7 +549,7 @@ body{background:var(--bg);color:var(--txt);font-family:'Pretendard','Inter',-app
   <div id="adm-main" class="adm-body" style="display:none">
     <div class="rsel">
       <div class="rsel-top"><span class="rsel-lbl">팀 / 라운드 선택</span></div>
-      <div class="ttog" id="adm-team-tog" style="padding:0 0 12px">
+      <div class="ttog segc" id="adm-team-tog">
         <button class="on red" data-t="red" onclick="admSetTeam('red')">🔴 레드</button>
         <button data-t="blue" onclick="admSetTeam('blue')">🔵 블루</button>
       </div>
@@ -567,7 +577,7 @@ body{background:var(--bg);color:var(--txt);font-family:'Pretendard','Inter',-app
     </div>
     <div class="mbonus" id="adm-m-bonus"></div>
 
-    <div class="ttog" id="adm-m-tog" style="margin:0 0 12px">
+    <div class="ttog segc" id="adm-m-tog">
       <button class="on red" data-t="red" onclick="admMSetTeam('red')">🔴 레드 득점</button>
       <button data-t="blue" onclick="admMSetTeam('blue')">🔵 블루 득점</button>
     </div>
@@ -581,9 +591,9 @@ body{background:var(--bg);color:var(--txt);font-family:'Pretendard','Inter',-app
   <div id="adm-roster" class="adm-body" style="display:none">
     <div class="rsel">
       <div class="rsel-top"><span class="rsel-lbl">신규 선수 추가</span></div>
-      <div class="ttog" id="adm-r-tog" style="padding:0 0 12px">
+      <div class="ttog segc" id="adm-r-tog">
         <button class="on red" data-t="red" onclick="admRSetTeam('red')">🔴 레드</button>
-        <button data-t="blue" data-t="blue" onclick="admRSetTeam('blue')">🔵 블루</button>
+        <button data-t="blue" onclick="admRSetTeam('blue')">🔵 블루</button>
       </div>
       <div style="display:flex;gap:8px">
         <input class="adm-in" id="adm-r-name" type="text" placeholder="선수 이름" style="margin-bottom:0;flex:1">
