@@ -453,6 +453,12 @@ body{background:var(--bg);color:var(--txt);font-family:'Pretendard','Inter',-app
 .pl-expand-pad .status{margin:0 0 6px}
 .pl-expand-pad .sec{margin:14px 0 9px}
 .pl-expand-pad .rounds{padding:0 0 4px}
+/* [연결] 공통화면 → 어드민 편집 진입 칩 (로그인한 운영자·주장만) */
+.edit-host{margin-left:auto;display:inline-flex;gap:6px;align-items:center}
+.edit-chip{font-size:11px;font-weight:800;color:var(--lime);background:var(--lime-dim);border:1px solid var(--lime-glow);border-radius:999px;padding:4px 11px;font-family:inherit;cursor:pointer;letter-spacing:-0.01em;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;transition:transform .1s}
+.edit-chip:active{transform:scale(.95)}
+.cover-edit{font-size:10.5px;font-weight:800;color:var(--lime);background:var(--lime-dim);border:1px solid var(--lime-glow);border-radius:999px;padding:4px 10px;font-family:inherit;cursor:pointer;letter-spacing:-0.01em;display:inline-flex;align-items:center;gap:3px}
+.cover-edit:active{transform:scale(.95)}
 </style>
 </head>
 <body>
@@ -491,14 +497,14 @@ body{background:var(--bg);color:var(--txt);font-family:'Pretendard','Inter',-app
       <button class="on red" data-t="red" onclick="setPlayersTeam('red')">🔴 레드</button>
       <button data-t="blue" onclick="setPlayersTeam('blue')">🔵 블루</button>
     </div>
-    <div class="sec">선수 명단 <span class="tag">행을 누르면 카드가 펼쳐져요</span></div>
+    <div class="sec">선수 명단 <span class="tag">행을 누르면 카드가 펼쳐져요</span><span class="edit-host" id="players-edit"></span></div>
     <div class="dtbl-wrap" id="players-host"></div>
     <div class="foot">누적수당 = 마켓 밸류(MV) · 순위는 MV 기준</div>
   </div>
 
   <!-- ===== 장부 ===== -->
   <div class="page" id="p-ledger">
-    <div class="sec" style="margin-top:14px">팀 자금 현황 <span class="tag">총획득 = 초기10만+경기+트레이드</span></div>
+    <div class="sec" style="margin-top:14px">팀 자금 현황 <span class="tag">총획득 = 초기10만+경기+트레이드</span><span class="edit-host" id="ledger-edit"></span></div>
     <div class="clubvs" id="clubvs"></div>
     <div class="ttog seg" id="ttog-ledger">
       <button class="on red" data-t="red" onclick="setLedgerTeam('red')">🔴 레드</button>
@@ -782,6 +788,8 @@ function setPlayersTeam(t){
 }
 function renderPlayersTab(){
   const host=document.getElementById('players-host');
+  const eh=document.getElementById('players-edit');
+  if(eh) eh.innerHTML = canEditTeam(playersTeam) ? (editChip('수당','allowance',playersTeam)+editChip('명단','roster',playersTeam)) : '';
   const arr=activePlayers(playersTeam).slice().sort((a,b)=>b.totalAllowance-a.totalAllowance);
   if(!arr.length){host.innerHTML='<div class="foot" style="padding:24px">선수 없음</div>';return;}
   // 펼침 상태 보존 (팀 전환 시 초기화)
@@ -828,6 +836,22 @@ function renderClub(){
     <div class="cv-side blue"><div class="cvt">🔵 블루</div><div class="cvv num">${fmt(b.earned)}</div><div class="cvu">총 획득자금</div>
       <div class="cvsub">선수가치 ${fmt(b.squad)}<br>가용 ${fmt(b.av)} · ${bw.w}승${bw.d}무</div></div>`;
 }
+// ===== [연결] 공통화면 → 어드민 편집 진입 =====
+function canEditTeam(team){ return admRole==='operator' || admRole===team; }
+function openAdminAt(menu,team){
+  openAdmin();
+  admMenu(menu);                     // 메뉴 전환 (권한별 팀 고정 로직 내장)
+  if(team){
+    if(menu==='allowance') admSetTeam(team);
+    else if(menu==='roster') admRSetTeam(team);
+    else if(menu==='trade') renderTrade(team);
+  }
+}
+function editChip(label,menu,team){
+  const t=team?`'${team}'`:'null';
+  return `<button class="edit-chip" onclick="event.stopPropagation();openAdminAt('${menu}',${t})">✏️ ${label}</button>`;
+}
+
 // ===== 경기 홈: 커버 + 다음경기 + 결과표 =====
 function isPlayed(m){ return m && m.redScore!=='' && m.redScore!=null && m.blueScore!=='' && m.blueScore!=null; }
 function scorerStr(arr){
@@ -840,7 +864,7 @@ function renderCover(){
   const played=D.matches.filter(isPlayed);
   const scheduled=D.matches.filter(m=>!isPlayed(m));
   if(!played.length){
-    host.innerHTML=`<div class="cover-empty"><div class="ce-i">⚽</div><div class="ce-t">아직 치러진 경기가 없어요</div><div class="ce-d">경기가 등록되면 여기에 최근 결과가 떠요</div></div>`;
+    host.innerHTML=`<div class="cover-empty"><div class="ce-i">⚽</div><div class="ce-t">아직 치러진 경기가 없어요</div><div class="ce-d">경기가 등록되면 여기에 최근 결과가 떠요</div>${admRole==='operator'?`<button class="cover-edit" style="margin-top:14px" onclick="openAdminAt('match')">✏️ 첫 경기 등록</button>`:''}</div>`;
   } else {
     const m=played[played.length-1];
     const win=m.winner==='red'?'r':m.winner==='blue'?'b':'d';
@@ -854,6 +878,7 @@ function renderCover(){
           <span class="cover-live">최근 경기</span>
           <span class="cover-date">${m.date}</span>
           <span class="cover-res ${win}">${resTxt}</span>
+          ${admRole==='operator'?`<button class="cover-edit" onclick="openAdminAt('match')">✏️ 경기 등록</button>`:''}
         </div>
         <div class="cover-main">
           <div class="cover-side red ${win==='r'?'win':''} ${win==='d'?'draw':''}">
@@ -914,6 +939,8 @@ function setLedgerTeam(t){ledgerTeam=t;document.querySelectorAll('#ttog-ledger b
 function renderLedger(){
   if(!D)return;
   const team=ledgerTeam;
+  const eh=document.getElementById('ledger-edit');
+  if(eh) eh.innerHTML = canEditTeam(team) ? (editChip('수당','allowance',team)+editChip('영입','trade',team)) : '';
   const players=activePlayers(team);
   const rounds=D.matches.map(m=>m.round);  // 라운드 번호 배열
   const info=(D.teamInfo&&D.teamInfo[team])||{};
@@ -1009,6 +1036,7 @@ async function adminLogin(){
     if(j.role==='operator'){badge.className='adm-badge op';badge.textContent='운영자';}
     else if(j.role==='red'){badge.className='adm-badge red';badge.textContent='🔴 레드 주장';}
     else{badge.className='adm-badge blue';badge.textContent='🔵 블루 주장';}
+    renderAll();   // 공통화면에 편집 칩 반영
     document.getElementById('adm-login').style.display='none';
     document.getElementById('adm-menu').style.display='flex';
     document.getElementById('adm-banner').style.display='flex';
