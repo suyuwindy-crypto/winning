@@ -380,6 +380,61 @@ body{background:var(--bg);color:var(--txt);font-family:'Pretendard','Inter',-app
 .savebar .sum b{color:var(--txt);font-family:'Oswald';font-size:14px}
 .savebar .save{margin-left:auto;background:var(--grass);color:#04210f;border:none;border-radius:12px;padding:13px 24px;font-size:15px;font-weight:800;font-family:inherit;cursor:pointer}
 .savebar .save:disabled{background:var(--muted);opacity:.6;cursor:not-allowed}
+
+/* ===== [리뉴얼] 경기 홈 큰 커버 (애플 스포츠 스타일) ===== */
+.cover{position:relative;margin:14px 18px 0;border-radius:22px;overflow:hidden;border:1px solid var(--line2);
+  background:
+    radial-gradient(125% 85% at 0% 0%, rgba(255,77,77,.24), transparent 56%),
+    radial-gradient(125% 85% at 100% 0%, rgba(61,139,255,.24), transparent 56%),
+    linear-gradient(180deg,#11160F 0%,#0A0D0B 100%);
+  box-shadow:0 22px 52px -22px rgba(0,0,0,.85);animation:rise .5s cubic-bezier(.2,.8,.2,1)}
+.cover .cgrid{position:absolute;inset:0;z-index:0;pointer-events:none;opacity:.5;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='44'%3E%3Cpath d='M0 22h44M22 0v44' stroke='%23ffffff' stroke-width='.5' opacity='.05'/%3E%3C/svg%3E")}
+.cover-top{position:relative;z-index:1;display:flex;align-items:center;gap:9px;padding:15px 17px 0}
+.cover-badge{font-family:'Oswald';font-weight:700;font-size:12px;color:#1a2400;background:var(--lime);padding:3px 10px;border-radius:8px}
+.cover-live{font-size:10px;font-weight:800;color:var(--muted);letter-spacing:.08em}
+.cover-date{font-size:11px;color:var(--txt2);font-weight:600;margin-left:2px}
+.cover-res{margin-left:auto;font-size:11px;font-weight:800;padding:4px 11px;border-radius:999px}
+.cover-res.r{background:rgba(255,77,77,.18);color:#FF7A7A}
+.cover-res.b{background:rgba(61,139,255,.18);color:#7AB0FF}
+.cover-res.d{background:rgba(255,255,255,.08);color:var(--txt2)}
+.cover-main{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:20px 14px 10px}
+.cover-side{flex:1;text-align:center;min-width:0}
+.cover-side .cs-team{font-size:13px;font-weight:800;letter-spacing:.05em}
+.cover-side.red .cs-team{color:#FF7A7A}.cover-side.blue .cs-team{color:#7AB0FF}
+.cover-side .cs-score{font-family:'Oswald';font-weight:700;font-size:66px;line-height:.85;margin-top:8px;color:var(--muted);transition:color .3s}
+.cover-side.win .cs-score{color:#fff;text-shadow:0 0 26px rgba(255,255,255,.22)}
+.cover-side.draw .cs-score{color:var(--txt)}
+.cover-side .cs-win{font-size:9px;font-weight:800;margin-top:7px;color:var(--gold);letter-spacing:.06em;height:11px}
+.cover-vs{position:relative;z-index:1;font-family:'Oswald';font-weight:700;font-size:22px;color:var(--muted);padding-bottom:14px}
+.cover-scorers{position:relative;z-index:1;display:flex;gap:12px;padding:13px 17px 16px;border-top:1px solid var(--line);margin-top:2px}
+.cover-scorers .cscore-side{flex:1;font-size:11.5px;color:var(--txt2);line-height:1.55;min-width:0}
+.cover-scorers .cscore-side.b{text-align:right}
+.cover-scorers .cscore-side .clab{font-size:9px;font-weight:800;color:var(--muted);letter-spacing:.04em;display:block;margin-bottom:2px}
+.cover-empty{margin:14px 18px 0;background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:40px 20px;text-align:center;color:var(--txt2)}
+.cover-empty .ce-i{font-size:34px;opacity:.5}.cover-empty .ce-t{font-weight:800;margin-top:10px}.cover-empty .ce-d{font-size:12px;color:var(--muted);margin-top:5px}
+
+/* 다음 경기 스트립 */
+.nextm{margin:10px 18px 0;background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:11px 15px;display:flex;align-items:center;gap:9px;font-size:12px;color:var(--txt2);font-weight:700}
+.nextm .nm-l{font-size:10px;color:var(--muted);font-weight:800;letter-spacing:.03em}
+.nextm b{font-family:'Oswald';color:var(--lime);font-size:15px}
+.nextm .nm-date{color:var(--txt2)}
+.nextm .nm-tag{margin-left:auto;font-size:10px;font-weight:800;color:var(--warn);background:rgba(255,176,32,.14);padding:3px 9px;border-radius:999px;flex-shrink:0}
+
+/* ===== [리뉴얼] 선수 표 + 펼침 카드 ===== */
+.pl-row{cursor:pointer;transition:background .15s}
+.pl-row .chev-i{display:inline-block;transition:transform .28s cubic-bezier(.2,.8,.2,1);color:var(--muted);font-size:13px;font-weight:700}
+.pl-row.open{background:var(--lime-dim)}
+.pl-row.open .chev-i{transform:rotate(180deg);color:var(--lime)}
+.pl-row td.d-pos{font-family:'Oswald';font-weight:600;font-size:11px;color:var(--txt2)}
+.pl-expand>td{padding:0 !important;border-top:none !important}
+.pl-expand-inner{max-height:0;overflow:hidden;transition:max-height .38s ease}
+.pl-expand.open .pl-expand-inner{max-height:1000px}
+.pl-expand-pad{padding:14px 14px 4px;background:var(--bg2)}
+.pl-expand-pad .card{margin:0 0 12px}
+.pl-expand-pad .status{margin:0 0 6px}
+.pl-expand-pad .sec{margin:14px 0 9px}
+.pl-expand-pad .rounds{padding:0 0 4px}
 </style>
 </head>
 <body>
@@ -403,50 +458,31 @@ body{background:var(--bg);color:var(--txt);font-family:'Pretendard','Inter',-app
     <button class="rfs" onclick="resetUrl()" title="URL 변경">⚙</button>
   </div>
 
-  <div class="page on" id="p-me">
-    <div class="picker">
-      <div class="picker-lbl">내 선수</div>
-      <select class="sel" id="sel" onchange="onSelMe()"></select>
-    </div>
-    <div id="card-host"></div>
-    <div id="status-host"></div>
-    <div class="sec">라운드별 수당 <span class="tag">초록=출전 · 회색=결장</span></div>
-    <div class="rounds" id="rounds"></div>
-    <div class="foot">기록보다 <b style="color:var(--txt2)">마켓 밸류</b>가 먼저</div>
+  <!-- ===== 경기 (홈) ===== -->
+  <div class="page on" id="p-match">
+    <div id="cover-host"></div>
+    <div id="next-host"></div>
+    <div class="sec" style="margin-top:22px">경기 결과 <span class="tag" id="match-count"></span></div>
+    <div class="dtbl-wrap" id="results-host"></div>
+    <div class="foot">초기 10만 + 승 2만 / 무 1만 BRO</div>
   </div>
 
-  <div class="page" id="p-line">
-    <div class="ttog" id="ttog-line">
-      <button class="on red" data-t="red" onclick="setLineTeam('red')">🔴 레드</button>
-      <button data-t="blue" onclick="setLineTeam('blue')">🔵 블루</button>
+  <!-- ===== 선수 ===== -->
+  <div class="page" id="p-players">
+    <div class="ttog" id="ttog-players" style="padding-top:14px">
+      <button class="on red" data-t="red" onclick="setPlayersTeam('red')">🔴 레드</button>
+      <button data-t="blue" onclick="setPlayersTeam('blue')">🔵 블루</button>
     </div>
-    <div class="pitch-cap"><span class="lock">📋 포지션 기반 자동 배치</span></div>
-    <div class="pitch" id="pitch">
-      <div class="stripe"></div>
-      <div class="lines"><i class="pl-mid"></i><i class="pl-circle"></i><i class="pl-boxT"></i><i class="pl-boxB"></i></div>
-    </div>
-    <div class="bench" id="bench"></div>
-    <div class="foot">주장이 직접 배치·공유하는 기능은 다음 단계에서 추가돼요</div>
+    <div class="sec">선수 명단 <span class="tag">행을 누르면 카드가 펼쳐져요</span></div>
+    <div class="dtbl-wrap" id="players-host"></div>
+    <div class="foot">누적수당 = 마켓 밸류(MV) · 순위는 MV 기준</div>
   </div>
 
-  <div class="page" id="p-rank">
+  <!-- ===== 장부 ===== -->
+  <div class="page" id="p-ledger">
     <div class="sec" style="margin-top:14px">팀 자금 현황 <span class="tag">총획득 = 초기10만+경기+트레이드</span></div>
     <div class="clubvs" id="clubvs"></div>
-    <div class="ttog" id="ttog-rank" style="padding-top:8px">
-      <button class="on red" data-t="red" onclick="setRankTeam('red')">🔴 레드 MV랭크</button>
-      <button data-t="blue" onclick="setRankTeam('blue')">🔵 블루 MV랭크</button>
-    </div>
-    <div class="dtbl-wrap" id="rank-list"></div>
-    <div class="foot">노란 테두리 = 내 선수</div>
-  </div>
-
-  <div class="page" id="p-match">
-    <div class="sec" style="margin-top:14px">경기 결과</div>
-    <div class="matches" id="matches"></div>
-  </div>
-
-  <div class="page" id="p-ledger">
-    <div class="ttog" id="ttog-ledger" style="padding-top:14px">
+    <div class="ttog" id="ttog-ledger" style="padding-top:6px">
       <button class="on red" data-t="red" onclick="setLedgerTeam('red')">🔴 레드</button>
       <button data-t="blue" onclick="setLedgerTeam('blue')">🔵 블루</button>
     </div>
@@ -456,11 +492,9 @@ body{background:var(--bg);color:var(--txt);font-family:'Pretendard','Inter',-app
   </div>
 
   <div class="tabbar">
-    <button class="tb on" data-p="me" onclick="sw(this)"><span class="ti">👤</span>나</button>
-    <button class="tb" data-p="line" onclick="sw(this)"><span class="ti">⚽</span>라인업</button>
-    <button class="tb" data-p="rank" onclick="sw(this)"><span class="ti">🏆</span>랭킹</button>
+    <button class="tb on" data-p="match" onclick="sw(this)"><span class="ti">⚽</span>경기</button>
+    <button class="tb" data-p="players" onclick="sw(this)"><span class="ti">👥</span>선수</button>
     <button class="tb" data-p="ledger" onclick="sw(this)"><span class="ti">📊</span>장부</button>
-    <button class="tb" data-p="match" onclick="sw(this)"><span class="ti">📋</span>경기</button>
   </div>
 </div>
 
@@ -586,7 +620,7 @@ const VICE={red:'문현민', blue:'권호연'};   // 부주장
 const DEFAULT_URL='https://script.google.com/macros/s/AKfycbxBkdHr-M1JGpN1vvhS-ui9FdR9tyIUZUU8H9-2D5Xz46zSnRzuqCpQfPNMGTWjxQWe/exec';
 // ▲▲▲ 여기만 바꾸면 모든 접속자에게 반영 ▲▲▲
 let URL=DEFAULT_URL||localStorage.getItem('we26_url')||'';
-let MY=localStorage.getItem('we26_me')||'';
+let MY='';  // (리뉴얼: '나' 탭 제거됨 — 미사용)
 let D=null;
 
 // 포지션 좌표
@@ -630,7 +664,7 @@ async function load(){
   }catch(e){setDot('err');showErr(e.message);}
 }
 function setDot(s){document.getElementById('dot').className='dot'+(s==='spin'?' spin':s==='err'?' err':'');}
-function showErr(m){document.getElementById('card-host').innerHTML=`<div class="err-box"><div style="font-size:22px;margin-bottom:8px">⚠</div><b>데이터 로드 실패</b><div style="font-size:12px;margin-top:6px;opacity:.85">${m}</div></div>`;}
+function showErr(m){document.getElementById('cover-host').innerHTML=`<div class="err-box"><div style="font-size:22px;margin-bottom:8px">⚠</div><b>데이터 로드 실패</b><div style="font-size:12px;margin-top:6px;opacity:.85">${m}</div></div>`;}
 
 // ===== 데이터 정규화 =====
 const LEADERS={red:'서범종', blue:'이호진'};   // 팀 주장
@@ -677,26 +711,23 @@ function isReleaseTarget(p){
 function teamRank(team,name){const arr=activePlayers(team).slice().sort((a,b)=>b.totalAllowance-a.totalAllowance);return arr.findIndex(p=>p.name===name)+1;}
 function winBonus(team){const w=D.matches.filter(m=>team==='red'?m.winner==='red':m.winner==='blue').length;const d=D.matches.filter(m=>m.winner==='draw').length;return{w,d,bonus:w*WIN_BONUS+d*DRAW_BONUS};}
 
-function renderAll(){if(!D)return;buildPicker();renderMe();setLineTeam(lineTeam);renderClub();setRankTeam(rankTeam);renderMatches();if(document.getElementById('p-ledger').classList.contains('on'))renderLedger();if(document.getElementById('adm-banner').style.display!=='none')renderBanner();}
-
-function buildPicker(){
-  const sel=document.getElementById('sel');
-  const list=[...activePlayers('red'),...activePlayers('blue')];
-  sel.innerHTML=list.map(p=>`<option value="${p.name}">${p.team==='red'?'🔴':'🔵'} ${p.name}${p.role==='팀장'?' (주장)':VICE[p.team]===p.name?' (부주장)':''}</option>`).join('');
-  if(MY&&list.find(p=>p.name===MY))sel.value=MY; else MY=sel.value;
+function renderAll(){
+  if(!D)return;
+  renderCover(); renderResults();
+  setPlayersTeam(playersTeam);
+  if(document.getElementById('p-ledger').classList.contains('on')){ renderClub(); renderLedger(); }
+  if(document.getElementById('adm-banner').style.display!=='none')renderBanner();
 }
-function onSelMe(){MY=document.getElementById('sel').value;localStorage.setItem('we26_me',MY);renderMe();}
 
-function renderMe(){
-  const p=D.players.find(x=>x.name===MY);
-  if(!p){document.getElementById('card-host').innerHTML='<div class="foot">선수를 선택하세요</div>';return;}
+// 선수 펼침용 피파카드 HTML 생성 (카드 + 상태 + 라운드별 수당)
+function buildPlayerCard(p){
   const st=consec(p),tot=p.totalAllowance,g=p.participated,gl=goals(p.name);
   const rk=teamRank(p.team,p.name),cnt=activePlayers(p.team).length;
   const cap=p.role==='팀장'?'<span class="captain">주장</span>':VICE[p.team]===p.name?'<span class="captain v">부주장</span>':'';
   const cardImg=p.imageUrl
     ? `<div class="cardimg"><img src="${p.imageUrl}" onerror="this.parentElement.innerHTML='<div class=\\'ph\\'><div class=\\'pi\\'>🃏</div><div class=\\'pp\\'>${p.position||'-'}</div><div class=\\'pt\\'>카드 준비중</div></div>'"></div>`
     : `<div class="cardimg"><div class="ph"><div class="pi">🃏</div><div class="pp">${p.position||'-'}</div><div class="pt">카드 준비중</div></div></div>`;
-  document.getElementById('card-host').innerHTML=`
+  const card=`
     <div class="card ${p.team}">
       <div class="card-row">
         ${cardImg}
@@ -719,34 +750,48 @@ function renderMe(){
   else if(st===ABSENCE_LIMIT-1){cls='warn';ico='⚠️';t='경고';d='다음 경기 결장 시 방출';}
   else if(st>0){cls='safe';ico='🟢';t='안전';d=`연속 ${st}경기 결장 · 여유 있음`;}
   else{cls='safe';ico='✅';t='안전';d='최근 경기 출전 중';}
-  document.getElementById('status-host').innerHTML=`<div class="status ${cls}"><span class="ico">${ico}</span><div style="flex:1"><div class="st-t">${t}</div><div class="st-d">${d}</div></div></div>`;
-  document.getElementById('rounds').innerHTML=(p.allowances||[]).map((v,i)=>`<div class="chip ${!v?'out':''}"><div class="cr">R${i+1}</div><div class="cv num">${v?fmt(v):'✗'}</div></div>`).join('')||'<div class="foot">기록 없음</div>';
+  const status=`<div class="status ${cls}"><span class="ico">${ico}</span><div style="flex:1"><div class="st-t">${t}</div><div class="st-d">${d}</div></div></div>`;
+  const chips=(p.allowances||[]).map((v,i)=>`<div class="chip ${!v?'out':''}"><div class="cr">R${i+1}</div><div class="cv num">${v?fmt(v):'✗'}</div></div>`).join('')||'<div class="foot" style="padding:8px 0">기록 없음</div>';
+  const rounds=`<div class="sec">라운드별 수당 <span class="tag">초록=출전 · 회색=결장</span></div><div class="rounds">${chips}</div>`;
+  return card+status+rounds;
 }
 
-let lineTeam='red';
-function setLineTeam(t){lineTeam=t;document.querySelectorAll('#ttog-line button').forEach(b=>b.className=b.dataset.t===t?('on '+t):'');renderLine();}
-function renderLine(){
-  const pitch=document.getElementById('pitch');
-  pitch.querySelectorAll('.node').forEach(n=>n.remove());
-  const tp=activePlayers(lineTeam);
-  const placed=[],bench=[];
-  const usedSlots={};
-  tp.forEach(p=>{
-    const pos=(p.position||'').toUpperCase();
-    if(POS_Y[pos]!=null){placed.push({p,pos});}else{bench.push(p);}
-  });
-  // 같은 포지션 겹치면 x 분산
-  const posCount={};placed.forEach(o=>posCount[o.pos]=(posCount[o.pos]||0)+1);
-  const posIdx={};
-  placed.forEach(o=>{
-    const{p,pos}=o;let x=POS_X[pos],y=POS_Y[pos];
-    const n=posCount[pos];if(n>1){posIdx[pos]=(posIdx[pos]||0);const spread=18;x=POS_X[pos]-spread*(n-1)/2+spread*posIdx[pos];posIdx[pos]++;}
-    const node=document.createElement('div');
-    node.className='node '+lineTeam;node.style.left=Math.max(10,Math.min(90,x))+'%';node.style.top=y+'%';
-    node.innerHTML=`<div class="nc"><div class="npos">${pos}</div><div class="nname">${p.name}</div><div class="npay num">${fmt(p.totalAllowance)}</div></div>`;
-    pitch.appendChild(node);
-  });
-  document.getElementById('bench').innerHTML=`<div class="bench-t">포지션 미지정 · 벤치 (${bench.length})</div><div class="bench-row">${bench.map(p=>`<span class="bc"><span class="bp">${p.position||'-'}</span>${p.name}</span>`).join('')||'<span style="color:var(--muted);font-size:12px">없음</span>'}</div>`;
+let playersTeam='red';
+function setPlayersTeam(t){
+  playersTeam=t;
+  document.querySelectorAll('#ttog-players button').forEach(b=>b.className=b.dataset.t===t?('on '+t):'');
+  renderPlayersTab();
+}
+function renderPlayersTab(){
+  const host=document.getElementById('players-host');
+  const arr=activePlayers(playersTeam).slice().sort((a,b)=>b.totalAllowance-a.totalAllowance);
+  if(!arr.length){host.innerHTML='<div class="foot" style="padding:24px">선수 없음</div>';return;}
+  // 펼침 상태 보존 (팀 전환 시 초기화)
+  const rows=arr.map((p,i)=>{
+    const r=roleOf(p);
+    const badge=r==='C'?'<span class="d-badge c">C</span>':r==='V'?'<span class="d-badge v">V</span>':'';
+    const danger=isReleaseTarget(p);
+    const nameCls=danger?'style="color:#FF7A7A"':'';
+    return `<tr class="pl-row" id="plrow${i}" onclick="togglePlayer(${i})">
+        <td class="d-rank ${i<3?'top':''} c">${i+1}</td>
+        <td class="d-name" ${nameCls}>${danger?'⚠️ ':''}${p.name}${badge}</td>
+        <td class="c d-pos">${p.position||'-'}</td>
+        <td class="r d-mv">${fmt(p.totalAllowance)}</td>
+        <td class="c"><span class="chev-i">⌄</span></td>
+      </tr>
+      <tr class="pl-expand" id="plx${i}"><td colspan="5"><div class="pl-expand-inner"><div class="pl-expand-pad">${buildPlayerCard(p)}</div></div></td></tr>`;
+  }).join('');
+  host.innerHTML=`<table class="dtbl"><thead><tr><th class="c">#</th><th>선수</th><th class="c">포지션</th><th class="r">누적수당</th><th class="c"></th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+function togglePlayer(i){
+  const row=document.getElementById('plrow'+i);
+  const exp=document.getElementById('plx'+i);
+  if(!row||!exp)return;
+  const open=exp.classList.contains('open');
+  // 다른 펼침 닫기 (한 번에 하나만)
+  document.querySelectorAll('#players-host .pl-expand.open').forEach(e=>e.classList.remove('open'));
+  document.querySelectorAll('#players-host .pl-row.open').forEach(r=>r.classList.remove('open'));
+  if(!open){ exp.classList.add('open'); row.classList.add('open'); }
 }
 
 function clubValue(team){
@@ -765,45 +810,85 @@ function renderClub(){
     <div class="cv-side blue"><div class="cvt">🔵 블루</div><div class="cvv num">${fmt(b.earned)}</div><div class="cvu">총 획득자금</div>
       <div class="cvsub">선수가치 ${fmt(b.squad)}<br>가용 ${fmt(b.av)} · ${bw.w}승${bw.d}무</div></div>`;
 }
-let rankTeam='red';
-function setRankTeam(t){rankTeam=t;document.querySelectorAll('#ttog-rank button').forEach(b=>b.className=b.dataset.t===t?('on '+t):'');renderRank();}
-function renderRank(){
-  const arr=activePlayers(rankTeam).slice().sort((a,b)=>b.totalAllowance-a.totalAllowance);
-  if(!arr.length){document.getElementById('rank-list').innerHTML='<div class="foot" style="padding:20px">선수 없음</div>';return;}
-  let rows=arr.map((p,i)=>{
-    const r=roleOf(p);
-    const badge=r==='C'?'<span class="d-badge c">C</span>':r==='V'?'<span class="d-badge v">V</span>':'';
-    const avg=p.participated?Math.round(p.totalAllowance/p.participated):0;
-    return `<tr class="${p.name===MY?'me-row':''}">
-      <td class="d-rank ${i<3?'top':''} c">${i+1}</td>
-      <td class="d-name">${p.name}${badge}</td>
-      <td class="r d-mv">${fmt(p.totalAllowance)}</td>
-      <td class="r d-num">${p.participated}</td>
-      <td class="r d-num">${fmt(avg)}</td></tr>`;
-  }).join('');
-  document.getElementById('rank-list').innerHTML=
-    `<table class="dtbl"><thead><tr><th class="c">#</th><th>선수</th><th class="r">누적수당</th><th class="r">출전</th><th class="r">평균</th></tr></thead><tbody>${rows}</tbody></table>`;
+// ===== 경기 홈: 커버 + 다음경기 + 결과표 =====
+function isPlayed(m){ return m && m.redScore!=='' && m.redScore!=null && m.blueScore!=='' && m.blueScore!=null; }
+function scorerStr(arr){
+  const u=[...new Set(arr)];
+  return u.map(n=>{const c=arr.filter(x=>x===n).length;return c>1?`${n}(${c})`:n;}).join(', ')||'기록 없음';
 }
-
-function renderMatches(){
-  const ms=D.matches.slice().reverse();
-  if(!ms.length){document.getElementById('matches').innerHTML='<div class="foot" style="padding:20px">경기 기록 없음</div>';return;}
+function renderCover(){
+  const host=document.getElementById('cover-host');
+  const nextHost=document.getElementById('next-host');
+  const played=D.matches.filter(isPlayed);
+  const scheduled=D.matches.filter(m=>!isPlayed(m));
+  if(!played.length){
+    host.innerHTML=`<div class="cover-empty"><div class="ce-i">⚽</div><div class="ce-t">아직 치러진 경기가 없어요</div><div class="ce-d">경기가 등록되면 여기에 최근 결과가 떠요</div></div>`;
+  } else {
+    const m=played[played.length-1];
+    const win=m.winner==='red'?'r':m.winner==='blue'?'b':'d';
+    const resTxt=win==='r'?'🔴 레드 승':win==='b'?'🔵 블루 승':'무승부';
+    const rs=scorerStr(m.redGoals), bs=scorerStr(m.blueGoals);
+    host.innerHTML=`
+      <div class="cover">
+        <div class="cgrid"></div>
+        <div class="cover-top">
+          <span class="cover-badge">R${m.round}</span>
+          <span class="cover-live">최근 경기</span>
+          <span class="cover-date">${m.date}</span>
+          <span class="cover-res ${win}">${resTxt}</span>
+        </div>
+        <div class="cover-main">
+          <div class="cover-side red ${win==='r'?'win':''} ${win==='d'?'draw':''}">
+            <div class="cs-team">레드</div>
+            <div class="cs-score num">${m.redScore}</div>
+            <div class="cs-win">${win==='r'?'WIN ▲':'&nbsp;'}</div>
+          </div>
+          <div class="cover-vs">:</div>
+          <div class="cover-side blue ${win==='b'?'win':''} ${win==='d'?'draw':''}">
+            <div class="cs-team">블루</div>
+            <div class="cs-score num">${m.blueScore}</div>
+            <div class="cs-win">${win==='b'?'WIN ▲':'&nbsp;'}</div>
+          </div>
+        </div>
+        <div class="cover-scorers">
+          <div class="cscore-side r"><span class="clab">🔴 레드 득점</span>${rs}</div>
+          <div class="cscore-side b"><span class="clab">블루 득점 🔵</span>${bs}</div>
+        </div>
+      </div>`;
+  }
+  const lastRound = played.length ? played[played.length-1].round : 0;
+  const upcoming = scheduled.filter(m=>m.round>lastRound).sort((a,b)=>a.round-b.round)[0];
+  if(upcoming){
+    nextHost.innerHTML=`<div class="nextm"><span class="nm-l">다음 경기</span><b>R${upcoming.round}</b><span class="nm-date">${upcoming.date||'일정 미정'}</span><span class="nm-tag">예정</span></div>`;
+  } else { nextHost.innerHTML=''; }
+}
+function renderResults(){
+  const host=document.getElementById('results-host');
+  const ms=D.matches.filter(isPlayed).slice().reverse();
+  document.getElementById('match-count').textContent=ms.length?`${ms.length}경기`:'';
+  if(!ms.length){host.innerHTML='<div class="foot" style="padding:24px">경기 기록 없음</div>';return;}
   let rows=ms.map(m=>{
     const win=m.winner==='red'?'r':m.winner==='blue'?'b':'d';
-    const ru=[...new Set(m.redGoals)],bu=[...new Set(m.blueGoals)];
-    const rs=ru.map(n=>{const c=m.redGoals.filter(x=>x===n).length;return c>1?`${n}(${c})`:n;}).join(', ')||'-';
-    const bs=bu.map(n=>{const c=m.blueGoals.filter(x=>x===n).length;return c>1?`${n}(${c})`:n;}).join(', ')||'-';
+    const rs=scorerStr(m.redGoals), bs=scorerStr(m.blueGoals);
     const wl=win==='r'?'<span class="mw r">레드 승</span>':win==='b'?'<span class="mw b">블루 승</span>':'<span class="mw d">무</span>';
     return `<tr>
       <td class="d-rank c">R${m.round}</td>
       <td class="m-sc"><span class="ms-r ${win==='r'?'w':''}">${m.redScore}</span><span class="ms-x">:</span><span class="ms-b ${win==='b'?'w':''}">${m.blueScore}</span><div class="m-res">${wl}</div></td>
       <td class="m-goals"><div class="mg r">🔴 ${rs}</div><div class="mg b">🔵 ${bs}</div><div class="mg-date">${m.date}</div></td></tr>`;
   }).join('');
-  document.getElementById('matches').innerHTML=
-    `<table class="dtbl mtbl"><thead><tr><th class="c">R</th><th class="c">스코어</th><th>득점자</th></tr></thead><tbody>${rows}</tbody></table>`;
+  host.innerHTML=`<table class="dtbl mtbl"><thead><tr><th class="c">R</th><th class="c">스코어</th><th>득점자</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
 
-function sw(btn){document.querySelectorAll('.tb').forEach(t=>t.classList.remove('on'));document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));btn.classList.add('on');document.getElementById('p-'+btn.dataset.p).classList.add('on');if(btn.dataset.p==='ledger')renderLedger();}
+function sw(btn){
+  document.querySelectorAll('.tb').forEach(t=>t.classList.remove('on'));
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  btn.classList.add('on');
+  const pg=btn.dataset.p;
+  document.getElementById('p-'+pg).classList.add('on');
+  if(pg==='match'){ renderCover(); renderResults(); }
+  else if(pg==='players'){ renderPlayersTab(); }
+  else if(pg==='ledger'){ renderClub(); renderLedger(); }
+}
 
 // ===== 장부 (가로 스크롤 격자) =====
 let ledgerTeam='red';
