@@ -455,10 +455,13 @@ body{background:var(--bg);color:var(--txt);font-family:'Pretendard','Inter',-app
 .pl-expand-pad .rounds{padding:0 0 4px}
 /* [연결] 공통화면 → 어드민 편집 진입 칩 (로그인한 운영자·주장만) */
 .edit-host{margin-left:auto;display:inline-flex;gap:6px;align-items:center}
-.edit-chip{font-size:11px;font-weight:800;color:var(--lime);background:var(--lime-dim);border:1px solid var(--lime-glow);border-radius:999px;padding:4px 11px;font-family:inherit;cursor:pointer;letter-spacing:-0.01em;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;transition:transform .1s}
+.edit-chip{font-size:11.5px;font-weight:800;color:var(--lime);background:var(--lime-dim);border:1px solid var(--lime-glow);border-radius:999px;padding:5px 12px;font-family:inherit;cursor:pointer;letter-spacing:-0.01em;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;box-shadow:0 2px 10px -4px var(--lime-glow);transition:transform .1s}
 .edit-chip:active{transform:scale(.95)}
-.cover-edit{font-size:10.5px;font-weight:800;color:var(--lime);background:var(--lime-dim);border:1px solid var(--lime-glow);border-radius:999px;padding:4px 10px;font-family:inherit;cursor:pointer;letter-spacing:-0.01em;display:inline-flex;align-items:center;gap:3px}
+.cover-edit{font-size:11px;font-weight:800;color:var(--lime);background:var(--lime-dim);border:1px solid var(--lime-glow);border-radius:999px;padding:5px 11px;font-family:inherit;cursor:pointer;letter-spacing:-0.01em;display:inline-flex;align-items:center;gap:3px;box-shadow:0 2px 10px -4px var(--lime-glow)}
 .cover-edit:active{transform:scale(.95)}
+/* 안내 토스트 */
+.adm-toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%) translateY(12px);z-index:80;background:var(--lime);color:#1a2400;font-weight:800;font-size:12.5px;padding:10px 16px;border-radius:999px;box-shadow:0 12px 32px -8px rgba(0,0,0,.6);opacity:0;pointer-events:none;transition:opacity .22s,transform .22s;max-width:90%;text-align:center;letter-spacing:-0.01em}
+.adm-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 </style>
 </head>
 <body>
@@ -499,7 +502,7 @@ body{background:var(--bg);color:var(--txt);font-family:'Pretendard','Inter',-app
     </div>
     <div class="sec">선수 명단 <span class="tag">행을 누르면 카드가 펼쳐져요</span><span class="edit-host" id="players-edit"></span></div>
     <div class="dtbl-wrap" id="players-host"></div>
-    <div class="foot">누적수당 = 마켓 밸류(MV) · 순위는 MV 기준</div>
+    <div class="foot">주장·부주장 상단 고정 · 이하 누적수당(MV)순</div>
   </div>
 
   <!-- ===== 장부 ===== -->
@@ -707,7 +710,13 @@ function normalize(){
 
 // ===== 헬퍼 =====
 function fmt(n){return Number(n||0).toLocaleString('ko-KR');}
-function consec(p){let s=0;const a=p.allowances||[];for(let i=a.length-1;i>=0;i--){if(!a[i])s++;else break;}return s;}
+function consec(p){
+  const idx=playedRoundIdx(p.team);          // 실제 치러진 라운드 인덱스만
+  const a=p.allowances||[];
+  let s=0;
+  for(let k=idx.length-1;k>=0;k--){ if(!(a[idx[k]]>0)) s++; else break; }
+  return s;
+}
 function goals(name){if(!D)return 0;return D.matches.reduce((s,m)=>s+m.redGoals.filter(x=>x===name).length+m.blueGoals.filter(x=>x===name).length,0);}
 function roleOf(p){if(p.role==='팀장')return 'C';if(VICE[p.team]===p.name)return 'V';return '';}
 // 이적 나감(traded)·강퇴(released)는 제외, 주장은 항상 포함
@@ -790,7 +799,11 @@ function renderPlayersTab(){
   const host=document.getElementById('players-host');
   const eh=document.getElementById('players-edit');
   if(eh) eh.innerHTML = canEditTeam(playersTeam) ? (editChip('수당','allowance',playersTeam)+editChip('명단','roster',playersTeam)) : '';
-  const arr=activePlayers(playersTeam).slice().sort((a,b)=>b.totalAllowance-a.totalAllowance);
+  const arr=activePlayers(playersTeam).slice().sort((a,b)=>{
+    const ra=roleOf(a)==='C'?0:roleOf(a)==='V'?1:2;
+    const rb=roleOf(b)==='C'?0:roleOf(b)==='V'?1:2;
+    return ra-rb || b.totalAllowance-a.totalAllowance;   // 주장·부주장 상단 고정, 이하 MV순
+  });
   if(!arr.length){host.innerHTML='<div class="foot" style="padding:24px">선수 없음</div>';return;}
   // 펼침 상태 보존 (팀 전환 시 초기화)
   const rows=arr.map((p,i)=>{
@@ -994,8 +1007,13 @@ function renderLedger(){
 let admRole=null, admPw='', admTeam='red', admRound=1, admState={};
 const QUICK=[1000,2000,3000,4000];
 
-function openAdmin(){document.getElementById('admin').style.display='block';}
-function closeAdmin(){document.getElementById('admin').style.display='none';document.getElementById('adm-banner').style.display='none';}
+function openAdmin(){document.getElementById('admin').style.display='block';}function closeAdmin(){document.getElementById('admin').style.display='none';document.getElementById('adm-banner').style.display='none';}
+function admToast(msg){
+  let el=document.getElementById('adm-toast');
+  if(!el){el=document.createElement('div');el.id='adm-toast';el.className='adm-toast';document.body.appendChild(el);}
+  el.textContent=msg; void el.offsetWidth; el.classList.add('show');
+  clearTimeout(el._t); el._t=setTimeout(()=>el.classList.remove('show'),2800);
+}
 // 하단 플로팅 배너: 운영자는 양팀, 주장은 자기팀
 function renderBanner(){
   if(!D)return;
@@ -1042,6 +1060,10 @@ async function adminLogin(){
     document.getElementById('adm-banner').style.display='flex';
     renderBanner();
     admMenu('match');
+    // 공통화면으로 떨어뜨려 편집 칩이 바로 보이게 (어드민은 ✏️·🔒로 재진입)
+    document.getElementById('admin').style.display='none';
+    const roleNm = j.role==='operator'?'운영자':(j.role==='red'?'레드 주장':'블루 주장');
+    admToast('✅ '+roleNm+' 로그인 · 화면의 ✏️를 눌러 편집하세요');
   }catch(e){
     msg.className='adm-msg err';msg.textContent=e.message||'로그인 실패';
   }
