@@ -453,6 +453,19 @@ body{background:var(--bg);color:var(--txt);font-family:'Pretendard','Inter',-app
 .pl-expand-pad .status{margin:0 0 6px}
 .pl-expand-pad .sec{margin:14px 0 9px}
 .pl-expand-pad .rounds{padding:0 0 4px}
+/* [수정] 선수 표 폭 고정 — 펼침 카드가 표를 넓혀 잘리던 문제 해결 */
+.ptbl{table-layout:fixed;width:100%}
+.ptbl col.pc-rank{width:34px}
+.ptbl col.pc-pos{width:60px}
+.ptbl col.pc-mv{width:74px}
+.ptbl col.pc-chev{width:30px}
+.ptbl .d-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pl-expand-pad .card-row{gap:12px;padding:14px}
+.pl-expand-pad .cardimg{width:100px}
+.pl-expand-pad .pay-val{font-size:30px}
+.pl-expand-pad .mini .m{padding:8px 2px}
+.pl-expand-pad .mini .mv{font-size:17px}
+.pl-expand-pad .rankpill{font-size:10.5px;padding:4px 9px}
 /* [연결] 공통화면 → 어드민 편집 진입 칩 (로그인한 운영자·주장만) */
 .edit-host{margin-left:auto;display:inline-flex;gap:6px;align-items:center}
 .edit-chip{font-size:11.5px;font-weight:800;color:var(--lime);background:var(--lime-dim);border:1px solid var(--lime-glow);border-radius:999px;padding:5px 12px;font-family:inherit;cursor:pointer;letter-spacing:-0.01em;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;box-shadow:0 2px 10px -4px var(--lime-glow);transition:transform .1s}
@@ -722,7 +735,11 @@ function roleOf(p){if(p.role==='팀장')return 'C';if(VICE[p.team]===p.name)retu
 // 이적 나감(traded)·강퇴(released)는 제외, 주장은 항상 포함
 function activePlayers(team){return D.players.filter(p=>p.team===team&&!p.traded&&(p.role==='팀장'||p.status==='active'));}
 // 방출된 선수(강퇴 상태) = 무소속 풀. 어느 팀에서 방출됐는지(team) 포함
-function releasedPlayers(){return D.players.filter(p=>p.status==='released'&&!p.traded);}
+function releasedPlayers(){
+  // 다른 팀에서 현재 활동 중인 동명 선수는 방출 풀에서 제외 (가장 최근 소속 우선)
+  const activeNames=new Set(D.players.filter(p=>!p.traded&&(p.role==='팀장'||p.status==='active')).map(p=>p.name));
+  return D.players.filter(p=>p.status==='released'&&!p.traded&&!activeNames.has(p.name));
+}
 // 실제로 치러진 라운드 인덱스 (누군가 수당이 있는 라운드만). 빈 미래경기 제외
 function playedRoundIdx(team){
   const ps=D.players.filter(p=>p.team===team);
@@ -779,7 +796,9 @@ function buildPlayerCard(p){
       </div>
     </div>`;
   let cls,ico,t,d;
-  if(st>=ABSENCE_LIMIT){cls='danger';ico='🚨';t='방출 대상';d=`연속 ${st}경기 결장 — 규정상 방출`;}
+  const prot = roleOf(p)!=='';   // 주장(C)·부주장(V)은 방출 면제
+  if(prot){cls='safe';ico='🛡️';t='보호 대상';d='주장·부주장은 방출 면제';}
+  else if(st>=ABSENCE_LIMIT){cls='danger';ico='🚨';t='방출 대상';d=`최근 ${ABSENCE_LIMIT}경기 연속 결장 — 규정상 방출`;}
   else if(st===ABSENCE_LIMIT-1){cls='warn';ico='⚠️';t='경고';d='다음 경기 결장 시 방출';}
   else if(st>0){cls='safe';ico='🟢';t='안전';d=`연속 ${st}경기 결장 · 여유 있음`;}
   else{cls='safe';ico='✅';t='안전';d='최근 경기 출전 중';}
@@ -820,7 +839,7 @@ function renderPlayersTab(){
       </tr>
       <tr class="pl-expand" id="plx${i}"><td colspan="5"><div class="pl-expand-inner"><div class="pl-expand-pad">${buildPlayerCard(p)}</div></div></td></tr>`;
   }).join('');
-  host.innerHTML=`<table class="dtbl"><thead><tr><th class="c">#</th><th>선수</th><th class="c">포지션</th><th class="r">누적수당</th><th class="c"></th></tr></thead><tbody>${rows}</tbody></table>`;
+  host.innerHTML=`<table class="dtbl ptbl"><colgroup><col class="pc-rank"><col class="pc-name"><col class="pc-pos"><col class="pc-mv"><col class="pc-chev"></colgroup><thead><tr><th class="c">#</th><th>선수</th><th class="c">포지션</th><th class="r">누적수당</th><th class="c"></th></tr></thead><tbody>${rows}</tbody></table>`;
 }
 function togglePlayer(i){
   const row=document.getElementById('plrow'+i);
