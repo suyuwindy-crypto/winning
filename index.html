@@ -376,7 +376,6 @@ body{background:var(--bg);color:var(--txt);font-family:'Pretendard','Inter',-app
 .budget .bv.red{color:var(--red)}.budget .bv.ok{color:var(--grass)}
 
 .hint{font-size:12px;color:var(--txt2);background:rgba(45,140,255,.08);border:1px solid rgba(45,140,255,.2);border-radius:11px;padding:11px 14px;line-height:1.5;margin-bottom:12px}
-.plist{}
 .prow{display:flex;align-items:center;gap:11px;background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:11px 13px;margin-bottom:8px}
 .prow.off{opacity:.5}
 .tg{width:46px;height:28px;border-radius:999px;background:var(--bg2);border:1px solid var(--line);position:relative;flex-shrink:0;cursor:pointer;transition:.2s}
@@ -440,30 +439,38 @@ body{background:var(--bg);color:var(--txt);font-family:'Pretendard','Inter',-app
 .nextm .nm-tag{margin-left:auto;font-size:10px;font-weight:800;color:var(--warn);background:rgba(255,176,32,.14);padding:3px 9px;border-radius:999px;flex-shrink:0}
 
 /* ===== [리뉴얼] 선수 표 + 펼침 카드 ===== */
-.pl-row{cursor:pointer;transition:background .15s}
-.pl-row .chev-i{display:inline-block;transition:transform .28s cubic-bezier(.2,.8,.2,1);color:var(--muted);font-size:13px;font-weight:700}
-.pl-row.open{background:var(--lime-dim)}
-.pl-row.open .chev-i{transform:rotate(180deg);color:var(--lime)}
-.pl-row td.d-pos{font-family:'Oswald';font-weight:600;font-size:11px;color:var(--txt2)}
-.pl-expand>td{padding:0 !important;border-top:none !important}
+/* [div 리스트] 선수 명단 — 표가 아닌 div라 펼침 카드가 폭을 못 늘림 */
+.plist{margin:0 18px;background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.pl-head{display:flex;align-items:center;padding:9px 12px;background:var(--bg2);font-size:10.5px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:-0.01em}
+.pl-item{border-top:1px solid var(--line)}
+.pl-item:first-child{border-top:none}
+.pl-item.open .pl-line{background:var(--lime-dim)}
+.pl-line{display:flex;align-items:center;padding:11px 12px;cursor:pointer;font-size:13px}
+.pl-line .chev-i{display:inline-block;transition:transform .28s cubic-bezier(.2,.8,.2,1);color:var(--muted);font-size:13px;font-weight:700}
+.pl-item.open .chev-i{transform:rotate(180deg);color:var(--lime)}
+.plist .pli-c{min-width:0}
+.plist .c-rank{flex:0 0 30px;font-family:'Oswald';font-weight:700;color:var(--muted)}
+.plist .c-rank.top{color:var(--lime)}
+.plist .c-name{flex:1;min-width:0;font-weight:700;color:var(--txt);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;letter-spacing:-0.01em}
+.plist .c-pos{flex:0 0 56px;text-align:center;font-family:'Oswald';font-weight:600;font-size:11px;color:var(--txt2)}
+.plist .c-mv{flex:0 0 72px;text-align:right;font-family:'Oswald';font-weight:700;color:var(--lime)}
+.plist .c-chev{flex:0 0 28px;text-align:center}
+.pl-head .c-name,.pl-head .c-pos,.pl-head .c-mv{color:var(--txt2);font-family:inherit;font-weight:700;font-size:10.5px}
+.plist .d-badge{font-size:9px;font-weight:800;padding:1px 5px;border-radius:4px;margin-left:5px;vertical-align:middle}
+.plist .d-badge.c{background:rgba(255,210,74,.18);color:var(--gold)}
+.plist .d-badge.v{background:var(--bg2);color:var(--txt2)}
 .pl-expand-inner{max-height:0;overflow:hidden;transition:max-height .38s ease}
-.pl-expand.open .pl-expand-inner{max-height:1000px}
+.pl-expand.open .pl-expand-inner{max-height:1200px}
 .pl-expand-pad{padding:14px 14px 4px;background:var(--bg2)}
-.pl-expand-pad .card{margin:0 0 12px}
+.pl-expand-pad .card{margin:0 0 12px;max-width:100%}
 .pl-expand-pad .status{margin:0 0 6px}
 .pl-expand-pad .sec{margin:14px 0 9px}
 .pl-expand-pad .rounds{padding:0 0 4px}
-/* [수정] 선수 표 폭 고정 — 펼침 카드가 표를 넓혀 잘리던 문제 해결 */
-.ptbl{table-layout:fixed;width:100%}
-.ptbl col.pc-rank{width:34px}
-.ptbl col.pc-pos{width:60px}
-.ptbl col.pc-mv{width:74px}
-.ptbl col.pc-chev{width:30px}
-.ptbl .d-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pl-expand-pad .card-row{gap:12px;padding:14px}
 .pl-expand-pad .cardimg{width:100px}
 .pl-expand-pad .pay-val{font-size:30px}
-.pl-expand-pad .mini .m{padding:8px 2px}
+.pl-expand-pad .mini{min-width:0}
+.pl-expand-pad .mini .m{padding:8px 2px;min-width:0}
 .pl-expand-pad .mini .mv{font-size:17px}
 .pl-expand-pad .rankpill{font-size:10.5px;padding:4px 9px}
 /* [연결] 공통화면 → 어드민 편집 진입 칩 (로그인한 운영자·주장만) */
@@ -719,6 +726,16 @@ function normalize(){
         allowances:[],totalAllowance:0,participated:0});
     }else{ p.role='팀장'; }
   });
+  // 2) 동명이인(이적/복귀로 양 팀 존재): 양 팀에 동시 활성이면 가장 최근(참여 많은) 팀만 유지
+  const byName={};
+  D.players.forEach(p=>{ (byName[p.name]=byName[p.name]||[]).push(p); });
+  Object.values(byName).forEach(list=>{
+    if(list.length<2) return;
+    const actives=list.filter(p=>!p.traded&&(p.role==='팀장'||p.status==='active'));
+    if(actives.length<2) return;                       // 충돌 없음(한 팀만 활성)
+    actives.sort((a,b)=> (b.participated-a.participated) || (b.totalAllowance-a.totalAllowance));
+    actives.slice(1).forEach(p=>{ if(p.role!=='팀장') p.status='released'; }); // 옛 팀 기록은 방출 처리
+  });
 }
 
 // ===== 헬퍼 =====
@@ -829,27 +846,28 @@ function renderPlayersTab(){
     const r=roleOf(p);
     const badge=r==='C'?'<span class="d-badge c">C</span>':r==='V'?'<span class="d-badge v">V</span>':'';
     const danger=isReleaseTarget(p);
-    const nameCls=danger?'style="color:#FF7A7A"':'';
-    return `<tr class="pl-row" id="plrow${i}" onclick="togglePlayer(${i})">
-        <td class="d-rank ${i<3?'top':''} c">${i+1}</td>
-        <td class="d-name" ${nameCls}>${danger?'⚠️ ':''}${p.name}${badge}</td>
-        <td class="c d-pos">${p.position||'-'}</td>
-        <td class="r d-mv">${fmt(p.totalAllowance)}</td>
-        <td class="c"><span class="chev-i">⌄</span></td>
-      </tr>
-      <tr class="pl-expand" id="plx${i}"><td colspan="5"><div class="pl-expand-inner"><div class="pl-expand-pad">${buildPlayerCard(p)}</div></div></td></tr>`;
+    const nameStyle=danger?'color:#FF7A7A':'';
+    return `<div class="pl-item" id="plitem${i}">
+        <div class="pl-line" onclick="togglePlayer(${i})">
+          <span class="pli-c c-rank${i<3?' top':''}">${i+1}</span>
+          <span class="pli-c c-name" style="${nameStyle}">${danger?'⚠️ ':''}${p.name}${badge}</span>
+          <span class="pli-c c-pos">${p.position||'-'}</span>
+          <span class="pli-c c-mv">${fmt(p.totalAllowance)}</span>
+          <span class="pli-c c-chev"><span class="chev-i">⌄</span></span>
+        </div>
+        <div class="pl-expand" id="plx${i}"><div class="pl-expand-inner"><div class="pl-expand-pad">${buildPlayerCard(p)}</div></div></div>
+      </div>`;
   }).join('');
-  host.innerHTML=`<table class="dtbl ptbl"><colgroup><col class="pc-rank"><col class="pc-name"><col class="pc-pos"><col class="pc-mv"><col class="pc-chev"></colgroup><thead><tr><th class="c">#</th><th>선수</th><th class="c">포지션</th><th class="r">누적수당</th><th class="c"></th></tr></thead><tbody>${rows}</tbody></table>`;
+  host.innerHTML=`<div class="plist"><div class="pl-head"><span class="pli-c c-rank">#</span><span class="pli-c c-name">선수</span><span class="pli-c c-pos">포지션</span><span class="pli-c c-mv">누적수당</span><span class="pli-c c-chev"></span></div>${rows}</div>`;
 }
 function togglePlayer(i){
-  const row=document.getElementById('plrow'+i);
+  const item=document.getElementById('plitem'+i);
   const exp=document.getElementById('plx'+i);
-  if(!row||!exp)return;
+  if(!item||!exp)return;
   const open=exp.classList.contains('open');
-  // 다른 펼침 닫기 (한 번에 하나만)
   document.querySelectorAll('#players-host .pl-expand.open').forEach(e=>e.classList.remove('open'));
-  document.querySelectorAll('#players-host .pl-row.open').forEach(r=>r.classList.remove('open'));
-  if(!open){ exp.classList.add('open'); row.classList.add('open'); }
+  document.querySelectorAll('#players-host .pl-item.open').forEach(r=>r.classList.remove('open'));
+  if(!open){ exp.classList.add('open'); item.classList.add('open'); }
 }
 
 function clubValue(team){
