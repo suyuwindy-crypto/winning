@@ -455,6 +455,8 @@ body{background:var(--bg);color:var(--txt);font-family:'Pretendard','Inter',-app
 .plist .c-pos{flex:0 0 56px;text-align:center;font-family:'Oswald';font-weight:600;font-size:11px;color:var(--txt2)}
 .plist .c-mv{flex:0 0 72px;text-align:right;font-family:'Oswald';font-weight:700;color:var(--lime)}
 .plist .c-chev{flex:0 0 28px;text-align:center}
+.pl-item.free .c-mv{color:var(--muted)}
+.pl-item.free .c-rank{color:var(--muted)}
 .pl-head .c-name,.pl-head .c-pos,.pl-head .c-mv{color:var(--txt2);font-family:inherit;font-weight:700;font-size:10.5px}
 .plist .d-badge{font-size:9px;font-weight:800;padding:1px 5px;border-radius:4px;margin-left:5px;vertical-align:middle}
 .plist .d-badge.c{background:rgba(255,210,74,.18);color:var(--gold)}
@@ -731,10 +733,10 @@ function normalize(){
   D.players.forEach(p=>{ (byName[p.name]=byName[p.name]||[]).push(p); });
   Object.values(byName).forEach(list=>{
     if(list.length<2) return;
-    const actives=list.filter(p=>!p.traded&&(p.role==='팀장'||p.status==='active'));
+    const actives=list.filter(p=>!leftTeam(p)&&!isReleased(p));
     if(actives.length<2) return;                       // 충돌 없음(한 팀만 활성)
     actives.sort((a,b)=> (b.participated-a.participated) || (b.totalAllowance-a.totalAllowance));
-    actives.slice(1).forEach(p=>{ if(p.role!=='팀장') p.status='released'; }); // 옛 팀 기록은 방출 처리
+    actives.slice(1).forEach(p=>{ if(p.role!=='팀장') p.status='traded'; }); // 옛 팀 기록은 떠난 것으로
   });
 }
 
@@ -750,12 +752,14 @@ function consec(p){
 function goals(name){if(!D)return 0;return D.matches.reduce((s,m)=>s+m.redGoals.filter(x=>x===name).length+m.blueGoals.filter(x=>x===name).length,0);}
 function roleOf(p){if(p.role==='팀장')return 'C';if(VICE[p.team]===p.name)return 'V';return '';}
 // 이적 나감(traded)·강퇴(released)는 제외, 주장은 항상 포함
-function activePlayers(team){return D.players.filter(p=>p.team===team&&!p.traded&&(p.role==='팀장'||p.status==='active'));}
-// 방출된 선수(강퇴 상태) = 무소속 풀. 어느 팀에서 방출됐는지(team) 포함
+function leftTeam(p){return p.traded || p.status==='traded';}   // 이적·제외 = 팀 떠남(존중)
+// ★ 시트의 '강퇴'(자동함수) 무시 — 앱이 직접 판정: 실제 최근 3경기 연속 결장 → 무소속
+function isReleased(p){return !leftTeam(p) && isReleaseTarget(p);}   // isReleaseTarget이 주장·부주장 보호
+function activePlayers(team){return D.players.filter(p=>p.team===team && !leftTeam(p) && !isReleased(p));}
+// 무소속 풀 = 앱 판정 강등자. 다른 팀에서 활동 중인 동명 선수는 제외(가장 최근 소속 우선)
 function releasedPlayers(){
-  // 다른 팀에서 현재 활동 중인 동명 선수는 방출 풀에서 제외 (가장 최근 소속 우선)
-  const activeNames=new Set(D.players.filter(p=>!p.traded&&(p.role==='팀장'||p.status==='active')).map(p=>p.name));
-  return D.players.filter(p=>p.status==='released'&&!p.traded&&!activeNames.has(p.name));
+  const activeNames=new Set(D.players.filter(p=>!leftTeam(p)&&!isReleased(p)).map(p=>p.name));
+  return D.players.filter(p=>!leftTeam(p)&&isReleased(p)&&!activeNames.has(p.name));
 }
 // 실제로 치러진 라운드 인덱스 (누군가 수당이 있는 라운드만). 빈 미래경기 제외
 function playedRoundIdx(team){
@@ -840,25 +844,36 @@ function renderPlayersTab(){
     const rb=roleOf(b)==='C'?0:roleOf(b)==='V'?1:2;
     return ra-rb || b.totalAllowance-a.totalAllowance;   // 주장·부주장 상단 고정, 이하 MV순
   });
-  if(!arr.length){host.innerHTML='<div class="foot" style="padding:24px">선수 없음</div>';return;}
-  // 펼침 상태 보존 (팀 전환 시 초기화)
-  const rows=arr.map((p,i)=>{
+  const freed=releasedPlayers().filter(p=>p.team===playersTeam)
+                .sort((a,b)=>b.totalAllowance-a.totalAllowance);
+  if(!arr.length && !freed.length){host.innerHTML='<div class="foot" style="padding:24px">선수 없음</div>';return;}
+
+  const head='<div class="pl-head"><span class="pli-c c-rank">#</span><span class="pli-c c-name">선수</span><span class="pli-c c-pos">포지션</span><span class="pli-c c-mv">누적수당</span><span class="pli-c c-chev"></span></div>';
+  const item=(p,idx,isFree)=>{
     const r=roleOf(p);
     const badge=r==='C'?'<span class="d-badge c">C</span>':r==='V'?'<span class="d-badge v">V</span>':'';
-    const danger=isReleaseTarget(p);
-    const nameStyle=danger?'color:#FF7A7A':'';
-    return `<div class="pl-item" id="plitem${i}">
-        <div class="pl-line" onclick="togglePlayer(${i})">
-          <span class="pli-c c-rank${i<3?' top':''}">${i+1}</span>
-          <span class="pli-c c-name" style="${nameStyle}">${danger?'⚠️ ':''}${p.name}${badge}</span>
+    const warn=!isFree && consec(p)===ABSENCE_LIMIT-1;   // 1번 더 빠지면 강등
+    const rank=isFree?'·':(idx+1);
+    const nameStyle=isFree?'color:#FF7A7A':(warn?'color:var(--warn)':'');
+    const mark=isFree?'🚫 ':(warn?'⚠️ ':'');
+    return `<div class="pl-item${isFree?' free':''}" id="plitem${idx}">
+        <div class="pl-line" onclick="togglePlayer(${idx})">
+          <span class="pli-c c-rank${(!isFree&&idx<3)?' top':''}">${rank}</span>
+          <span class="pli-c c-name" style="${nameStyle}">${mark}${p.name}${badge}</span>
           <span class="pli-c c-pos">${p.position||'-'}</span>
           <span class="pli-c c-mv">${fmt(p.totalAllowance)}</span>
           <span class="pli-c c-chev"><span class="chev-i">⌄</span></span>
         </div>
-        <div class="pl-expand" id="plx${i}"><div class="pl-expand-inner"><div class="pl-expand-pad">${buildPlayerCard(p)}</div></div></div>
+        <div class="pl-expand" id="plx${idx}"><div class="pl-expand-inner"><div class="pl-expand-pad">${buildPlayerCard(p)}</div></div></div>
       </div>`;
-  }).join('');
-  host.innerHTML=`<div class="plist"><div class="pl-head"><span class="pli-c c-rank">#</span><span class="pli-c c-name">선수</span><span class="pli-c c-pos">포지션</span><span class="pli-c c-mv">누적수당</span><span class="pli-c c-chev"></span></div>${rows}</div>`;
+  };
+
+  let html=`<div class="plist">${head}${arr.map((p,i)=>item(p,i,false)).join('')||'<div class="foot" style="padding:18px">활성 선수 없음</div>'}</div>`;
+  if(freed.length){
+    html+=`<div class="sec" style="margin-top:18px">무소속 <span class="tag">최근 ${ABSENCE_LIMIT}경기 결장 · 자동 강등</span></div>`;
+    html+=`<div class="plist">${freed.map((p,i)=>item(p,1000+i,true)).join('')}</div>`;
+  }
+  host.innerHTML=html;
 }
 function togglePlayer(i){
   const item=document.getElementById('plitem'+i);
