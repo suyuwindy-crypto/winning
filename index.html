@@ -761,12 +761,13 @@ function releasedPlayers(){
   const activeNames=new Set(D.players.filter(p=>!leftTeam(p)&&!isReleased(p)).map(p=>p.name));
   return D.players.filter(p=>!leftTeam(p)&&isReleased(p)&&!activeNames.has(p.name));
 }
-// 실제로 치러진 라운드 인덱스 (누군가 수당이 있는 라운드만). 빈 미래경기 제외
+// 실제로 치러진 라운드 인덱스. ★ 실제 경기 수(경기결과)를 넘는 칸 = 미래 → 제외 + 값 없는 칸 제외
 function playedRoundIdx(team){
+  const playedCount=D.matches.filter(isPlayed).length;   // 실제 치러진 경기 수
   const ps=D.players.filter(p=>p.team===team);
   const maxLen=ps.reduce((m,p)=>Math.max(m,(p.allowances||[]).length),0);
   const idx=[];
-  for(let i=0;i<maxLen;i++){
+  for(let i=0;i<maxLen && i<playedCount;i++){             // 경기 수 넘어가는 미래 라운드 제외
     if(ps.some(p=>(p.allowances&&p.allowances[i])>0)) idx.push(i);
   }
   return idx;
