@@ -348,6 +348,35 @@ body{background:var(--bg);color:var(--txt);font-family:'Pretendard','Inter',-app
 .titem .tbadge.risk{background:rgba(255,65,51,.18);color:var(--red)}
 .titem .tbadge.prot{background:var(--bg2);color:var(--muted)}
 .adm-body{padding:16px 18px 90px}
+/* 정산 */
+.stl-head{margin-bottom:14px}
+.stl-title{font-size:20px;font-weight:900;letter-spacing:-0.02em}
+.stl-sub{font-size:12px;color:var(--txt2);margin-top:3px}
+.stl-sum{display:flex;gap:8px;margin-bottom:12px}
+.stl-card{flex:1;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:11px 10px;text-align:center;min-width:0}
+.stl-k{font-size:10.5px;color:var(--txt2);font-weight:700;margin-bottom:4px}
+.stl-v{font-size:16px;font-weight:800;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stl-v.ok{color:var(--lime)} .stl-v.rem{color:var(--warn)}
+.stl-v .u{font-size:9.5px;color:var(--txt2);font-weight:600;margin-left:3px}
+.stl-hint{font-size:11.5px;color:var(--txt2);background:var(--bg2);border-radius:10px;padding:9px 12px;margin-bottom:12px}
+.stl-rows{overflow:hidden}
+.stl-row{display:flex;align-items:center;gap:10px;padding:12px 13px;border-top:1px solid var(--line);cursor:pointer;transition:background .15s}
+.stl-row:first-child{border-top:none}
+.stl-row.done{background:var(--lime-dim)}
+.stl-row.done .stl-nm{color:var(--muted);text-decoration:line-through}
+.stl-left{flex:1;min-width:0}
+.stl-nm{font-weight:800;font-size:14px;letter-spacing:-0.01em}
+.stl-tm{font-size:10.5px;color:var(--txt2);margin-top:2px;display:flex;gap:6px;flex-wrap:wrap}
+.stl-tt.red{color:#FF7A7A} .stl-tt.blue{color:#7FB2FF}
+.stl-amt{flex:0 0 auto;font-weight:800;font-size:14px;color:var(--lime);white-space:nowrap}
+.stl-amt .u{font-size:9px;color:var(--txt2);font-weight:600;margin-left:2px}
+.stl-chk{flex:0 0 24px;text-align:center;font-size:18px}
+.stl-danger{margin-top:22px;background:rgba(255,90,90,.06);border:1px solid rgba(255,90,90,.25);border-radius:14px;padding:14px 15px}
+.stl-dtitle{font-weight:800;color:#FF7A7A;font-size:14px;margin-bottom:5px}
+.stl-ddesc{font-size:11.5px;color:var(--txt2);line-height:1.55;margin-bottom:12px}
+.stl-ddesc b{color:var(--txt)}
+.stl-allbtn{width:100%;padding:14px;border:none;border-radius:12px;background:#E5484D;color:#fff;font-weight:800;font-size:14px;font-family:inherit;cursor:pointer}
+.stl-allbtn:disabled{opacity:.6}
 .adm-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px}
 .adm-card-t{font-size:15px;font-weight:800;margin-bottom:6px}
 .adm-desc{font-size:12px;color:var(--txt2);line-height:1.5;margin-bottom:16px}
@@ -574,6 +603,7 @@ body{background:var(--bg);color:var(--txt);font-family:'Pretendard','Inter',-app
     <button data-m="allowance" onclick="admMenu('allowance')">💰 수당</button>
     <button data-m="roster" onclick="admMenu('roster')">👥 선수</button>
     <button data-m="trade" onclick="admMenu('trade')">💸 바이아웃</button>
+    <button data-m="settle" id="adm-menu-settle" onclick="admMenu('settle')" style="display:none">🧾 정산</button>
   </div>
 
   <!-- 수당 입력 -->
@@ -655,6 +685,23 @@ body{background:var(--bg);color:var(--txt);font-family:'Pretendard','Inter',-app
     </div>
     <div class="dtbl-wrap" id="adm-tlist"></div>
     <div style="height:20px"></div>
+  </div>
+
+  <!-- 정산 (운영자 전용) -->
+  <div id="adm-settle" class="adm-body" style="display:none">
+    <div class="stl-head">
+      <div class="stl-title">🧾 상반기 정산</div>
+      <div class="stl-sub">1–6월 누적 연봉 · 카카오페이 개인 지급 체크용</div>
+    </div>
+    <div class="stl-sum" id="stl-sum"></div>
+    <div class="stl-hint">💡 지급 완료한 사람은 오른쪽 체크를 눌러 표시하세요. (이 기기에 저장)</div>
+    <div id="stl-list"></div>
+    <div class="stl-danger">
+      <div class="stl-dtitle">⚠️ 전체 정산 완료</div>
+      <div class="stl-ddesc">모두에게 지급을 마쳤다면 아래 버튼으로 <b>모든 선수 MV를 0으로 초기화</b>합니다. (초기화 전 값은 ‘정산기록’ 시트에 자동 백업)</div>
+      <button class="stl-allbtn" id="stl-allbtn" onclick="doSettleAll()">전체 정산 완료 · MV 0으로 초기화</button>
+    </div>
+    <div style="height:30px"></div>
   </div>
 
   <!-- 하단 플로팅 배너 (로그인 후 표시) -->
@@ -1123,8 +1170,9 @@ async function adminLogin(){
     document.getElementById('adm-login').style.display='none';
     document.getElementById('adm-menu').style.display='flex';
     document.getElementById('adm-banner').style.display='flex';
+    document.getElementById('adm-menu-settle').style.display = j.role==='operator'?'block':'none';
     renderBanner();
-    admMenu('match');
+    admMenu(j.role==='operator'?'match':'allowance');
     // 공통화면으로 떨어뜨려 편집 칩이 바로 보이게 (어드민은 ✏️·🔒로 재진입)
     document.getElementById('admin').style.display='none';
     const roleNm = j.role==='operator'?'운영자':(j.role==='red'?'레드 주장':'블루 주장');
@@ -1140,14 +1188,19 @@ function admMenu(m){
     alert('경기 등록은 운영자만 가능해요.');
     m='allowance';
   }
+  if(m==='settle' && admRole!=='operator'){
+    alert('정산은 운영자만 가능해요.');
+    m='allowance';
+  }
   document.querySelectorAll('#adm-menu button').forEach(b=>b.classList.toggle('on',b.dataset.m===m));
   document.getElementById('adm-main').style.display=m==='allowance'?'block':'none';
   document.getElementById('adm-match').style.display=m==='match'?'block':'none';
   document.getElementById('adm-roster').style.display=m==='roster'?'block':'none';
   document.getElementById('adm-trade').style.display=m==='trade'?'block':'none';
-  // 상단 저장버튼: 선수관리·영입은 자체 버튼 쓰므로 숨김
+  document.getElementById('adm-settle').style.display=m==='settle'?'block':'none';
+  // 상단 저장버튼: 선수관리·영입·정산은 자체 버튼 쓰므로 숨김
   const saveBtn=document.getElementById('adm-save');
-  saveBtn.style.display=(m==='roster'||m==='trade')?'none':'block';
+  saveBtn.style.display=(m==='roster'||m==='trade'||m==='settle')?'none':'block';
   saveBtn.setAttribute('data-mode',m);
   document.getElementById('adm-summary').style.display=m==='allowance'?'block':'none';
   const fixTeam=admRole==='red'?'red':admRole==='blue'?'blue':null;
@@ -1155,6 +1208,7 @@ function admMenu(m){
   else if(m==='match'){ initMatchForm(); }
   else if(m==='roster'){ admRSetTeam(fixTeam||'red'); }
   else if(m==='trade'){ renderTrade(fixTeam||'red'); }
+  else if(m==='settle'){ renderSettle(); }
 }
 
 function admSetTeam(t){
@@ -1162,6 +1216,74 @@ function admSetTeam(t){
   document.querySelectorAll('#adm-team-tog button').forEach(b=>b.className=b.dataset.t===t?('on '+t):'');
   buildRoundChips();
   admPickRound(admRound);
+}
+
+// ===== 정산 (운영자) =====
+// 사람별 합산: 활성 MV + 결장강등 MV + 트레이드 원팀채무 — 이름 기준으로 합산
+function settleOwed(){
+  const map={};
+  D.players.forEach(p=>{
+    const amt=p.totalAllowance||0;
+    if(amt<=0)return;
+    if(!map[p.name]) map[p.name]={name:p.name,total:0,red:0,blue:0};
+    map[p.name].total+=amt;
+    map[p.name][p.team]=(map[p.name][p.team]||0)+amt;
+  });
+  return Object.values(map).sort((a,b)=>b.total-a.total);
+}
+function paidKey(name){return 'we26_paid_'+name;}
+function isPaid(name){try{return localStorage.getItem(paidKey(name))==='1';}catch(e){return false;}}
+function toggleSettlePaid(name){
+  try{localStorage.setItem(paidKey(name),isPaid(name)?'0':'1');}catch(e){}
+  renderSettle();
+}
+function renderSettle(){
+  const list=settleOwed();
+  const total=list.reduce((s,o)=>s+o.total,0);
+  const paidList=list.filter(o=>isPaid(o.name));
+  const paidSum=paidList.reduce((s,o)=>s+o.total,0);
+  document.getElementById('stl-sum').innerHTML=
+    `<div class="stl-card"><div class="stl-k">총 지급액</div><div class="stl-v num">${fmt(total)}<span class="u">BRO</span></div></div>`+
+    `<div class="stl-card"><div class="stl-k">지급 완료</div><div class="stl-v num ok">${fmt(paidSum)}<span class="u">· ${paidList.length}명</span></div></div>`+
+    `<div class="stl-card"><div class="stl-k">남은 금액</div><div class="stl-v num rem">${fmt(total-paidSum)}<span class="u">· ${list.length-paidList.length}명</span></div></div>`;
+  const host=document.getElementById('stl-list');
+  if(!list.length){host.innerHTML='<div class="foot" style="padding:24px">지급할 수당이 없어요</div>';return;}
+  host.innerHTML=`<div class="plist stl-rows">`+list.map(o=>{
+    const paid=isPaid(o.name);
+    const teams=[];
+    if(o.red) teams.push(`<span class="stl-tt red">레드 ${fmt(o.red)}</span>`);
+    if(o.blue) teams.push(`<span class="stl-tt blue">블루 ${fmt(o.blue)}</span>`);
+    const nm=o.name.replace(/'/g,"\\'");
+    return `<div class="stl-row${paid?' done':''}" onclick="toggleSettlePaid('${nm}')">
+      <div class="stl-left"><div class="stl-nm">${o.name}</div><div class="stl-tm">${teams.join(' · ')||'—'}</div></div>
+      <div class="stl-amt num">${fmt(o.total)}<span class="u">BRO</span></div>
+      <div class="stl-chk">${paid?'✅':'⬜'}</div>
+    </div>`;
+  }).join('')+`</div>`;
+}
+async function doSettleAll(){
+  if(admRole!=='operator'){alert('정산은 운영자만 가능해요.');return;}
+  const list=settleOwed();
+  const total=list.reduce((s,o)=>s+o.total,0);
+  if(!list.length){alert('정산할 수당이 없어요.');return;}
+  if(!confirm(`전체 정산을 실행하면 모든 선수 MV(${fmt(total)} BRO)가 0으로 초기화됩니다.\n초기화 전 값은 '정산기록' 시트에 백업돼요.\n\n계속할까요?`))return;
+  const btn=document.getElementById('stl-allbtn');
+  btn.disabled=true; btn.textContent='정산 처리 중…';
+  try{
+    const params=new URLSearchParams({action:'settle',password:admPw});
+    const sep=URL.includes('?')?'&':'?';
+    const res=await fetch(URL+sep+params.toString());
+    const j=await res.json();
+    if(!j.ok)throw new Error(j.error||'정산 실패');
+    try{list.forEach(o=>localStorage.removeItem(paidKey(o.name)));}catch(e){}   // 체크 초기화(새 반기)
+    alert(`✅ 정산 완료 · ${j.settled!=null?j.settled+'건 백업 후 ':''}MV 초기화됨`);
+    await load();
+    admMenu('settle');
+  }catch(e){
+    alert('❌ '+(e.message||'정산 실패'));
+  }finally{
+    btn.disabled=false; btn.textContent='전체 정산 완료 · MV 0으로 초기화';
+  }
 }
 
 function buildRoundChips(){
