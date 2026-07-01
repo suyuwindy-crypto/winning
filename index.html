@@ -733,7 +733,7 @@ function normalize(){
   D.players.forEach(p=>{ (byName[p.name]=byName[p.name]||[]).push(p); });
   Object.values(byName).forEach(list=>{
     if(list.length<2) return;
-    const actives=list.filter(p=>!leftTeam(p)&&!isReleased(p));
+    const actives=list.filter(p=>!isTradedAway(p)&&!isReleased(p));
     if(actives.length<2) return;                       // 충돌 없음(한 팀만 활성)
     actives.sort((a,b)=> (b.participated-a.participated) || (b.totalAllowance-a.totalAllowance));
     actives.slice(1).forEach(p=>{ if(p.role!=='팀장') p.status='traded'; }); // 옛 팀 기록은 떠난 것으로
@@ -752,15 +752,17 @@ function consec(p){
 function goals(name){if(!D)return 0;return D.matches.reduce((s,m)=>s+m.redGoals.filter(x=>x===name).length+m.blueGoals.filter(x=>x===name).length,0);}
 function roleOf(p){if(p.role==='팀장')return 'C';if(VICE[p.team]===p.name)return 'V';return '';}
 // 이적 나감(traded)·강퇴(released)는 제외, 주장은 항상 포함
-function leftTeam(p){return p.traded || p.status==='traded';}   // 이적·제외 = 팀 떠남(존중)
+function isTradedAway(p){return p.traded || p.status==='traded';}   // 't'/제외 = 트레이드로 원팀 떠남
 // ★ 시트의 '강퇴'(자동함수) 무시 — 앱이 직접 판정: 실제 최근 3경기 연속 결장 → 무소속
-function isReleased(p){return !leftTeam(p) && isReleaseTarget(p);}   // isReleaseTarget이 주장·부주장 보호
-function activePlayers(team){return D.players.filter(p=>p.team===team && !leftTeam(p) && !isReleased(p));}
-// 무소속 풀 = 앱 판정 강등자. 다른 팀에서 활동 중인 동명 선수는 제외(가장 최근 소속 우선)
+function isReleased(p){return !isTradedAway(p) && isReleaseTarget(p);}   // isReleaseTarget이 주장·부주장 보호
+function activePlayers(team){return D.players.filter(p=>p.team===team && !isTradedAway(p) && !isReleased(p));}
+// 결장 강등 무소속. 다른 팀에서 활동 중인 동명(강퇴+복귀)은 제외(가장 최근 소속 우선)
 function releasedPlayers(){
-  const activeNames=new Set(D.players.filter(p=>!leftTeam(p)&&!isReleased(p)).map(p=>p.name));
-  return D.players.filter(p=>!leftTeam(p)&&isReleased(p)&&!activeNames.has(p.name));
+  const activeNames=new Set(D.players.filter(p=>!isTradedAway(p)&&!isReleased(p)).map(p=>p.name));
+  return D.players.filter(p=>!isTradedAway(p)&&isReleased(p)&&!activeNames.has(p.name));
 }
+// 트레이드로 이적한 선수 — 원팀 채무(그 팀에서 받을 수당) 보존. 현재 다른 팀이어도 원팀에 남김
+function tradedAwayPlayers(team){return D.players.filter(p=>p.team===team && isTradedAway(p));}
 // 실제로 치러진 라운드 인덱스. ★ 실제 경기 수(경기결과)를 넘는 칸 = 미래 → 제외 + 값 없는 칸 제외
 function playedRoundIdx(team){
   const playedCount=D.matches.filter(isPlayed).length;   // 실제 치러진 경기 수
@@ -799,6 +801,8 @@ function buildPlayerCard(p){
   const cardImg=p.imageUrl
     ? `<div class="cardimg"><img src="${p.imageUrl}" onerror="this.parentElement.innerHTML='<div class=\\'ph\\'><div class=\\'pi\\'>🃏</div><div class=\\'pp\\'>${p.position||'-'}</div><div class=\\'pt\\'>카드 준비중</div></div>'"></div>`
     : `<div class="cardimg"><div class="ph"><div class="pi">🃏</div><div class="pp">${p.position||'-'}</div><div class="pt">카드 준비중</div></div></div>`;
+  const traded=isTradedAway(p);
+  const rankpill=traded?`<span class="rankpill">🔄 트레이드 이적</span>`:`<span class="rankpill">🏆 팀 내 ${rk}위 / ${cnt}명</span>`;
   const card=`
     <div class="card ${p.team}">
       <div class="card-row">
@@ -806,9 +810,9 @@ function buildPlayerCard(p){
         <div class="cardinfo">
           <div class="team-tag">${p.team==='red'?'RED TEAM':'BLUE TEAM'}</div>
           <div class="pname">${p.name}${cap}</div>
-          <div class="pay"><div class="pay-lbl">마켓 밸류 (MV)</div>
+          <div class="pay"><div class="pay-lbl">${traded?'원팀 채무 (받을 수당)':'마켓 밸류 (MV)'}</div>
             <div class="pay-val num">${fmt(tot)}<span class="unit">BRO</span></div></div>
-          <span class="rankpill">🏆 팀 내 ${rk}위 / ${cnt}명</span>
+          ${rankpill}
           <div class="mini">
             <div class="m"><div class="mv num">${g}</div><div class="ml">출전</div></div>
             <div class="m"><div class="mv num">${gl}</div><div class="ml">골</div></div>
@@ -819,7 +823,8 @@ function buildPlayerCard(p){
     </div>`;
   let cls,ico,t,d;
   const prot = roleOf(p)!=='';   // 주장(C)·부주장(V)은 방출 면제
-  if(prot){cls='safe';ico='🛡️';t='보호 대상';d='주장·부주장은 방출 면제';}
+  if(traded){cls='safe';ico='🔄';t='트레이드 이적';d=`이 팀에서 받을 수당 ${fmt(tot)} BRO (원팀 채무)`;}
+  else if(prot){cls='safe';ico='🛡️';t='보호 대상';d='주장·부주장은 방출 면제';}
   else if(st>=ABSENCE_LIMIT){cls='danger';ico='🚨';t='방출 대상';d=`최근 ${ABSENCE_LIMIT}경기 연속 결장 — 규정상 방출`;}
   else if(st===ABSENCE_LIMIT-1){cls='warn';ico='⚠️';t='경고';d='다음 경기 결장 시 방출';}
   else if(st>0){cls='safe';ico='🟢';t='안전';d=`연속 ${st}경기 결장 · 여유 있음`;}
@@ -847,19 +852,22 @@ function renderPlayersTab(){
   });
   const freed=releasedPlayers().filter(p=>p.team===playersTeam)
                 .sort((a,b)=>b.totalAllowance-a.totalAllowance);
-  if(!arr.length && !freed.length){host.innerHTML='<div class="foot" style="padding:24px">선수 없음</div>';return;}
+  const traded=tradedAwayPlayers(playersTeam)
+                .sort((a,b)=>b.totalAllowance-a.totalAllowance);
+  if(!arr.length && !freed.length && !traded.length){host.innerHTML='<div class="foot" style="padding:24px">선수 없음</div>';return;}
 
   const head='<div class="pl-head"><span class="pli-c c-rank">#</span><span class="pli-c c-name">선수</span><span class="pli-c c-pos">포지션</span><span class="pli-c c-mv">누적수당</span><span class="pli-c c-chev"></span></div>';
-  const item=(p,idx,isFree)=>{
+  // kind: 'active' | 'freed'(결장강등) | 'traded'(이적)
+  const item=(p,idx,kind)=>{
     const r=roleOf(p);
     const badge=r==='C'?'<span class="d-badge c">C</span>':r==='V'?'<span class="d-badge v">V</span>':'';
-    const warn=!isFree && consec(p)===ABSENCE_LIMIT-1;   // 1번 더 빠지면 강등
-    const rank=isFree?'·':(idx+1);
-    const nameStyle=isFree?'color:#FF7A7A':(warn?'color:var(--warn)':'');
-    const mark=isFree?'🚫 ':(warn?'⚠️ ':'');
-    return `<div class="pl-item${isFree?' free':''}" id="plitem${idx}">
+    const warn=kind==='active' && consec(p)===ABSENCE_LIMIT-1;   // 1번 더 빠지면 강등
+    const rank=kind==='active'?(idx+1):'·';
+    const nameStyle=kind==='freed'?'color:#FF7A7A':kind==='traded'?'color:var(--txt2)':(warn?'color:var(--warn)':'');
+    const mark=kind==='freed'?'🚫 ':kind==='traded'?'🔄 ':(warn?'⚠️ ':'');
+    return `<div class="pl-item${kind!=='active'?' free':''}" id="plitem${idx}">
         <div class="pl-line" onclick="togglePlayer(${idx})">
-          <span class="pli-c c-rank${(!isFree&&idx<3)?' top':''}">${rank}</span>
+          <span class="pli-c c-rank${(kind==='active'&&idx<3)?' top':''}">${rank}</span>
           <span class="pli-c c-name" style="${nameStyle}">${mark}${p.name}${badge}</span>
           <span class="pli-c c-pos">${p.position||'-'}</span>
           <span class="pli-c c-mv">${fmt(p.totalAllowance)}</span>
@@ -869,10 +877,14 @@ function renderPlayersTab(){
       </div>`;
   };
 
-  let html=`<div class="plist">${head}${arr.map((p,i)=>item(p,i,false)).join('')||'<div class="foot" style="padding:18px">활성 선수 없음</div>'}</div>`;
+  let html=`<div class="plist">${head}${arr.map((p,i)=>item(p,i,'active')).join('')||'<div class="foot" style="padding:18px">활성 선수 없음</div>'}</div>`;
   if(freed.length){
-    html+=`<div class="sec" style="margin-top:18px">무소속 <span class="tag">최근 ${ABSENCE_LIMIT}경기 결장 · 자동 강등</span></div>`;
-    html+=`<div class="plist">${freed.map((p,i)=>item(p,1000+i,true)).join('')}</div>`;
+    html+=`<div class="sec" style="margin-top:18px">무소속 · 결장 강등 <span class="tag">최근 ${ABSENCE_LIMIT}경기 결장</span></div>`;
+    html+=`<div class="plist">${freed.map((p,i)=>item(p,1000+i,'freed')).join('')}</div>`;
+  }
+  if(traded.length){
+    html+=`<div class="sec" style="margin-top:18px">트레이드 이적 <span class="tag">원팀 채무 · 이 팀에서 받을 수당</span></div>`;
+    html+=`<div class="plist">${traded.map((p,i)=>item(p,2000+i,'traded')).join('')}</div>`;
   }
   host.innerHTML=html;
 }
