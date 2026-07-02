@@ -718,7 +718,7 @@ function derive(){
   // 수당 → 시즌/커리어
   D.allowances.forEach(a=>{
     const p=P[a.pid];if(!p)return;
-    p.careerPay+=a.amount;p.careerGames++;p.attend[a.matchId]=a.amount;
+    p.careerPay+=a.amount;p.careerGames++;p.attend[a.matchId]=true;
     if(a.season===cur){p.seasonMV+=a.amount;p.seasonRows[a.matchId]=a.amount;p.seasonGames++;}
   });
   // 골
@@ -755,7 +755,7 @@ function derive(){
   Object.values(P).forEach(p=>{
     let s=0;
     for(let i=played.length-1;i>=0;i--){
-      if(p.attend[played[i].id]>0)break;
+      if(p.attend[played[i].id])break;
       s++;
     }
     p.absent=Math.min(s,played.length);
@@ -928,11 +928,39 @@ function renderHome(){
 }
 
 // ═══════ 경기 ═══════
+function schedCover(m){
+  const iso=isoOf(m.date);
+  const md=new Date(iso+'T00:00:00');
+  const today=new Date();today.setHours(0,0,0,0);
+  const dd=Math.round((md-today)/86400000);
+  const ddTxt=dd===0?'⚡ D-DAY':dd>0?'D-'+dd:'일정 지남';
+  const wk=['일','월','화','수','목','금','토'][md.getDay()];
+  return `<div class="cover">
+    <div class="cover-top"><span class="cover-badge">${m.season} R${m.round}</span><span class="cover-live">다음 경기</span><span class="cover-res d">📅 예정</span></div>
+    <div class="cover-main" style="flex-direction:column;gap:4px;padding:18px 14px 6px">
+      <div style="display:flex;align-items:center;gap:16px">
+        <span style="font-family:'Oswald';font-weight:700;font-size:34px;color:#FF7A7A">RED</span>
+        <span class="cover-vs" style="padding:0;font-size:18px">VS</span>
+        <span style="font-family:'Oswald';font-weight:700;font-size:34px;color:#7AB0FF">BLUE</span>
+      </div>
+      <div class="num" style="font-family:'Oswald';font-weight:600;font-size:19px;color:#fff;margin-top:10px">${md.getMonth()+1}월 ${md.getDate()}일 (${wk})</div>
+      <div style="font-family:'Oswald';font-weight:700;font-size:15px;color:var(--lime);background:var(--lime-dim);border:1px solid var(--lime-glow);border-radius:999px;padding:4px 16px;margin:8px 0 12px">${ddTxt}</div>
+    </div>
+  </div>`;
+}
 function renderMatch(){
   const host=document.getElementById('cover-host');
   const upcoming=D.matches.filter(m=>!isPlayed(m)).sort((a,b)=>a.round-b.round)[0];
-  document.getElementById('next-host').innerHTML=upcoming?`<div class="nextm"><span class="nm-l">다음 경기</span><b class="num">R${upcoming.round}</b><span class="nm-date">${upcoming.date||'일정 미정'}</span><span class="nm-tag">예정</span></div>`:'';
   const ms=playedAll();
+  const nextHost=document.getElementById('next-host');
+  if(upcoming){
+    host.innerHTML=schedCover(upcoming);
+    const last=ms[ms.length-1];
+    nextHost.innerHTML=last?`<div class="nextm"><span class="nm-l">최근 결과</span><b class="num">R${last.round}</b><span class="nm-date">레드 ${last.redScore} : ${last.blueScore} 블루</span><span class="nm-tag" style="color:${last.winner==='red'?'#FF7A7A':last.winner==='blue'?'#7AB0FF':'var(--txt2)'};background:rgba(255,255,255,.06)">${last.winner==='red'?'레드 승':last.winner==='blue'?'블루 승':'무승부'}</span></div>`:'';
+    renderResultsTable(ms);
+    return;
+  }
+  nextHost.innerHTML='';
   if(!ms.length){
     host.innerHTML=`<div class="cover-empty"><div class="ce-i">⚽</div><div class="ce-t">아직 치러진 경기가 없어요</div><div class="ce-d">경기가 등록되면 여기에 결과가 떠요</div></div>`;
   }else{
@@ -955,6 +983,9 @@ function renderMatch(){
         <div class="cscore-side b"><span class="clab">블루 득점 🔵</span>${scorerStr(m.blueGoals)}</div>
       </div>${momHtml}</div>`;
   }
+  renderResultsTable(ms);
+}
+function renderResultsTable(ms){
   const rHost=document.getElementById('results-host');
   const rev=ms.slice().reverse();
   document.getElementById('match-count').textContent=rev.length?`${rev.length}경기`:'';
