@@ -94,6 +94,7 @@ button{font-family:inherit}
 .g-row{position:relative;display:flex;gap:14px}
 .g-img{width:104px;flex-shrink:0;aspect-ratio:3/4;border-radius:13px;overflow:hidden;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center}
 .g-img img{width:100%;height:100%;object-fit:cover}
+.g-img.px img{image-rendering:pixelated;image-rendering:crisp-edges}
 .g-img .ph{text-align:center;color:rgba(255,255,255,.5)}
 .g-img .ph .pi{font-size:30px;opacity:.5}
 .g-img .ph .pp{font-family:'Oswald';font-weight:700;font-size:17px;margin-top:5px;color:rgba(255,255,255,.75)}
@@ -636,12 +637,12 @@ let URL=DEFAULT_URL||localStorage.getItem('we3_url')||'';
 const ABSENCE_LIMIT=3, QUICK=[1000,2000,3000,4000];
 // K7 성장 등급
 const GRADES=[
-  {name:'연습생',xp:0,cls:'g0',emo:'🌱'},
-  {name:'유망주',xp:10000,cls:'g1',emo:'🥉'},
-  {name:'로테이션',xp:30000,cls:'g2',emo:'🥈'},
-  {name:'주전',xp:60000,cls:'g3',emo:'🥇'},
-  {name:'팀 에이스',xp:100000,cls:'g4',emo:'⭐'},
-  {name:'K7 콜업',xp:150000,cls:'g5',emo:'🏆'},
+  {name:'연습생',xp:0,cls:'g0',emo:'🌱',img:'g0.png'},
+  {name:'유망주',xp:10000,cls:'g1',emo:'🥉',img:'g1.png'},
+  {name:'로테이션',xp:30000,cls:'g2',emo:'🥈',img:'g2.png'},
+  {name:'주전',xp:60000,cls:'g3',emo:'🥇',img:'g3.png'},
+  {name:'팀 에이스',xp:100000,cls:'g4',emo:'⭐',img:'g4.png'},
+  {name:'K7 콜업',xp:150000,cls:'g5',emo:'🏆',img:'g5.png'},
 ];
 const XP_GAME=1000, XP_GOAL=1000, XP_MOM=1000, XP_CLEAN=500;
 const DEF_POS=['GK','CB','LB','RB','LWB','RWB','SW','DF'];
@@ -825,7 +826,7 @@ function buildGrowthCard(p,compact){
   const teamLabel=p.team==='red'?'RED TEAM':p.team==='blue'?'BLUE TEAM':'무소속';
   const img=p.imageUrl
     ?`<div class="g-img"><img src="${p.imageUrl}"></div>`
-    :`<div class="g-img"><div class="ph"><div class="pi">${g.emo}</div><div class="pp">${p.position||'-'}</div></div></div>`;
+    :`<div class="g-img px"><img src="${g.img}" alt="" onerror="this.parentElement.innerHTML='<div class=\'ph\'><div class=\'pi\'>${g.emo}</div><div class=\'pp\'>${p.position||'-'}</div></div>'"></div>`;
   const role=p.role==='주장'?'<span class="g-role">주장</span>':p.role==='부주장'?'<span class="g-role v">부주장</span>':'';
   let xpHtml;
   if(next){
