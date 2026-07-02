@@ -326,6 +326,12 @@ button{font-family:inherit}
 .segc button::after{content:'';position:absolute;left:14%;right:14%;bottom:-1px;height:2.5px;border-radius:2px;background:transparent}
 .segc button.on.red{color:#FF7A7A}.segc button.on.red::after{background:var(--red)}
 .segc button.on.blue{color:#7AB0FF}.segc button.on.blue::after{background:var(--blue)}
+.segc button.on:not(.red):not(.blue){color:var(--lime)}
+.segc button.on:not(.red):not(.blue)::after{background:var(--lime)}
+.nextm{margin:10px 18px 0;background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:11px 15px;display:flex;align-items:center;gap:9px;font-size:12px;color:var(--txt2);font-weight:700}
+.nextm .nm-l{font-size:10px;color:var(--muted);font-weight:800}
+.nextm b{font-family:'Oswald';color:var(--lime);font-size:15px}
+.nextm .nm-tag{margin-left:auto;font-size:10px;font-weight:800;color:var(--warn);background:rgba(255,176,32,.14);padding:3px 9px;border-radius:999px}
 .rsel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:12px}
 .rsel-lbl{font-size:12px;font-weight:800;color:var(--txt2);margin-bottom:11px;display:block}
 .rchips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
@@ -482,6 +488,7 @@ button{font-family:inherit}
   <!-- 경기 -->
   <div class="page" id="p-match">
     <div id="cover-host"></div>
+    <div id="next-host"></div>
     <div class="sec" style="margin-top:22px">경기 결과 <span class="tag" id="match-count"></span></div>
     <div class="dtbl-wrap" id="results-host"></div>
     <div class="foot">승리 +2만 / 무승부 +1만 BRO</div>
@@ -563,10 +570,16 @@ button{font-family:inherit}
 
   <!-- 경기 등록 -->
   <div id="adm-match" class="adm-body" style="display:none">
+    <div class="segc" id="adm-mmode">
+      <button class="on" data-mm="result" onclick="setMMode('result')">🏁 결과 입력</button>
+      <button data-mm="schedule" onclick="setMMode('schedule')">📅 일정 등록</button>
+    </div>
     <div class="rsel">
       <span class="rsel-lbl" id="adm-m-round">새 경기</span>
+      <div id="adm-sched-chips"></div>
       <div class="rsel-date">경기일 <input type="date" id="adm-m-date"></div>
     </div>
+    <div id="adm-m-resultblock">
     <div class="mscore">
       <div class="mscore-side red"><div class="msl">🔴 레드</div><div class="msv num" id="adm-m-rs">0</div></div>
       <div class="mscore-vs num">VS</div>
@@ -584,6 +597,7 @@ button{font-family:inherit}
     <div class="hint">💡 골 넣은 선수를 탭하면 +1 (멀티골은 여러 번). 명단에 없으면 ＋수기 입력.</div>
     <button class="adm-add-manual" onclick="admAddManual()">＋ 수기 입력 (신입·게스트)</button>
     <div id="adm-glist"></div>
+    </div>
   </div>
 
   <!-- 선수 관리 -->
@@ -697,14 +711,14 @@ function derive(){
   document.getElementById('season-tag').textContent=cur;
   D.players.forEach(p=>{
     P[p.id]={...p,seasonMV:0,seasonRows:{},seasonGames:0,careerPay:0,careerGames:0,
-      goals:0,moms:0,cleans:0,xp:0,gradeIdx:0,absent:0};
+      goals:0,moms:0,cleans:0,xp:0,gradeIdx:0,absent:0,attend:{}};
   });
   const mById={};
   D.matches.forEach(m=>mById[m.id]=m);
   // 수당 → 시즌/커리어
   D.allowances.forEach(a=>{
     const p=P[a.pid];if(!p)return;
-    p.careerPay+=a.amount;p.careerGames++;
+    p.careerPay+=a.amount;p.careerGames++;p.attend[a.matchId]=a.amount;
     if(a.season===cur){p.seasonMV+=a.amount;p.seasonRows[a.matchId]=a.amount;p.seasonGames++;}
   });
   // 골
@@ -736,15 +750,15 @@ function derive(){
     p.gradeIdx=0;
     GRADES.forEach((g,i)=>{if(p.xp>=g.xp)p.gradeIdx=i;});
   });
-  // 결장 스트릭 (이번 시즌 최근 경기 기준)
-  const curMatches=D.matches.filter(m=>m.season===cur).sort((a,b)=>a.round-b.round);
+  // 결장 스트릭 — 시즌 무관, 실제 치러진 최근 경기 기준
+  const played=D.matches.filter(m=>m.redScore!==''&&m.blueScore!=='').sort((a,b)=>a.id<b.id?-1:1);
   Object.values(P).forEach(p=>{
     let s=0;
-    for(let i=curMatches.length-1;i>=0;i--){
-      if(p.seasonRows[curMatches[i].id]>0)break;
+    for(let i=played.length-1;i>=0;i--){
+      if(p.attend[played[i].id]>0)break;
       s++;
     }
-    p.absent=Math.min(s,curMatches.length);
+    p.absent=Math.min(s,played.length);
   });
 }
 function curMatchList(){return D.matches.filter(m=>m.season===D.season).sort((a,b)=>a.round-b.round);}
@@ -752,7 +766,7 @@ function activeOf(team){return Object.values(P).filter(p=>p.team===team&&p.statu
 function isProtected(p){return p.role==='주장'||p.role==='부주장';}
 function isReleaseTarget(p){
   if(isProtected(p))return false;
-  return curMatchList().length>=ABSENCE_LIMIT&&p.absent>=ABSENCE_LIMIT;
+  return playedAll().length>=ABSENCE_LIMIT&&p.absent>=ABSENCE_LIMIT;
 }
 function teamFunds(team){
   const f=D.funds.filter(x=>x.team===team).reduce((s,x)=>s+x.amount,0);
@@ -782,6 +796,9 @@ function scorerStr(arr){
   return u.map(n=>{const c=arr.filter(x=>x===n).length;return c>1?`${n}(${c})`:n;}).join(', ')||'기록 없음';
 }
 function nameOf(pid){return P[pid]?P[pid].name:'';}
+function isPlayed(m){return m.redScore!==''&&m.blueScore!=='';}
+function playedAll(){return D.matches.filter(isPlayed).sort((a,b)=>a.id<b.id?-1:1);}
+function curPlayedList(){return curMatchList().filter(isPlayed);}
 
 // ═══════ 내 선수 선택 ═══════
 function openMyPick(){
@@ -860,7 +877,7 @@ function buildGrowthCard(p,compact){
   </div>`;
 }
 function buildStatus(p){
-  const cnt=curMatchList().length;
+  const cnt=playedAll().length;
   let cls,ico,t,d;
   if(p.team==='free'){cls='warn';ico='🚫';t='무소속';d='복귀는 운영진에게 문의하세요';}
   else if(isProtected(p)){cls='safe';ico='🛡️';t='보호 대상';d='주장·부주장은 방출 면제';}
@@ -885,7 +902,7 @@ function buildCareer(p){
   return `<div class="career">${rows}</div>`;
 }
 function buildRounds(p){
-  const ms=curMatchList();
+  const ms=curPlayedList();
   if(!ms.length)return '';
   const chips=ms.map(m=>{
     const v=p.seasonRows[m.id]||0;
@@ -913,7 +930,9 @@ function renderHome(){
 // ═══════ 경기 ═══════
 function renderMatch(){
   const host=document.getElementById('cover-host');
-  const ms=D.matches.slice().sort((a,b)=>a.id<b.id?-1:1);
+  const upcoming=D.matches.filter(m=>!isPlayed(m)).sort((a,b)=>a.round-b.round)[0];
+  document.getElementById('next-host').innerHTML=upcoming?`<div class="nextm"><span class="nm-l">다음 경기</span><b class="num">R${upcoming.round}</b><span class="nm-date">${upcoming.date||'일정 미정'}</span><span class="nm-tag">예정</span></div>`:'';
+  const ms=playedAll();
   if(!ms.length){
     host.innerHTML=`<div class="cover-empty"><div class="ce-i">⚽</div><div class="ce-t">아직 치러진 경기가 없어요</div><div class="ce-d">경기가 등록되면 여기에 결과가 떠요</div></div>`;
   }else{
@@ -977,7 +996,7 @@ function renderPlayers(){
   let gi=0;
   const item=(p,rank,kind)=>{
     const i=gi++;
-    const warn=kind==='act'&&curMatchList().length>=ABSENCE_LIMIT-1&&p.absent===ABSENCE_LIMIT-1&&!isProtected(p);
+    const warn=kind==='act'&&playedAll().length>=ABSENCE_LIMIT-1&&p.absent===ABSENCE_LIMIT-1&&!isProtected(p);
     const me=p.id===MY;
     const nameStyle=kind==='freed'?'color:#FF7A7A':warn?'color:var(--warn)':'';
     const mark=kind==='freed'?'🚫 ':warn?'⚠️ ':'';
@@ -1033,7 +1052,7 @@ function renderLedger(){
   const eh=document.getElementById('ledger-edit');
   if(eh)eh.innerHTML=canEditTeam(team)?(editChip('수당','allowance',team)+editChip('영입','trade',team)):'';
   const players=activeOf(team).sort((a,b)=>b.seasonMV-a.seasonMV);
-  const ms=curMatchList();
+  const ms=curPlayedList();
   const totMV=players.reduce((s,p)=>s+p.seasonMV,0);
   const totG=players.reduce((s,p)=>s+p.seasonGames,0);
   document.getElementById('ledger-summary').innerHTML=
@@ -1150,13 +1169,13 @@ let admTeam='red',admMatchId='',admState={};
 function admSetTeam(t){
   admTeam=t;
   document.querySelectorAll('#adm-team-tog button').forEach(b=>b.className=b.dataset.t===t?('on '+t):'');
-  const ms=curMatchList();
+  const ms=curPlayedList();
   if(ms.length&&!ms.find(m=>m.id===admMatchId))admMatchId=ms[ms.length-1].id;
   buildMatchChips();
   buildAllowInputs();
 }
 function buildMatchChips(){
-  const ms=curMatchList().slice().reverse();
+  const ms=curPlayedList().slice().reverse();
   const host=document.getElementById('adm-rchips');
   if(!ms.length){host.innerHTML='<div class="foot" style="padding:8px 0">이번 시즌 경기가 없어요. 먼저 ⚽ 경기 탭에서 등록하세요.</div>';return;}
   host.innerHTML=ms.map(m=>`<div class="rchip ${m.id===admMatchId?'on':''}" onclick="admPickMatch('${m.id}')">
@@ -1228,18 +1247,47 @@ async function saveAllowance(){
 }
 
 // ── 경기 등록 ──
-let mTeam='red',mGoals={red:{},blue:{}},mManual={red:[],blue:[]};
+let mTeam='red',mGoals={red:{},blue:{}},mManual={red:[],blue:[]},mMode='result',mTargetId=null;
+function setMMode(mm){
+  mMode=mm;
+  document.querySelectorAll('#adm-mmode button').forEach(b=>b.classList.toggle('on',b.dataset.mm===mm));
+  document.getElementById('adm-m-resultblock').style.display=mm==='result'?'block':'none';
+  buildSchedChips();updateMLabel();
+}
+function isoOf(dateStr){
+  const m=String(dateStr||'').match(/(\d{4})\.\s*(\d{1,2})\.\s*(\d{1,2})/);
+  if(!m)return new Date().toISOString().slice(0,10);
+  return m[1]+'-'+String(m[2]).padStart(2,'0')+'-'+String(m[3]).padStart(2,'0');
+}
+function buildSchedChips(){
+  const host=document.getElementById('adm-sched-chips');
+  const upcoming=curMatchList().filter(m=>!isPlayed(m));
+  if(mMode!=='result'||!upcoming.length){host.innerHTML='';if(!upcoming.length)mTargetId='';return;}
+  if(mTargetId===null||(mTargetId&&!upcoming.find(m=>m.id===mTargetId)))mTargetId=upcoming[0].id;
+  host.innerHTML='<div style="font-size:11px;color:var(--muted);font-weight:700;margin:2px 0 7px">결과 넣을 경기</div><div class="rchips">'+
+    upcoming.map(m=>`<div class="rchip ${m.id===mTargetId?'on':''}" onclick="pickTarget('${m.id}')"><div class="rr">R${m.round}</div><div class="rd">${(m.date||'').replace(/^\d+\.\s*/,'')||'예정'}</div></div>`).join('')+
+    `<div class="rchip ${mTargetId===''?'on':''}" onclick="pickTarget('')"><div class="rr">＋</div><div class="rd">새 경기</div></div></div>`;
+  const t=upcoming.find(m=>m.id===mTargetId);
+  if(t&&t.date)document.getElementById('adm-m-date').value=isoOf(t.date);
+}
+function pickTarget(id){mTargetId=id;buildSchedChips();updateMLabel();}
+function updateMLabel(){
+  const el=document.getElementById('adm-m-round');
+  if(mMode==='schedule'){el.textContent=`📅 새 일정 · ${D.season} R${curMatchList().length+1}`;return;}
+  const t=curMatchList().find(m=>m.id===mTargetId);
+  el.textContent=t?`🏁 R${t.round} 결과 입력`:`🏁 새 경기 · ${D.season} R${curMatchList().length+1}`;
+}
 function initMatchForm(){
   mGoals={red:{},blue:{}};mManual={red:[],blue:[]};
-  const next=curMatchList().length+1;
-  document.getElementById('adm-m-round').textContent=`새 경기 · ${D.season} R${next}`;
   document.getElementById('adm-m-date').value=new Date().toISOString().slice(0,10);
+  mTargetId=null;
   const opts='<option value="">— 선택 안 함 —</option>'+
     [...activeOf('red'),...activeOf('blue')].sort((a,b)=>a.team<b.team?-1:1)
     .map(p=>`<option value="${p.id}">${p.team==='red'?'🔴':'🔵'} ${p.name}${p.position?' ('+p.position+')':''}</option>`).join('');
   document.getElementById('adm-mom-def').innerHTML=opts;
   document.getElementById('adm-mom-mid').innerHTML=opts;
   mTeam='red';admMSetTeam('red');updateScore();
+  setMMode('result');
 }
 function admMSetTeam(t){
   mTeam=t;
@@ -1283,6 +1331,22 @@ function updateScore(){
   document.getElementById('adm-m-bonus').textContent=txt;
 }
 async function saveMatch(){
+  if(mMode==='schedule'){
+    const raw0=document.getElementById('adm-m-date').value;
+    if(!raw0){alert('경기일을 선택하세요');return;}
+    const d0=new Date(raw0+'T00:00:00');
+    const date0=d0.getFullYear()+'. '+(d0.getMonth()+1)+'. '+d0.getDate()+'.';
+    const btn0=document.getElementById('adm-save');
+    btn0.disabled=true;btn0.textContent='등록 중…';
+    try{
+      const j=await api({action:'saveMatch',password:admPw,mode:'schedule',date:date0});
+      if(!j.ok)throw new Error(j.error);
+      toast(`📅 R${j.round} 일정 등록 · ${date0}`);
+      btn0.textContent='✓ 등록됨';
+      setTimeout(()=>{btn0.textContent='저장';btn0.disabled=false;load().then(initMatchForm);},1000);
+    }catch(e){alert('등록 실패: '+e.message);btn0.textContent='저장';btn0.disabled=false;}
+    return;
+  }
   const raw=document.getElementById('adm-m-date').value;
   if(!raw){alert('경기일을 선택하세요');return;}
   const dd=new Date(raw+'T00:00:00');
@@ -1295,7 +1359,7 @@ async function saveMatch(){
   const btn=document.getElementById('adm-save');
   btn.disabled=true;btn.textContent='저장 중…';
   try{
-    const j=await api({action:'saveMatch',password:admPw,date,redScore:rs,blueScore:bs,
+    const j=await api({action:'saveMatch',password:admPw,matchId:mTargetId||'',date,redScore:rs,blueScore:bs,
       redGoals:JSON.stringify(redGoals),blueGoals:JSON.stringify(blueGoals),
       momDef:document.getElementById('adm-mom-def').value,momMid:document.getElementById('adm-mom-mid').value});
     if(!j.ok)throw new Error(j.error);
@@ -1318,9 +1382,9 @@ function admRSetTeam(t){
 function renderRoster(){
   const players=activeOf(rTeam).sort((a,b)=>b.xp-a.xp);
   document.getElementById('adm-r-count').textContent='('+players.length+'명)';
-  const ms=curMatchList().slice(-ABSENCE_LIMIT);
+  const ms=playedAll().slice(-ABSENCE_LIMIT);
   document.getElementById('adm-rlist').innerHTML=players.map(p=>{
-    const dots=ms.map(m=>`<span class="ad ${p.seasonRows[m.id]?'on':'miss'}"></span>`).join('')||'<span style="font-size:9px;color:var(--muted)">경기 전</span>';
+    const dots=ms.map(m=>`<span class="ad ${p.attend[m.id]?'on':'miss'}"></span>`).join('')||'<span style="font-size:9px;color:var(--muted)">경기 전</span>';
     const danger=isReleaseTarget(p);
     const tag=p.role==='주장'?'<span class="rtag">주장</span>':p.role==='부주장'?'<span class="rtag">부주장</span>':'';
     const btn=isProtected(p)?'':`<button class="rbtn out" onclick="release('${p.id}','${p.name.replace(/'/g,"\\'")}')">방출</button>`;
