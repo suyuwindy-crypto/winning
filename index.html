@@ -336,7 +336,7 @@ button{font-family:inherit}
 .rchip.on{background:rgba(45,140,255,.18);border-color:var(--blue)}
 .rchip.on .rr{color:#fff}
 .rsel-date{margin-top:11px;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:8px}
-.rsel-date input{background:var(--bg2);border:1px solid var(--line);border-radius:9px;color:var(--txt);padding:7px 11px;font-size:13px;font-family:inherit;flex:1}
+.rsel-date input{background:var(--bg2);border:1px solid var(--line);border-radius:9px;color:var(--txt);padding:7px 11px;font-size:13px;font-family:inherit;flex:1;color-scheme:dark;-webkit-appearance:none;min-height:36px}
 .budget{margin-bottom:12px;border-radius:13px;padding:13px 16px;border:1px solid var(--line);display:flex;align-items:center;gap:10px;background:var(--panel)}
 .budget.over{background:rgba(255,65,51,.12);border-color:var(--red)}
 .budget.warn{background:rgba(255,176,32,.1);border-color:rgba(255,176,32,.4)}
@@ -565,7 +565,7 @@ button{font-family:inherit}
   <div id="adm-match" class="adm-body" style="display:none">
     <div class="rsel">
       <span class="rsel-lbl" id="adm-m-round">새 경기</span>
-      <div class="rsel-date">경기일 <input type="text" id="adm-m-date" placeholder="2026. 7. 12."></div>
+      <div class="rsel-date">경기일 <input type="date" id="adm-m-date"></div>
     </div>
     <div class="mscore">
       <div class="mscore-side red"><div class="msl">🔴 레드</div><div class="msv num" id="adm-m-rs">0</div></div>
@@ -824,9 +824,7 @@ function buildGrowthCard(p,compact){
   const g=gradeOf(p);
   const next=GRADES[p.gradeIdx+1];
   const teamLabel=p.team==='red'?'RED TEAM':p.team==='blue'?'BLUE TEAM':'무소속';
-  const img=p.imageUrl
-    ?`<div class="g-img"><img src="${p.imageUrl}"></div>`
-    :`<div class="g-img px"><img src="${g.img}" alt="" onerror="this.parentElement.innerHTML='<div class=\'ph\'><div class=\'pi\'>${g.emo}</div><div class=\'pp\'>${p.position||'-'}</div></div>'"></div>`;
+  const img=`<div class="g-img px"><img src="${g.img}" alt="" onerror="this.parentElement.innerHTML='<div class=\'ph\'><div class=\'pi\'>${g.emo}</div><div class=\'pp\'>${p.position||'-'}</div></div>'"></div>`;
   const role=p.role==='주장'?'<span class="g-role">주장</span>':p.role==='부주장'?'<span class="g-role v">부주장</span>':'';
   let xpHtml;
   if(next){
@@ -1235,7 +1233,7 @@ function initMatchForm(){
   mGoals={red:{},blue:{}};mManual={red:[],blue:[]};
   const next=curMatchList().length+1;
   document.getElementById('adm-m-round').textContent=`새 경기 · ${D.season} R${next}`;
-  document.getElementById('adm-m-date').value='';
+  document.getElementById('adm-m-date').value=new Date().toISOString().slice(0,10);
   const opts='<option value="">— 선택 안 함 —</option>'+
     [...activeOf('red'),...activeOf('blue')].sort((a,b)=>a.team<b.team?-1:1)
     .map(p=>`<option value="${p.id}">${p.team==='red'?'🔴':'🔵'} ${p.name}${p.position?' ('+p.position+')':''}</option>`).join('');
@@ -1285,8 +1283,10 @@ function updateScore(){
   document.getElementById('adm-m-bonus').textContent=txt;
 }
 async function saveMatch(){
-  const date=document.getElementById('adm-m-date').value.trim();
-  if(!date){alert('경기일을 입력하세요');return;}
+  const raw=document.getElementById('adm-m-date').value;
+  if(!raw){alert('경기일을 선택하세요');return;}
+  const dd=new Date(raw+'T00:00:00');
+  const date=dd.getFullYear()+'. '+(dd.getMonth()+1)+'. '+dd.getDate()+'.';
   const rs=teamScore('red'),bs=teamScore('blue');
   if(rs===0&&bs===0){alert('득점자를 입력하세요');return;}
   const redGoals=[],blueGoals=[];
