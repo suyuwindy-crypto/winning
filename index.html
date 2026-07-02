@@ -104,6 +104,8 @@ button{font-family:inherit}
 .g-mv .l{font-size:10px;color:rgba(255,255,255,.65);font-weight:700}
 .g-mv .v{font-family:'Oswald';font-weight:700;font-size:31px;line-height:1;color:#fff;margin-top:1px}
 .g-mv .v .u{font-size:13px;margin-left:3px;color:rgba(255,255,255,.7)}
+.g-cap{margin-top:7px;font-size:10.5px;font-weight:700;color:var(--gold);background:rgba(255,210,74,.1);border:1px solid rgba(255,210,74,.3);border-radius:8px;padding:5px 9px;align-self:flex-start}
+.g-cap b{font-size:12px}
 .g-mini{display:flex;gap:6px;margin-top:auto;padding-top:11px}
 .g-mini .m{flex:1;background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:7px 2px;text-align:center;min-width:0}
 .g-mini .mv{font-family:'Oswald';font-weight:700;font-size:16px;line-height:1;color:#fff}
@@ -757,6 +759,7 @@ function teamFunds(team){
   return f-a;
 }
 function teamEarned(team){return D.funds.filter(x=>x.team===team).reduce((s,x)=>s+x.amount,0);}
+function capBonus(team){return Math.round(teamEarned(team)*0.1/100)*100;}   // 구단가치 = 총획득자금
 function buyoutPrice(p){
   if(!p.seasonGames)return 0;
   return Math.ceil((p.seasonMV/p.seasonGames)*3/100)*100;
@@ -846,6 +849,7 @@ function buildGrowthCard(p,compact){
         <div class="g-name">${p.name}</div>
         <div class="g-pos">${p.position||'포지션 미정'} · 통산 ${p.careerGames}경기</div>
         <div class="g-mv"><div class="l">이번 시즌 MV</div><div class="v num">${fmt(p.seasonMV)}<span class="u">BRO</span></div></div>
+        ${p.role==='주장'?`<div class="g-cap">👑 주장 보상 <b class="num">${fmt(capBonus(p.team))}</b> 적립 중 · 구단가치 10%</div>`:''}
         <div class="g-mini">
           <div class="m"><div class="mv num">${p.goals}</div><div class="ml">통산골</div></div>
           <div class="m"><div class="mv num">${p.moms}</div><div class="ml">MOM</div></div>
@@ -962,21 +966,26 @@ function renderPlayers(){
   const host=document.getElementById('players-host');
   const eh=document.getElementById('players-edit');
   if(eh)eh.innerHTML=canEditTeam(playersTeam)?(editChip('수당','allowance',playersTeam)+editChip('명단','roster',playersTeam)):'';
-  const arr=activeOf(playersTeam).sort((a,b)=>{
+  const all=activeOf(playersTeam).sort((a,b)=>{
     const ra=a.role==='주장'?0:a.role==='부주장'?1:2;
     const rb=b.role==='주장'?0:b.role==='부주장'?1:2;
     return ra-rb||b.xp-a.xp;
   });
-  if(!arr.length){host.innerHTML='<div class="foot" style="padding:24px">선수 없음</div>';return;}
+  const act=all.filter(p=>!isReleaseTarget(p));
+  const freed=all.filter(p=>isReleaseTarget(p)).sort((a,b)=>b.seasonMV-a.seasonMV);
+  if(!all.length){host.innerHTML='<div class="foot" style="padding:24px">선수 없음</div>';return;}
   const head='<div class="pl-head"><span class="pli-c c-rank">#</span><span class="pli-c c-name">선수</span><span class="pli-c c-grade">등급</span><span class="pli-c c-mv">시즌MV</span><span class="pli-c c-chev"></span></div>';
-  const items=arr.map((p,i)=>{
-    const warn=curMatchList().length>=ABSENCE_LIMIT-1&&p.absent===ABSENCE_LIMIT-1&&!isProtected(p);
-    const danger=isReleaseTarget(p);
+  let gi=0;
+  const item=(p,rank,kind)=>{
+    const i=gi++;
+    const warn=kind==='act'&&curMatchList().length>=ABSENCE_LIMIT-1&&p.absent===ABSENCE_LIMIT-1&&!isProtected(p);
     const me=p.id===MY;
+    const nameStyle=kind==='freed'?'color:#FF7A7A':warn?'color:var(--warn)':'';
+    const mark=kind==='freed'?'🚫 ':warn?'⚠️ ':'';
     return `<div class="pl-item" id="pli${i}">
       <div class="pl-line" style="${me?'background:var(--lime-dim)':''}" onclick="togglePlayer(${i})">
-        <span class="pli-c c-rank${i<3?' top':''}">${i+1}</span>
-        <span class="pli-c c-name" style="${danger?'color:#FF7A7A':warn?'color:var(--warn)':''}">${danger?'🚨 ':warn?'⚠️ ':''}${p.name}${roleBadge(p)}</span>
+        <span class="pli-c c-rank${(kind==='act'&&rank<=3)?' top':''}">${rank}</span>
+        <span class="pli-c c-name" style="${nameStyle}">${mark}${p.name}${roleBadge(p)}</span>
         <span class="pli-c c-grade">${gradeBadge(p)}</span>
         <span class="pli-c c-mv">${fmt(p.seasonMV)}</span>
         <span class="pli-c c-chev"><span class="chev-i">⌄</span></span>
@@ -984,9 +993,14 @@ function renderPlayers(){
       <div class="pl-expand" id="plx${i}"><div class="pl-expand-inner"><div class="pl-expand-pad">
         ${buildGrowthCard(p,true)}${buildStatus(p)}${buildCareer(p)}${buildRounds(p)}
       </div></div></div></div>`;
-  }).join('');
-  host.innerHTML=`<div class="plist">${head}${items}</div>
-    <div class="foot">주장·부주장 상단 고정 · 이하 XP순 · 등급은 통산 커리어 기준</div>`;
+  };
+  let html=`<div class="plist">${head}${act.map((p,idx)=>item(p,idx+1,'act')).join('')||'<div class="foot" style="padding:18px">활성 선수 없음</div>'}</div>`;
+  if(freed.length){
+    html+=`<div class="sec" style="margin-top:18px">무소속 · 결장 강등 <span class="tag">최근 ${ABSENCE_LIMIT}경기 결장 · 출전하면 자동 복귀</span></div>`;
+    html+=`<div class="plist">${freed.map(p=>item(p,'·','freed')).join('')}</div>`;
+  }
+  html+=`<div class="foot">주장·부주장 상단 고정 · 이하 XP순 · 결장 강등도 수당·XP는 보존</div>`;
+  host.innerHTML=html;
 }
 function togglePlayer(i){
   const item=document.getElementById('pli'+i);
