@@ -744,9 +744,13 @@ function derive(){
       if(attendIdx[pid+'|'+m.id]===cleanTeam&&DEF_POS.includes(p.position))p.cleans++;
     });
   });
-  // XP + 등급
+  // 정산 확정액 (커리어 자산)
+  Object.values(P).forEach(p=>{p.settledPay=0;});
+  D.settlements.forEach(s=>{if(P[s.pid])P[s.pid].settledPay+=s.amount;});
+  // XP + 등급 — 돈 성분: 정산확정 + 진행시즌 수당 + 미정산 주장보상
   Object.values(P).forEach(p=>{
-    p.xp=p.careerGames*XP_GAME+p.careerPay+p.goals*XP_GOAL+p.moms*XP_MOM+p.cleans*XP_CLEAN;
+    p.capComp=capBonusFor(p.id);
+    p.xp=p.careerGames*XP_GAME+(p.settledPay+p.seasonMV+p.capComp)+p.goals*XP_GOAL+p.moms*XP_MOM+p.cleans*XP_CLEAN;
     p.gradeIdx=0;
     GRADES.forEach((g,i)=>{if(p.xp>=g.xp)p.gradeIdx=i;});
   });
@@ -774,7 +778,20 @@ function teamFunds(team){
   return f-a;
 }
 function teamEarned(team){return D.funds.filter(x=>x.team===team).reduce((s,x)=>s+x.amount,0);}
-function capBonus(team){return Math.round(teamEarned(team)*0.1/100)*100;}   // 구단가치 = 총획득자금
+// 주장 보상 지분 (구단가치 10%를 지분대로 배분) — 주장 교체 시 여기만 수정
+const CAP_SHARE={
+  red:[{pid:'P37',ratio:1}],                             // 서범종 100%
+  blue:[{pid:'P36',ratio:5/6},{pid:'P28',ratio:1/6}],    // 이임표 5/6 · 이호진 1/6 (6월 교체)
+};
+function capBonusFor(pid){
+  let sum=0;
+  Object.keys(CAP_SHARE).forEach(t=>{
+    CAP_SHARE[t].forEach(s=>{
+      if(s.pid===pid)sum+=Math.round(teamEarned(t)*0.1*s.ratio/100)*100;
+    });
+  });
+  return sum;
+}
 function buyoutPrice(p){
   if(!p.seasonGames)return 0;
   return Math.ceil((p.seasonMV/p.seasonGames)*3/100)*100;
@@ -865,7 +882,7 @@ function buildGrowthCard(p,compact){
         <div class="g-name">${p.name}</div>
         <div class="g-pos">${p.position||'포지션 미정'} · 통산 ${p.careerGames}경기</div>
         <div class="g-mv"><div class="l">이번 시즌 MV</div><div class="v num">${fmt(p.seasonMV)}<span class="u">BRO</span></div></div>
-        ${p.role==='주장'?`<div class="g-cap">👑 주장 보상 <b class="num">${fmt(capBonus(p.team))}</b> 적립 중 · 구단가치 10%</div>`:''}
+        ${p.capComp>0?`<div class="g-cap">👑 주장 보상 <b class="num">${fmt(p.capComp)}</b> 적립 중 · 구단가치 10% 지분</div>`:''}
         <div class="g-mini">
           <div class="m"><div class="mv num">${p.goals}</div><div class="ml">통산골</div></div>
           <div class="m"><div class="mv num">${p.moms}</div><div class="ml">MOM</div></div>
@@ -924,7 +941,7 @@ function renderHome(){
   const p=P[MY];
   host.innerHTML=buildGrowthCard(p,false)+buildStatus(p)+
     `<div class="sec">커리어 연혁 <span class="tag">시즌별 연봉</span></div>`+buildCareer(p)+buildRounds(p)+
-    `<div class="foot">XP = 출전 1,000 + 수당 + 골 1,000 + MOM 1,000 + 클린시트 500</div>`;
+    `<div class="foot">XP = 출전 1,000 + 수령액(정산확정+진행) + 주장보상 + 골 1,000 + MOM 1,000 + 클린시트 500</div>`;
 }
 
 // ═══════ 경기 ═══════
