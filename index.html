@@ -1328,7 +1328,7 @@ function updateMLabel(){
 function initMatchForm(){
   mGoals={red:{},blue:{}};mManual={red:[],blue:[]};
   document.getElementById('adm-m-date').value=new Date().toISOString().slice(0,10);
-  mTargetId=null;
+  mTargetId=null;ogOpen=false;
   const opts='<option value="">— 선택 안 함 —</option>'+
     [...activeOf('red'),...activeOf('blue')].sort((a,b)=>a.team<b.team?-1:1)
     .map(p=>`<option value="${p.id}">${p.team==='red'?'🔴':'🔵'} ${p.name}${p.position?' ('+p.position+')':''}</option>`).join('');
@@ -1337,10 +1337,17 @@ function initMatchForm(){
   mTeam='red';admMSetTeam('red');updateScore();
   setMMode('result');
 }
+let ogOpen=false;
 function admMSetTeam(t){
-  mTeam=t;
+  mTeam=t;ogOpen=false;
   document.querySelectorAll('#adm-m-tog button').forEach(b=>b.className=b.dataset.t===t?('on '+t):'');
   renderGoalList();
+}
+function ogToggle(v){ogOpen=v;renderGoalList();}
+function addOwnGoal(name){
+  const key=name+'(자책)';
+  mGoals[mTeam][key]=(mGoals[mTeam][key]||0)+1;
+  ogOpen=false;renderGoalList();updateScore();
 }
 function renderGoalList(){
   const players=activeOf(mTeam).sort((a,b)=>b.goals-a.goals);
@@ -1358,6 +1365,22 @@ function renderGoalList(){
       <span class="gcount num ${c===0?'zero':''}">${c}</span>
       <button onclick="goalPlus('${mTeam}','${nm}')">＋</button></div></div>`;
   });
+  // 자책골 행 (상대 선수 이름(자책) — 우리 팀 득점으로 카운트, 골·XP 미반영)
+  Object.keys(mGoals[mTeam]).filter(n=>/\(자책\)$/.test(n)&&mGoals[mTeam][n]>0).forEach(nm=>{
+    const c=mGoals[mTeam][nm];
+    html+=`<div class="grow has"><div class="gn">${nm.replace('(자책)','')}<span class="gm" style="background:var(--warn)">🥅 자책</span></div>
+      <div class="gctl"><button onclick="goalMinus('${mTeam}','${nm}')">−</button>
+      <span class="gcount num">${c}</span>
+      <button onclick="goalPlus('${mTeam}','${nm}')">＋</button></div></div>`;
+  });
+  // 자책골 추가 버튼 / 상대 선수 피커
+  const opp=mTeam==='red'?'blue':'red';
+  if(ogOpen){
+    html+=`<div class="hint" style="margin:10px 0 8px">🥅 자책골 넣은 <b>${opp==='red'?'🔴 레드':'🔵 블루'}</b> 선수를 선택하세요 <span onclick="ogToggle(false)" style="float:right;color:var(--muted);font-weight:800;cursor:pointer">✕ 취소</span></div>`;
+    html+=activeOf(opp).map(p=>`<div class="grow" onclick="addOwnGoal('${p.name.replace(/'/g,"\\'")}')" style="cursor:pointer"><div class="gn">${p.name}<span class="gp">${p.position||'-'}</span></div><div class="gctl" style="font-size:12px;color:var(--muted);font-weight:700">선택 ›</div></div>`).join('');
+  }else{
+    html+=`<button class="adm-add-manual" style="margin-top:8px" onclick="ogToggle(true)">🥅 상대 자책골 추가</button>`;
+  }
   document.getElementById('adm-glist').innerHTML=html;
 }
 function goalPlus(team,name){mGoals[team][name]=(mGoals[team][name]||0)+1;renderGoalList();updateScore();}
