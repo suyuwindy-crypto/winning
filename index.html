@@ -598,6 +598,15 @@ button{font-family:inherit}
     <button class="adm-add-manual" onclick="admAddManual()">＋ 수기 입력 (신입·게스트)</button>
     <div id="adm-glist"></div>
     </div>
+    <div class="rsel" id="adm-mom-late" style="margin-top:16px">
+      <span class="rsel-lbl">🏅 지난 경기 MOM 수정 <span style="color:var(--muted);font-weight:700">· 득점자 먼저 올리고 MOM은 나중에</span></span>
+      <div class="rchips" id="adm-mom-chips" style="margin-bottom:10px"></div>
+      <div class="mom-row" style="margin-bottom:10px">
+        <div class="mom-box"><div class="ml">🛡️ 오늘의 수비수</div><select id="adm-mom-def2"></select></div>
+        <div class="mom-box"><div class="ml">⚙️ 오늘의 미들</div><select id="adm-mom-mid2"></select></div>
+      </div>
+      <button class="adm-btn" onclick="saveMomLate()">MOM 저장</button>
+    </div>
   </div>
 
   <!-- 선수 관리 -->
@@ -1012,7 +1021,7 @@ function renderResultsTable(ms){
     const wl=win==='r'?'<span class="mw r">레드 승</span>':win==='b'?'<span class="mw b">블루 승</span>':'<span class="mw d">무</span>';
     return `<tr><td class="d-rank c">R${m.round}</td>
       <td class="m-sc"><span class="ms-r ${win==='r'?'w':''}">${m.redScore}</span><span class="ms-x">:</span><span class="ms-b ${win==='b'?'w':''}">${m.blueScore}</span><div style="margin-top:2px">${wl}</div></td>
-      <td class="m-goals"><div class="mg">🔴 ${scorerStr(m.redGoals)}</div><div class="mg">🔵 ${scorerStr(m.blueGoals)}</div><div class="mg-date">${m.season} · ${m.date}</div></td></tr>`;
+      <td class="m-goals"><div class="mg">🔴 ${scorerStr(m.redGoals)}</div><div class="mg">🔵 ${scorerStr(m.blueGoals)}</div>${(m.momDef||m.momMid)?`<div class="mg" style="color:var(--gold);margin-top:2px">${m.momDef?'🛡️ '+(nameOf(m.momDef)||m.momDef):''}${m.momDef&&m.momMid?' · ':''}${m.momMid?'⚙️ '+(nameOf(m.momMid)||m.momMid):''}</div>`:''}<div class="mg-date">${m.season} · ${m.date}</div></td></tr>`;
   }).join('');
   rHost.innerHTML=`<table class="dtbl mtbl"><thead><tr><th class="c">R</th><th class="c">스코어</th><th>득점자</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
@@ -1319,6 +1328,34 @@ function buildSchedChips(){
   if(t&&t.date)document.getElementById('adm-m-date').value=isoOf(t.date);
 }
 function pickTarget(id){mTargetId=id;buildSchedChips();updateMLabel();}
+let momTargetId='';
+function buildMomLate(){
+  const played=curPlayedList().slice().reverse();
+  const box=document.getElementById('adm-mom-late');
+  if(!played.length){box.style.display='none';return;}
+  box.style.display='block';
+  if(!momTargetId||!played.find(m=>m.id===momTargetId))momTargetId=played[0].id;
+  document.getElementById('adm-mom-chips').innerHTML=played.map(m=>
+    `<div class="rchip ${m.id===momTargetId?'on':''}" onclick="pickMomMatch('${m.id}')"><div class="rr">R${m.round}</div><div class="rd">${(m.date||'').replace(/^\d+\.\s*/,'')}</div></div>`).join('');
+  const t=played.find(m=>m.id===momTargetId);
+  const opts='<option value="">— 선택 안 함 —</option>'+
+    [...activeOf('red'),...activeOf('blue')].sort((a,b)=>a.team<b.team?-1:1)
+    .map(p=>`<option value="${p.id}">${p.team==='red'?'🔴':'🔵'} ${p.name}${p.position?' ('+p.position+')':''}</option>`).join('');
+  const d2=document.getElementById('adm-mom-def2'),m2=document.getElementById('adm-mom-mid2');
+  d2.innerHTML=opts;m2.innerHTML=opts;
+  d2.value=t&&t.momDef?t.momDef:'';m2.value=t&&t.momMid?t.momMid:'';
+}
+function pickMomMatch(id){momTargetId=id;buildMomLate();}
+async function saveMomLate(){
+  if(!momTargetId)return;
+  try{
+    const j=await api({action:'setMom',password:admPw,matchId:momTargetId,
+      momDef:document.getElementById('adm-mom-def2').value,momMid:document.getElementById('adm-mom-mid2').value});
+    if(!j.ok)throw new Error(j.error);
+    toast('🏅 MOM 저장 완료 · XP 반영됨');
+    load().then(buildMomLate);
+  }catch(e){alert('저장 실패: '+e.message);}
+}
 function updateMLabel(){
   const el=document.getElementById('adm-m-round');
   if(mMode==='schedule'){el.textContent=`📅 새 일정 · ${D.season} R${curMatchList().length+1}`;return;}
@@ -1336,6 +1373,7 @@ function initMatchForm(){
   document.getElementById('adm-mom-mid').innerHTML=opts;
   mTeam='red';admMSetTeam('red');updateScore();
   setMMode('result');
+  momTargetId='';buildMomLate();
 }
 let ogOpen=false;
 function admMSetTeam(t){
