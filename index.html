@@ -236,7 +236,7 @@ button{font-family:inherit}
 .pl-item.open .chev-i{transform:rotate(180deg);color:var(--lime)}
 .pli-c{min-width:0}
 .plist .c-rank{flex:0 0 28px;font-family:'Oswald';font-weight:700;color:var(--muted)}
-.plist .c-rank.top{color:var(--lime)}
+.plist .c-rank.t3{color:var(--lime)}
 .plist .c-name{flex:1;min-width:0;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .plist .c-grade{flex:0 0 64px;text-align:center}
 .plist .c-mv{flex:0 0 66px;text-align:right;font-family:'Oswald';font-weight:700;color:var(--lime)}
@@ -840,7 +840,7 @@ function openMyPick(){
   const host=document.getElementById('pick-host');
   let html='';
   [['red','🔴 RED TEAM'],['blue','🔵 BLUE TEAM']].forEach(([t,label])=>{
-    const arr=activeOf(t).sort((a,b)=>b.seasonMV-a.seasonMV);
+    const arr=activeOf(t).sort((a,b)=>a.name.localeCompare(b.name,'ko'));
     html+=`<div class="pick-team ${t}">${label}</div><div class="pick-grid">`;
     html+=arr.map(p=>`<div class="pick-cell ${t}" onclick="pickMe('${p.id}')">${p.name}</div>`).join('');
     html+='</div>';
@@ -1068,7 +1068,7 @@ function renderPlayers(){
     const mark=kind==='freed'?'🚫 ':warn?'⚠️ ':'';
     return `<div class="pl-item" id="pli${i}">
       <div class="pl-line" style="${me?'background:var(--lime-dim)':''}" onclick="togglePlayer(${i})">
-        <span class="pli-c c-rank${(kind==='act'&&rank<=3)?' top':''}">${rank}</span>
+        <span class="pli-c c-rank${(kind==='act'&&rank<=3)?' t3':''}">${rank}</span>
         <span class="pli-c c-name" style="${nameStyle}">${mark}${p.name}${roleBadge(p)}</span>
         <span class="pli-c c-grade">${gradeBadge(p)}</span>
         <span class="pli-c c-mv">${fmt(p.seasonMV)}</span>
