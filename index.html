@@ -587,8 +587,12 @@ button{font-family:inherit}
     </div>
     <div class="mbonus" id="adm-m-bonus"></div>
     <div class="mom-row">
-      <div class="mom-box"><div class="ml">🛡️ 오늘의 수비수 (+1000 XP)</div><select id="adm-mom-def"></select></div>
-      <div class="mom-box"><div class="ml">⚙️ 오늘의 미들 (+1000 XP)</div><select id="adm-mom-mid"></select></div>
+      <div class="mom-box"><div class="ml" style="color:#FF7A7A">🔴 🛡️ 수비수 (+500)</div><select id="adm-mom-defr"></select></div>
+      <div class="mom-box"><div class="ml" style="color:#FF7A7A">🔴 ⚙️ 미들 (+500)</div><select id="adm-mom-midr"></select></div>
+    </div>
+    <div class="mom-row">
+      <div class="mom-box"><div class="ml" style="color:#7AB0FF">🔵 🛡️ 수비수 (+500)</div><select id="adm-mom-defb"></select></div>
+      <div class="mom-box"><div class="ml" style="color:#7AB0FF">🔵 ⚙️ 미들 (+500)</div><select id="adm-mom-midb"></select></div>
     </div>
     <div class="segc" id="adm-m-tog">
       <button class="on red" data-t="red" onclick="admMSetTeam('red')">🔴 레드 득점</button>
@@ -601,9 +605,13 @@ button{font-family:inherit}
     <div class="rsel" id="adm-mom-late" style="margin-top:16px">
       <span class="rsel-lbl">🏅 지난 경기 MOM 수정 <span style="color:var(--muted);font-weight:700">· 득점자 먼저 올리고 MOM은 나중에</span></span>
       <div class="rchips" id="adm-mom-chips" style="margin-bottom:10px"></div>
+      <div class="mom-row" style="margin-bottom:8px">
+        <div class="mom-box"><div class="ml" style="color:#FF7A7A">🔴 🛡️ 수비수</div><select id="adm-mom-defr2"></select></div>
+        <div class="mom-box"><div class="ml" style="color:#FF7A7A">🔴 ⚙️ 미들</div><select id="adm-mom-midr2"></select></div>
+      </div>
       <div class="mom-row" style="margin-bottom:10px">
-        <div class="mom-box"><div class="ml">🛡️ 오늘의 수비수</div><select id="adm-mom-def2"></select></div>
-        <div class="mom-box"><div class="ml">⚙️ 오늘의 미들</div><select id="adm-mom-mid2"></select></div>
+        <div class="mom-box"><div class="ml" style="color:#7AB0FF">🔵 🛡️ 수비수</div><select id="adm-mom-defb2"></select></div>
+        <div class="mom-box"><div class="ml" style="color:#7AB0FF">🔵 ⚙️ 미들</div><select id="adm-mom-midb2"></select></div>
       </div>
       <button class="adm-btn" onclick="saveMomLate()">MOM 저장</button>
     </div>
@@ -667,7 +675,7 @@ const GRADES=[
   {name:'팀 에이스',xp:100000,cls:'g4',emo:'⭐',img:'g4.png'},
   {name:'K7 콜업',xp:150000,cls:'g5',emo:'🏆',img:'g5.png'},
 ];
-const XP_GAME=1000, XP_GOAL=1000, XP_MOM=1000, XP_CLEAN=500;
+const XP_GAME=1000, XP_GOAL=1000, XP_MOM=500, XP_CLEAN=500;
 const DEF_POS=['GK','CB','LB','RB','LWB','RWB','SW','DF'];
 
 let D=null, P={}, MY=localStorage.getItem('we3_my')||'';
@@ -737,8 +745,9 @@ function derive(){
   });
   // MOM
   D.matches.forEach(m=>{
-    if(m.momDef&&P[m.momDef])P[m.momDef].moms++;
-    if(m.momMid&&P[m.momMid])P[m.momMid].moms++;
+    ['momDefR','momMidR','momDefB','momMidB'].forEach(k=>{
+      if(m[k]&&P[m[k]])P[m[k]].moms++;
+    });
   });
   // 클린시트: 실점 0 경기 출전한 GK·수비
   const attendIdx={};
@@ -950,7 +959,7 @@ function renderHome(){
   const p=P[MY];
   host.innerHTML=buildGrowthCard(p,false)+buildStatus(p)+
     `<div class="sec">커리어 연혁 <span class="tag">시즌별 연봉</span></div>`+buildCareer(p)+buildRounds(p)+
-    `<div class="foot">XP = 출전 1,000 + 수령액(정산확정+진행) + 주장보상 + 골 1,000 + MOM 1,000 + 클린시트 500</div>`;
+    `<div class="foot">XP = 출전 1,000 + 수령액(정산확정+진행) + 주장보상 + 골 1,000 + MOM 500 + 클린시트 500</div>`;
 }
 
 // ═══════ 경기 ═══════
@@ -993,9 +1002,9 @@ function renderMatch(){
     const m=ms[ms.length-1];
     const win=m.winner==='red'?'r':m.winner==='blue'?'b':'d';
     const resTxt=win==='r'?'🔴 레드 승':win==='b'?'🔵 블루 승':'무승부';
-    const momHtml=(m.momDef||m.momMid)?`<div class="cover-mom">
-      ${m.momDef?`<div class="cm">🛡️ 오늘의 수비수 <b>${nameOf(m.momDef)||m.momDef}</b></div>`:''}
-      ${m.momMid?`<div class="cm">⚙️ 오늘의 미들 <b>${nameOf(m.momMid)||m.momMid}</b></div>`:''}</div>`:'<div style="height:6px"></div>';
+    const momR=[m.momDefR?'🛡️ '+(nameOf(m.momDefR)||''):'',m.momMidR?'⚙️ '+(nameOf(m.momMidR)||''):''].filter(Boolean).join(' · ');
+    const momB=[m.momDefB?'🛡️ '+(nameOf(m.momDefB)||''):'',m.momMidB?'⚙️ '+(nameOf(m.momMidB)||''):''].filter(Boolean).join(' · ');
+    const momHtml=(momR||momB)?`<div class="cover-mom"><div class="cm">🔴 <b>${momR||'—'}</b></div><div class="cm">🔵 <b>${momB||'—'}</b></div></div>`:'<div style="height:6px"></div>';
     host.innerHTML=`<div class="cover">
       <div class="cover-top"><span class="cover-badge">${m.season} R${m.round}</span><span class="cover-live">최근 경기</span>
         <span class="cover-date">${m.date}</span><span class="cover-res ${win}">${resTxt}</span></div>
@@ -1021,7 +1030,7 @@ function renderResultsTable(ms){
     const wl=win==='r'?'<span class="mw r">레드 승</span>':win==='b'?'<span class="mw b">블루 승</span>':'<span class="mw d">무</span>';
     return `<tr><td class="d-rank c">R${m.round}</td>
       <td class="m-sc"><span class="ms-r ${win==='r'?'w':''}">${m.redScore}</span><span class="ms-x">:</span><span class="ms-b ${win==='b'?'w':''}">${m.blueScore}</span><div style="margin-top:2px">${wl}</div></td>
-      <td class="m-goals"><div class="mg">🔴 ${scorerStr(m.redGoals)}</div><div class="mg">🔵 ${scorerStr(m.blueGoals)}</div>${(m.momDef||m.momMid)?`<div class="mg" style="color:var(--gold);margin-top:2px">${m.momDef?'🛡️ '+(nameOf(m.momDef)||m.momDef):''}${m.momDef&&m.momMid?' · ':''}${m.momMid?'⚙️ '+(nameOf(m.momMid)||m.momMid):''}</div>`:''}<div class="mg-date">${m.season} · ${m.date}</div></td></tr>`;
+      <td class="m-goals"><div class="mg">🔴 ${scorerStr(m.redGoals)}</div><div class="mg">🔵 ${scorerStr(m.blueGoals)}</div>${(m.momDefR||m.momMidR||m.momDefB||m.momMidB)?`<div class="mg" style="color:var(--gold);margin-top:2px">🏅 ${[m.momDefR,m.momMidR,m.momDefB,m.momMidB].filter(Boolean).map(x=>nameOf(x)||x).join(' · ')}</div>`:''}<div class="mg-date">${m.season} · ${m.date}</div></td></tr>`;
   }).join('');
   rHost.innerHTML=`<table class="dtbl mtbl"><thead><tr><th class="c">R</th><th class="c">스코어</th><th>득점자</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
@@ -1338,19 +1347,22 @@ function buildMomLate(){
   document.getElementById('adm-mom-chips').innerHTML=played.map(m=>
     `<div class="rchip ${m.id===momTargetId?'on':''}" onclick="pickMomMatch('${m.id}')"><div class="rr">R${m.round}</div><div class="rd">${(m.date||'').replace(/^\d+\.\s*/,'')}</div></div>`).join('');
   const t=played.find(m=>m.id===momTargetId);
-  const opts='<option value="">— 선택 안 함 —</option>'+
-    [...activeOf('red'),...activeOf('blue')].sort((a,b)=>a.team<b.team?-1:1)
-    .map(p=>`<option value="${p.id}">${p.team==='red'?'🔴':'🔵'} ${p.name}${p.position?' ('+p.position+')':''}</option>`).join('');
-  const d2=document.getElementById('adm-mom-def2'),m2=document.getElementById('adm-mom-mid2');
-  d2.innerHTML=opts;m2.innerHTML=opts;
-  d2.value=t&&t.momDef?t.momDef:'';m2.value=t&&t.momMid?t.momMid:'';
+  const tOpts=tm=>'<option value="">— 선택 안 함 —</option>'+activeOf(tm)
+    .map(p=>`<option value="${p.id}">${p.name}${p.position?' ('+p.position+')':''}</option>`).join('');
+  const els={defr2:'red',midr2:'red',defb2:'blue',midb2:'blue'};
+  Object.keys(els).forEach(id=>{document.getElementById('adm-mom-'+id).innerHTML=tOpts(els[id]);});
+  document.getElementById('adm-mom-defr2').value=t&&t.momDefR?t.momDefR:'';
+  document.getElementById('adm-mom-midr2').value=t&&t.momMidR?t.momMidR:'';
+  document.getElementById('adm-mom-defb2').value=t&&t.momDefB?t.momDefB:'';
+  document.getElementById('adm-mom-midb2').value=t&&t.momMidB?t.momMidB:'';
 }
 function pickMomMatch(id){momTargetId=id;buildMomLate();}
 async function saveMomLate(){
   if(!momTargetId)return;
   try{
     const j=await api({action:'setMom',password:admPw,matchId:momTargetId,
-      momDef:document.getElementById('adm-mom-def2').value,momMid:document.getElementById('adm-mom-mid2').value});
+      momDefR:document.getElementById('adm-mom-defr2').value,momMidR:document.getElementById('adm-mom-midr2').value,
+      momDefB:document.getElementById('adm-mom-defb2').value,momMidB:document.getElementById('adm-mom-midb2').value});
     if(!j.ok)throw new Error(j.error);
     toast('🏅 MOM 저장 완료 · XP 반영됨');
     load().then(buildMomLate);
@@ -1366,11 +1378,12 @@ function initMatchForm(){
   mGoals={red:{},blue:{}};mManual={red:[],blue:[]};
   document.getElementById('adm-m-date').value=new Date().toISOString().slice(0,10);
   mTargetId=null;ogOpen=false;
-  const opts='<option value="">— 선택 안 함 —</option>'+
-    [...activeOf('red'),...activeOf('blue')].sort((a,b)=>a.team<b.team?-1:1)
-    .map(p=>`<option value="${p.id}">${p.team==='red'?'🔴':'🔵'} ${p.name}${p.position?' ('+p.position+')':''}</option>`).join('');
-  document.getElementById('adm-mom-def').innerHTML=opts;
-  document.getElementById('adm-mom-mid').innerHTML=opts;
+  const teamOpts=t=>'<option value="">— 선택 안 함 —</option>'+activeOf(t)
+    .map(p=>`<option value="${p.id}">${p.name}${p.position?' ('+p.position+')':''}</option>`).join('');
+  document.getElementById('adm-mom-defr').innerHTML=teamOpts('red');
+  document.getElementById('adm-mom-midr').innerHTML=teamOpts('red');
+  document.getElementById('adm-mom-defb').innerHTML=teamOpts('blue');
+  document.getElementById('adm-mom-midb').innerHTML=teamOpts('blue');
   mTeam='red';admMSetTeam('red');updateScore();
   setMMode('result');
   momTargetId='';buildMomLate();
@@ -1470,7 +1483,8 @@ async function saveMatch(){
   try{
     const j=await api({action:'saveMatch',password:admPw,matchId:mTargetId||'',date,redScore:rs,blueScore:bs,
       redGoals:JSON.stringify(redGoals),blueGoals:JSON.stringify(blueGoals),
-      momDef:document.getElementById('adm-mom-def').value,momMid:document.getElementById('adm-mom-mid').value});
+      momDefR:document.getElementById('adm-mom-defr').value,momMidR:document.getElementById('adm-mom-midr').value,
+      momDefB:document.getElementById('adm-mom-defb').value,momMidB:document.getElementById('adm-mom-midb').value});
     if(!j.ok)throw new Error(j.error);
     btn.textContent='✓ 저장됨';
     let msg=`✓ R${j.round} 저장 (${j.winner==='red'?'레드 승':j.winner==='blue'?'블루 승':'무승부'})`;
