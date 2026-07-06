@@ -1117,7 +1117,7 @@ function renderLedger(){
   const team=ledgerTeam;
   const eh=document.getElementById('ledger-edit');
   if(eh)eh.innerHTML=canEditTeam(team)?(editChip('수당','allowance',team)+editChip('영입','trade',team)):'';
-  const players=activeOf(team).sort((a,b)=>b.seasonMV-a.seasonMV);
+  const players=activeOf(team).filter(p=>!isReleaseTarget(p)).sort((a,b)=>b.seasonMV-a.seasonMV);
   const ms=curPlayedList();
   const totMV=players.reduce((s,p)=>s+p.seasonMV,0);
   const totG=players.reduce((s,p)=>s+p.seasonGames,0);
@@ -1260,13 +1260,26 @@ function buildAllowInputs(){
     return `<div class="prow ${on?'':'off'}" id="arow${i}">
       <div class="tg ${on?'on':''}" onclick="admToggle(${i},'${p.id}')" id="atg${i}"></div>
       <div class="pinfo"><div class="pn">${p.name}<span class="pp">${p.position||'-'}</span></div>
-        <div class="quick" id="aq${i}" style="${on?'':'display:none'}">
-          ${QUICK.map(q=>`<span class="qc ${q===(prev||1000)?'on':''}" onclick="admSetAmt(${i},'${p.id}',${q})">${q/1000}천</span>`).join('')}
-        </div></div>
+        <div class="quick" id="aq${i}" style="${on?'':'display:none'}">${quickHtml(i,p.id,prev||1000)}</div></div>
       <div class="amt"><input type="number" id="aamt${i}" value="${prev||1000}" ${on?'':'disabled'} oninput="admInput(${i},'${p.id}')"><span class="u">BRO</span></div>
     </div>`;
   }).join('')||'<div class="foot">선수 없음</div>';
   admRecalc();
+}
+function quickHtml(i,pid,amt){
+  const base=Math.floor(amt/1000)*1000;
+  const half=amt%1000===500;
+  return QUICK.map(q=>`<span class="qc ${q===base?'on':''}" onclick="admSetAmt(${i},'${pid}',${q})">${q/1000}천</span>`).join('')+
+    `<span class="qc ${half?'on':''}" onclick="admHalf(${i},'${pid}')" style="${half?'':'border-style:dashed'}">＋5백</span>`;
+}
+function refreshQuick(i,pid){
+  document.getElementById('aq'+i).innerHTML=quickHtml(i,pid,admState[pid].amount||0);
+  document.getElementById('aamt'+i).value=admState[pid].amount;
+}
+function admHalf(i,pid){
+  const a=admState[pid].amount||0;
+  admState[pid].amount=a%1000===500?a-500:a+500;
+  refreshQuick(i,pid);admRecalc();
 }
 function admToggle(i,pid){
   const s=admState[pid];s.on=!s.on;
@@ -1277,11 +1290,15 @@ function admToggle(i,pid){
   admRecalc();
 }
 function admSetAmt(i,pid,v){
-  document.getElementById('aamt'+i).value=v;admState[pid].amount=v;
-  document.querySelectorAll('#aq'+i+' .qc').forEach(c=>c.classList.toggle('on',c.textContent===(v/1000)+'천'));
+  const half=(admState[pid].amount||0)%1000===500?500:0;   // ＋5백 상태 유지
+  admState[pid].amount=v+half;
+  refreshQuick(i,pid);admRecalc();
+}
+function admInput(i,pid){
+  admState[pid].amount=parseInt(document.getElementById('aamt'+i).value)||0;
+  document.getElementById('aq'+i).innerHTML=quickHtml(i,pid,admState[pid].amount);
   admRecalc();
 }
-function admInput(i,pid){admState[pid].amount=parseInt(document.getElementById('aamt'+i).value)||0;admRecalc();}
 function admRecalc(){
   let cnt=0,sum=0;
   Object.values(admState).forEach(s=>{if(s.on){cnt++;sum+=s.amount||0;}});
