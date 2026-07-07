@@ -665,7 +665,7 @@ button{font-family:inherit}
 // ═══════ 설정 ═══════
 const DEFAULT_URL='https://script.google.com/macros/s/AKfycbxBkdHr-M1JGpN1vvhS-ui9FdR9tyIUZUU8H9-2D5Xz46zSnRzuqCpQfPNMGTWjxQWe/exec';
 let URL=DEFAULT_URL||localStorage.getItem('we3_url')||'';
-const ABSENCE_LIMIT=3, QUICK=[1000,2000,3000,4000];
+const ABSENCE_LIMIT=3, QUICK=[500,1000,2000,3000];
 // K7 성장 등급
 const GRADES=[
   {name:'연습생',xp:0,cls:'g0',emo:'🌱',img:'g0.png'},
@@ -1258,29 +1258,29 @@ function buildAllowInputs(){
   host.innerHTML=players.map((p,i)=>{
     const prev=p.seasonRows[admMatchId]||0;
     const on=prev>0;
-    admState[p.id]={name:p.name,on,amount:prev||1000};
+    admState[p.id]={name:p.name,on,amount:prev};
     return `<div class="prow ${on?'':'off'}" id="arow${i}">
       <div class="tg ${on?'on':''}" onclick="admToggle(${i},'${p.id}')" id="atg${i}"></div>
       <div class="pinfo"><div class="pn">${p.name}<span class="pp">${p.position||'-'}</span></div>
-        <div class="quick" id="aq${i}" style="${on?'':'display:none'}">${quickHtml(i,p.id,prev||1000)}</div></div>
-      <div class="amt"><input type="number" id="aamt${i}" value="${prev||1000}" ${on?'':'disabled'} oninput="admInput(${i},'${p.id}')"><span class="u">BRO</span></div>
+        <div class="quick" id="aq${i}" style="${on?'':'display:none'}">${quickHtml(i,p.id)}</div></div>
+      <div class="amt"><input type="number" id="aamt${i}" value="${prev}" ${on?'':'disabled'} oninput="admInput(${i},'${p.id}')"><span class="u">BRO</span></div>
     </div>`;
   }).join('')||'<div class="foot">선수 없음</div>';
   admRecalc();
 }
-function quickHtml(i,pid,amt){
-  const base=Math.floor(amt/1000)*1000;
-  const half=amt%1000===500;
-  return QUICK.map(q=>`<span class="qc ${q===base?'on':''}" onclick="admSetAmt(${i},'${pid}',${q})">${q/1000}천</span>`).join('')+
-    `<span class="qc ${half?'on':''}" onclick="admHalf(${i},'${pid}')" style="${half?'':'border-style:dashed'}">＋5백</span>`;
+function quickHtml(i,pid){
+  return QUICK.map(q=>`<span class="qc" onclick="admAddAmt(${i},'${pid}',${q})">＋${q>=1000?(q/1000)+'천':'5백'}</span>`).join('')+
+    `<span class="qc" onclick="admResetAmt(${i},'${pid}')" style="color:var(--red);border-color:rgba(255,77,77,.35)">C</span>`;
 }
 function refreshQuick(i,pid){
-  document.getElementById('aq'+i).innerHTML=quickHtml(i,pid,admState[pid].amount||0);
   document.getElementById('aamt'+i).value=admState[pid].amount;
 }
-function admHalf(i,pid){
-  const a=admState[pid].amount||0;
-  admState[pid].amount=a%1000===500?a-500:a+500;
+function admAddAmt(i,pid,q){
+  admState[pid].amount=(admState[pid].amount||0)+q;
+  refreshQuick(i,pid);admRecalc();
+}
+function admResetAmt(i,pid){
+  admState[pid].amount=0;
   refreshQuick(i,pid);admRecalc();
 }
 function admToggle(i,pid){
@@ -1291,14 +1291,8 @@ function admToggle(i,pid){
   document.getElementById('aq'+i).style.display=s.on?'flex':'none';
   admRecalc();
 }
-function admSetAmt(i,pid,v){
-  const half=(admState[pid].amount||0)%1000===500?500:0;   // ＋5백 상태 유지
-  admState[pid].amount=v+half;
-  refreshQuick(i,pid);admRecalc();
-}
 function admInput(i,pid){
   admState[pid].amount=parseInt(document.getElementById('aamt'+i).value)||0;
-  document.getElementById('aq'+i).innerHTML=quickHtml(i,pid,admState[pid].amount);
   admRecalc();
 }
 function admRecalc(){
