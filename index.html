@@ -822,9 +822,11 @@ function roleBadge(p){
   return '';
 }
 function winCnt(team){
-  const w=D.matches.filter(m=>m.winner===team).length;
-  const d=D.matches.filter(m=>m.winner==='draw').length;
-  return {w,d};
+  const played=playedAll();
+  const w=played.filter(m=>m.winner===team).length;
+  const d=played.filter(m=>m.winner==='draw').length;
+  const l=played.length-w-d;
+  return {w,d,l};
 }
 function scorerStr(arr){
   const u=[...new Set(arr)];
@@ -1108,16 +1110,16 @@ function renderClub(){
   const b={earned:teamEarned('blue'),avail:teamFunds('blue'),...winCnt('blue')};
   document.getElementById('clubvs').innerHTML=`
     <div class="cv-side red"><div class="cvt">🔴 레드</div><div class="cvv num">${fmt(r.avail)}</div><div class="cvu">가용자금</div>
-      <div class="cvsub">총획득 ${fmt(r.earned)}<br>${r.w}승 ${r.d}무</div></div>
+      <div class="cvsub">총획득 ${fmt(r.earned)}<br>${r.w}승 ${r.d}무 ${r.l}패</div></div>
     <div class="cv-mid">VS</div>
     <div class="cv-side blue"><div class="cvt">🔵 블루</div><div class="cvv num">${fmt(b.avail)}</div><div class="cvu">가용자금</div>
-      <div class="cvsub">총획득 ${fmt(b.earned)}<br>${b.w}승 ${b.d}무</div></div>`;
+      <div class="cvsub">총획득 ${fmt(b.earned)}<br>${b.w}승 ${b.d}무 ${b.l}패</div></div>`;
 }
 function renderLedger(){
   const team=ledgerTeam;
   const eh=document.getElementById('ledger-edit');
   if(eh)eh.innerHTML=canEditTeam(team)?(editChip('수당','allowance',team)+editChip('영입','trade',team)):'';
-  const players=activeOf(team).filter(p=>!isReleaseTarget(p)).sort((a,b)=>b.seasonMV-a.seasonMV);
+  const players=activeOf(team).filter(p=>!isReleaseTarget(p)).sort((a,b)=>a.name.localeCompare(b.name,'ko'));
   const ms=curPlayedList();
   const totMV=players.reduce((s,p)=>s+p.seasonMV,0);
   const totG=players.reduce((s,p)=>s+p.seasonGames,0);
