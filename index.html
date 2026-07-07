@@ -359,7 +359,8 @@ button{font-family:inherit}
 .pinfo{flex:1;min-width:0}
 .pn{font-size:14px;font-weight:800}
 .pn .pp{font-family:'Oswald';font-size:10px;color:var(--muted);background:var(--bg2);padding:2px 6px;border-radius:5px;margin-left:6px}
-.quick{display:flex;gap:5px;margin-top:8px}
+.quick{display:flex;gap:5px;margin-top:8px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+.quick::-webkit-scrollbar{display:none}
 .qc{font-family:'Oswald';font-weight:700;font-size:11px;color:var(--txt2);background:var(--bg2);border:1px solid var(--line);border-radius:7px;padding:4px 9px;cursor:pointer}
 .qc.on{background:rgba(255,210,74,.15);border-color:var(--gold);color:var(--gold)}
 .amt{display:flex;align-items:center;gap:5px;flex-shrink:0}
@@ -439,6 +440,9 @@ button{font-family:inherit}
 .season-pick .sp{flex-shrink:0;font-family:'Oswald';font-weight:700;font-size:12px;padding:7px 13px;border-radius:999px;border:1px solid var(--line);background:var(--bg2);color:var(--txt2);cursor:pointer}
 .season-pick .sp.on{background:var(--lime-dim);border-color:var(--lime);color:var(--lime)}
 /* 토스트 */
+.sumbar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:440px;z-index:220;background:rgba(8,11,9,.96);backdrop-filter:blur(16px);border-top:1px solid var(--line);padding:11px 18px calc(11px + env(safe-area-inset-bottom,0px));display:flex;align-items:center;gap:12px}
+.sumbar .sb-txt{font-size:12px;color:var(--txt2);font-weight:700;flex:1}
+.sumbar .sb-txt b{font-size:15px;color:var(--txt)}
 .adm-toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%) translateY(12px);z-index:500;background:var(--lime);color:#1a2400;font-weight:800;font-size:12.5px;padding:10px 16px;border-radius:999px;box-shadow:0 12px 32px -8px rgba(0,0,0,.6);opacity:0;pointer-events:none;transition:.22s;max-width:90%;text-align:center}
 .adm-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .edit-host{margin-left:auto;display:inline-flex;gap:6px}
@@ -545,6 +549,10 @@ button{font-family:inherit}
     </div>
   </div>
 
+  <div class="sumbar" id="adm-sumbar" style="display:none">
+    <div class="sb-txt">출전 <b id="sb-cnt" class="num">0</b>명 · 합계 <b id="sb-sum" class="num" style="color:var(--lime)">0</b> · 잔액 <b id="sb-after" class="num">0</b></div>
+    <button class="adm-save-top" id="sb-save" onclick="admSave()">저장</button>
+  </div>
   <div class="adm-menu" id="adm-menu" style="display:none">
     <button class="on" data-m="match" onclick="admMenu('match')">⚽ 경기</button>
     <button data-m="allowance" onclick="admMenu('allowance')">💰 수당</button>
@@ -942,8 +950,9 @@ function buildRounds(p){
   const ms=curPlayedList();
   if(!ms.length)return '';
   const chips=ms.map(m=>{
-    const v=p.seasonRows[m.id]||0;
-    return `<div class="chip ${v?'':'out'}"><div class="cr">R${m.round}</div><div class="cv num">${v?fmt(v):'✗'}</div></div>`;
+    const v=p.seasonRows[m.id];
+    const att=v!==undefined;
+    return `<div class="chip ${att?'':'out'}"><div class="cr">R${m.round}</div><div class="cv num">${att?(v>0?fmt(v):'✓'):'✗'}</div></div>`;
   }).join('');
   return `<div class="sec">이번 시즌 수당 <span class="tag">초록=출전 · 회색=결장</span></div><div class="rounds">${chips}</div>`;
 }
@@ -1142,8 +1151,8 @@ function renderLedger(){
     const bo=(isProtected(p))?0:buyoutPrice(p);
     body+=`<tr class="${cap?'cap-row':''} ${danger?'danger-row':''}"><td class="c-name">${danger?'⚠️':''}${p.name}${cap?' 🅒':vice?' Ⓥ':''}</td>`;
     ms.forEach(m=>{
-      const v=p.seasonRows[m.id]||0;
-      body+=v?`<td class="paid">${fmt(v)}</td>`:'<td class="zero">·</td>';
+      const v=p.seasonRows[m.id];
+      body+=v!==undefined?`<td class="paid">${v>0?fmt(v):'✓'}</td>`:'<td class="zero">·</td>';
     });
     body+=`<td class="c-mv">${fmt(p.seasonMV)}</td><td class="c-num">${p.seasonGames}</td><td class="c-num" style="color:var(--lime)">${bo?fmt(bo):'—'}</td></tr>`;
   });
@@ -1175,7 +1184,7 @@ function renderAll(){
 
 // ═══════ 어드민 ═══════
 function openAdmin(){document.getElementById('admin').style.display='block';}
-function closeAdmin(){document.getElementById('admin').style.display='none';}
+function closeAdmin(){document.getElementById('admin').style.display='none';document.getElementById('adm-sumbar').style.display='none';}
 function openAdminAt(menu,team){
   openAdmin();
   if(!admRole)return;
@@ -1220,6 +1229,7 @@ function admMenu(m){
   saveBtn.style.display=(m==='allowance'||m==='match')?'block':'none';
   saveBtn.setAttribute('data-mode',m);
   document.getElementById('adm-summary').style.display=m==='allowance'?'block':'none';
+  document.getElementById('adm-sumbar').style.display=m==='allowance'?'flex':'none';
   const fix=admRole==='red'?'red':admRole==='blue'?'blue':null;
   if(m==='allowance')admSetTeam(fix||admTeam);
   else if(m==='match')initMatchForm();
@@ -1256,14 +1266,24 @@ function buildAllowInputs(){
   if(!admMatchId){host.innerHTML='';admRecalc();return;}
   const players=activeOf(admTeam).sort((a,b)=>b.seasonMV-a.seasonMV);
   host.innerHTML=players.map((p,i)=>{
-    const prev=p.seasonRows[admMatchId]||0;
-    const on=prev>0;
-    admState[p.id]={name:p.name,on,amount:prev};
+    const prev=p.seasonRows[admMatchId];
+    const on=prev!==undefined;
+    const cap=p.role==='주장';
+    admState[p.id]={name:p.name,on,amount:cap?0:(prev||0),cap};
+    if(cap){
+      return `<div class="prow ${on?'':'off'}" id="arow${i}">
+        <div class="tg ${on?'on':''}" onclick="admToggle(${i},'${p.id}')" id="atg${i}"></div>
+        <div class="pinfo"><div class="pn">${p.name}<span class="pp">주장</span></div>
+          <div style="font-size:10.5px;color:var(--gold);font-weight:700;margin-top:4px">👑 구단가치 10% 정산 · 출석만 체크 (0원 기록)</div>
+          <span id="aq${i}" style="display:none"></span></div>
+        <div class="amt"><input type="number" id="aamt${i}" value="0" disabled><span class="u">BRO</span></div>
+      </div>`;
+    }
     return `<div class="prow ${on?'':'off'}" id="arow${i}">
       <div class="tg ${on?'on':''}" onclick="admToggle(${i},'${p.id}')" id="atg${i}"></div>
       <div class="pinfo"><div class="pn">${p.name}<span class="pp">${p.position||'-'}</span></div>
         <div class="quick" id="aq${i}" style="${on?'':'display:none'}">${quickHtml(i,p.id)}</div></div>
-      <div class="amt"><input type="number" id="aamt${i}" value="${prev}" ${on?'':'disabled'} oninput="admInput(${i},'${p.id}')"><span class="u">BRO</span></div>
+      <div class="amt"><input type="number" id="aamt${i}" value="${prev||0}" ${on?'':'disabled'} oninput="admInput(${i},'${p.id}')"><span class="u">BRO</span></div>
     </div>`;
   }).join('')||'<div class="foot">선수 없음</div>';
   admRecalc();
@@ -1287,8 +1307,8 @@ function admToggle(i,pid){
   const s=admState[pid];s.on=!s.on;
   document.getElementById('arow'+i).classList.toggle('off',!s.on);
   document.getElementById('atg'+i).classList.toggle('on',s.on);
-  document.getElementById('aamt'+i).disabled=!s.on;
-  document.getElementById('aq'+i).style.display=s.on?'flex':'none';
+  document.getElementById('aamt'+i).disabled=!s.on||s.cap;
+  document.getElementById('aq'+i).style.display=(s.on&&!s.cap)?'flex':'none';
   admRecalc();
 }
 function admInput(i,pid){
@@ -1310,16 +1330,24 @@ function admRecalc(){
   else{saveBtn.disabled=!admMatchId;if(after<10000)cls='warn';}
   bEl.className='budget '+cls;
   bEl.innerHTML=`<span class="bl">${admTeam==='red'?'🔴 레드':'🔵 블루'} 지급 후 잔액</span><span class="bv ${vcls}">${fmt(after)} BRO</span>`;
+  document.getElementById('sb-cnt').textContent=cnt;
+  document.getElementById('sb-sum').textContent=fmt(sum);
+  const sa=document.getElementById('sb-after');
+  sa.textContent=fmt(after);sa.style.color=after<0?'var(--red)':'var(--txt)';
+  document.getElementById('sb-save').disabled=saveBtn.disabled;
 }
 async function saveAllowance(){
   if(!admMatchId){alert('경기를 선택하세요');return;}
-  const entries=Object.keys(admState).map(pid=>({pid,name:admState[pid].name,amount:admState[pid].on?(admState[pid].amount||0):0}));
+  const entries=Object.keys(admState).filter(pid=>admState[pid].on)
+    .map(pid=>({pid,name:admState[pid].name,amount:admState[pid].amount||0}));
   const btn=document.getElementById('adm-save');
   btn.disabled=true;btn.textContent='저장 중…';
   try{
     const j=await api({action:'saveAllowance',password:admPw,team:admTeam,matchId:admMatchId,entries:JSON.stringify(entries)});
     if(!j.ok)throw new Error(j.error);
     btn.textContent='✓ 저장됨';
+    document.getElementById('sb-save').textContent='✓ 저장됨';
+    setTimeout(()=>{document.getElementById('sb-save').textContent='저장';},1200);
     toast('💰 수당 저장 완료 · 선수들 XP에 반영됐어요');
     setTimeout(()=>{btn.textContent='저장';btn.disabled=false;load().then(()=>buildAllowInputs());},1000);
   }catch(e){alert('저장 실패: '+e.message);btn.textContent='저장';btn.disabled=false;}
