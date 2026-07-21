@@ -806,19 +806,41 @@ function teamFunds(team){
   return f-a;
 }
 function teamEarned(team){return D.funds.filter(x=>x.team===team).reduce((s,x)=>s+x.amount,0);}
-// 주장 보상 지분 (구단가치 10%를 지분대로 배분) — 주장 교체 시 여기만 수정
-const CAP_SHARE={
-  red:[{pid:'P37',ratio:1}],                             // 서범종 100%
-  blue:[{pid:'P36',ratio:5/6},{pid:'P28',ratio:1/6}],    // 이임표 5/6 · 이호진 1/6 (6월 교체)
+// 주장 보상 — 시대(era)별: 재임 기간에 늘어난 구단가치의 10%
+// 주장 교체 시: 이전 주장 until에 교체일 기입 + 새 주장 {pid, until:null} 추가 (백엔드 CAP_ERAS도 동일하게!)
+const CAP_ERAS={
+  red:[{pid:'P37',until:'2026-07-22'},{pid:'P04',until:null}],   // 서범종 → 문현민 (7/22 교체)
+  blue:[{pid:'P36',until:'2026-05-31'},{pid:'P28',until:null}],  // 이임표 → 이호진 (6월 교체)
 };
+function parseKD(s){
+  if(s instanceof Date)return s.getTime();
+  const m=String(s||'').match(/(\d{4})\.\s*(\d{1,2})\.\s*(\d{1,2})/);
+  return m?new Date(+m[1],+m[2]-1,+m[3]).getTime():null;
+}
+function earnedUpTo(team,untilISO){
+  const lim=untilISO?new Date(untilISO+'T23:59:59').getTime():Infinity;
+  return D.funds.filter(f=>f.team===team&&f.type!=='주장보상').reduce((s,f)=>{
+    const t=parseKD(f.date);
+    return (t===null||t<=lim)?s+f.amount:s;   // 날짜 없는 행(초기 등)은 첫 시대에 귀속
+  },0);
+}
+function paidCap(pid){
+  const nm=P[pid]?P[pid].name:'';
+  if(!nm)return 0;
+  return -D.funds.filter(f=>f.type==='주장보상'&&String(f.memo).includes(nm)).reduce((s,f)=>s+f.amount,0);
+}
 function capBonusFor(pid){
   let sum=0;
-  Object.keys(CAP_SHARE).forEach(t=>{
-    CAP_SHARE[t].forEach(s=>{
-      if(s.pid===pid)sum+=Math.round(teamEarned(t)*0.1*s.ratio/100)*100;
+  Object.keys(CAP_ERAS).forEach(team=>{
+    let prev=0;
+    CAP_ERAS[team].forEach(era=>{
+      const upto=earnedUpTo(team,era.until);
+      const ent=Math.round((upto-prev)*0.1/100)*100;
+      prev=upto;
+      if(era.pid===pid&&ent>0)sum+=ent;
     });
   });
-  return sum;
+  return Math.max(0,sum-paidCap(pid));   // 이미 정산된 몫 차감
 }
 function buyoutPrice(p){
   if(p.seasonPayG)return Math.ceil((p.seasonMV/p.seasonPayG)*3/100)*100;
@@ -1363,11 +1385,43 @@ async function saveAllowance(){
 
 // ── 경기 등록 ──
 let mTeam='red',mGoals={red:{},blue:{}},mManual={red:[],blue:[]},mMode='result',mTargetId=null;
+let schedEditId='';
 function setMMode(mm){
   mMode=mm;
   document.querySelectorAll('#adm-mmode button').forEach(b=>b.classList.toggle('on',b.dataset.mm===mm));
   document.getElementById('adm-m-resultblock').style.display=mm==='result'?'block':'none';
-  buildSchedChips();updateMLabel();
+  if(mm==='schedule')buildSchedEdit();else buildSchedChips();
+  updateMLabel();
+}
+function buildSchedEdit(){
+  const host=document.getElementById('adm-sched-chips');
+  const upcoming=curMatchList().filter(m=>!isPlayed(m));
+  if(schedEditId&&!upcoming.find(m=>m.id===schedEditId))schedEditId='';
+  let html='';
+  if(upcoming.length){
+    html+='<div style="font-size:11px;color:var(--muted);font-weight:700;margin:2px 0 7px">기존 일정 수정 또는 ＋새 일정</div><div class="rchips">'+
+      upcoming.map(m=>`<div class="rchip ${m.id===schedEditId?'on':''}" onclick="pickSchedEdit('${m.id}')"><div class="rr">R${m.round}</div><div class="rd">${(m.date||'').replace(/^\d+\.\s*/,'')||'예정'}</div></div>`).join('')+
+      `<div class="rchip ${schedEditId===''?'on':''}" onclick="pickSchedEdit('')"><div class="rr">＋</div><div class="rd">새 일정</div></div></div>`;
+  }
+  if(schedEditId){
+    html+=`<button class="adm-add-manual" style="border-color:rgba(255,77,77,.4);color:var(--red);margin-top:10px;margin-bottom:0" onclick="deleteSched()">🗑 이 일정 삭제</button>`;
+  }
+  host.innerHTML=html;
+  const t=upcoming.find(m=>m.id===schedEditId);
+  if(t&&t.date)document.getElementById('adm-m-date').value=isoOf(t.date);
+}
+function pickSchedEdit(id){schedEditId=id;buildSchedEdit();updateMLabel();}
+async function deleteSched(){
+  const t=curMatchList().find(m=>m.id===schedEditId);
+  if(!t)return;
+  if(!confirm(`R${t.round} (${t.date}) 일정을 삭제할까요?\n결과가 없는 예정 경기만 삭제돼요.`))return;
+  try{
+    const j=await api({action:'deleteSchedule',password:admPw,matchId:schedEditId});
+    if(!j.ok)throw new Error(j.error);
+    toast('🗑 일정 삭제됨');
+    schedEditId='';
+    load().then(initMatchForm);
+  }catch(e){alert('삭제 실패: '+e.message);}
 }
 function isoOf(dateStr){
   const m=String(dateStr||'').match(/(\d{4})\.\s*(\d{1,2})\.\s*(\d{1,2})/);
@@ -1419,14 +1473,18 @@ async function saveMomLate(){
 }
 function updateMLabel(){
   const el=document.getElementById('adm-m-round');
-  if(mMode==='schedule'){el.textContent=`📅 새 일정 · ${D.season} R${curMatchList().length+1}`;return;}
+  if(mMode==='schedule'){
+    const t=curMatchList().find(m=>m.id===schedEditId);
+    el.textContent=t?`📅 R${t.round} 일정 수정`:`📅 새 일정 · ${D.season} R${curMatchList().length+1}`;
+    return;
+  }
   const t=curMatchList().find(m=>m.id===mTargetId);
   el.textContent=t?`🏁 R${t.round} 결과 입력`:`🏁 새 경기 · ${D.season} R${curMatchList().length+1}`;
 }
 function initMatchForm(){
   mGoals={red:{},blue:{}};mManual={red:[],blue:[]};
   document.getElementById('adm-m-date').value=new Date().toISOString().slice(0,10);
-  mTargetId=null;ogOpen=false;
+  mTargetId=null;ogOpen=false;schedEditId='';
   const teamOpts=t=>'<option value="">— 선택 안 함 —</option>'+activeOf(t)
     .map(p=>`<option value="${p.id}">${p.name}${p.position?' ('+p.position+')':''}</option>`).join('');
   document.getElementById('adm-mom-defr').innerHTML=teamOpts('red');
@@ -1510,9 +1568,16 @@ async function saveMatch(){
     const btn0=document.getElementById('adm-save');
     btn0.disabled=true;btn0.textContent='등록 중…';
     try{
-      const j=await api({action:'saveMatch',password:admPw,mode:'schedule',date:date0});
-      if(!j.ok)throw new Error(j.error);
-      toast(`📅 R${j.round} 일정 등록 · ${date0}`);
+      let j;
+      if(schedEditId){
+        j=await api({action:'editSchedule',password:admPw,matchId:schedEditId,date:date0});
+        if(!j.ok)throw new Error(j.error);
+        toast(`📅 일정 변경 · ${date0}`);
+      }else{
+        j=await api({action:'saveMatch',password:admPw,mode:'schedule',date:date0});
+        if(!j.ok)throw new Error(j.error);
+        toast(`📅 R${j.round} 일정 등록 · ${date0}`);
+      }
       btn0.textContent='✓ 등록됨';
       setTimeout(()=>{btn0.textContent='저장';btn0.disabled=false;load().then(initMatchForm);},1000);
     }catch(e){alert('등록 실패: '+e.message);btn0.textContent='저장';btn0.disabled=false;}
