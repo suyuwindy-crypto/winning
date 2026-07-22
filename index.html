@@ -783,14 +783,18 @@ function derive(){
     GRADES.forEach((g,i)=>{if(p.xp>=g.xp)p.gradeIdx=i;});
   });
   // 결장 스트릭 — 시즌 무관, 실제 치러진 최근 경기 기준
+  // 기록이 전혀 없는 신규 선수는 등록일 이후 경기만 대상 (추가 직후 방출 방지)
   const played=D.matches.filter(m=>m.redScore!==''&&m.blueScore!=='').sort((a,b)=>a.id<b.id?-1:1);
   Object.values(P).forEach(p=>{
+    const reg=p.careerGames===0?parseKD(p.regDate):null;
+    const rel=reg===null?played:played.filter(m=>{const t=parseKD(m.date);return t===null||t>=reg;});
     let s=0;
-    for(let i=played.length-1;i>=0;i--){
-      if(p.attend[played[i].id])break;
+    for(let i=rel.length-1;i>=0;i--){
+      if(p.attend[rel[i].id])break;
       s++;
     }
-    p.absent=Math.min(s,played.length);
+    p.absent=Math.min(s,rel.length);
+    p.relCnt=rel.length;
   });
 }
 function curMatchList(){return D.matches.filter(m=>m.season===D.season).sort((a,b)=>a.round-b.round);}
@@ -798,7 +802,7 @@ function activeOf(team){return Object.values(P).filter(p=>p.team===team&&p.statu
 function isProtected(p){return p.role==='주장'||p.role==='부주장';}
 function isReleaseTarget(p){
   if(isProtected(p))return false;
-  return playedAll().length>=ABSENCE_LIMIT&&p.absent>=ABSENCE_LIMIT;
+  return p.relCnt>=ABSENCE_LIMIT&&p.absent>=ABSENCE_LIMIT;
 }
 function teamFunds(team){
   const f=D.funds.filter(x=>x.team===team).reduce((s,x)=>s+x.amount,0);
@@ -843,14 +847,11 @@ function capBonusFor(pid){
   return Math.max(0,sum-paidCap(pid));   // 이미 정산된 몫 차감
 }
 function buyoutPrice(p){
-  if(p.seasonPayG)return Math.ceil((p.seasonMV/p.seasonPayG)*3/100)*100;
-  if(p.careerPayG)return Math.ceil((p.careerPay/p.careerPayG)*3/100)*100;   // 시즌 기록 없으면 통산(시즌1) 기준
-  return 0;
+  if(!p.careerPayG)return 0;
+  return Math.ceil((p.careerPay/p.careerPayG)*3/100)*100;   // 통산(전 시즌 누적) 유급 평균 ×3
 }
 function payAvg(p){
-  if(p.seasonPayG)return Math.round(p.seasonMV/p.seasonPayG);
-  if(p.careerPayG)return Math.round(p.careerPay/p.careerPayG);
-  return 0;
+  return p.careerPayG?Math.round(p.careerPay/p.careerPayG):0;
 }
 function gradeOf(p){return GRADES[p.gradeIdx];}
 function gradeBadge(p){const g=gradeOf(p);return `<span class="gb ${g.cls}">${g.emo} ${g.name}</span>`;}
@@ -952,7 +953,7 @@ function buildGrowthCard(p,compact){
   </div>`;
 }
 function buildStatus(p){
-  const cnt=playedAll().length;
+  const cnt=p.relCnt;
   let cls,ico,t,d;
   if(p.team==='free'){cls='warn';ico='🚫';t='무소속';d='복귀는 운영진에게 문의하세요';}
   else if(isProtected(p)){cls='safe';ico='🛡️';t='보호 대상';d='주장·부주장은 방출 면제';}
@@ -1103,7 +1104,7 @@ function renderPlayers(){
   let gi=0;
   const item=(p,rank,kind)=>{
     const i=gi++;
-    const warn=kind==='act'&&playedAll().length>=ABSENCE_LIMIT-1&&p.absent===ABSENCE_LIMIT-1&&!isProtected(p);
+    const warn=kind==='act'&&p.relCnt>=ABSENCE_LIMIT-1&&p.absent===ABSENCE_LIMIT-1&&!isProtected(p);
     const me=p.id===MY;
     const nameStyle=kind==='freed'?'color:#FF7A7A':warn?'color:var(--warn)':'';
     const mark=kind==='freed'?'🚫 ':warn?'⚠️ ':'';
