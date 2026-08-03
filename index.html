@@ -1133,7 +1133,7 @@ function renderPlayers(){
   };
   let html=`<div class="plist">${head}${act.map((p,idx)=>item(p,idx+1,'act')).join('')||'<div class="foot" style="padding:18px">활성 선수 없음</div>'}</div>`;
   if(freed.length){
-    html+=`<div class="sec" style="margin-top:18px">무소속 · 결장 강등 <span class="tag">최근 ${ABSENCE_LIMIT}경기 결장 · 출전하면 자동 복귀</span></div>`;
+    html+=`<div class="sec" style="margin-top:18px">무소속 · 결장 강등 <span class="tag">최근 ${ABSENCE_LIMIT}경기 결장으로 무소속 분류</span></div>`;
     html+=`<div class="plist">${freed.map(p=>item(p,'·','freed')).join('')}</div>`;
   }
   html+=`<div class="foot">주장·부주장 상단 고정 · 이하 XP순 · 결장 강등도 수당·XP는 보존</div>`;
