@@ -633,6 +633,7 @@ button{font-family:inherit}
       <div class="segc" id="adm-r-tog">
         <button class="on red" data-t="red" onclick="admRSetTeam('red')">🔴 레드</button>
         <button data-t="blue" onclick="admRSetTeam('blue')">🔵 블루</button>
+        <button data-t="guest" onclick="admRSetTeam('guest')">🟡 용병</button>
       </div>
       <div style="display:flex;gap:8px">
         <input class="adm-in" id="adm-r-name" type="text" placeholder="이름" style="margin-bottom:0;flex:1.4">
@@ -784,7 +785,7 @@ function derive(){
     GRADES.forEach((g,i)=>{if(p.xp>=g.xp)p.gradeIdx=i;});
   });
   // 결장 스트릭 — 시즌 무관, 실제 치러진 최근 경기 기준
-  // 기록이 전혀 없는 신규 선수는 등록일 이후 경기만 대상 (추가 직후 방출 방지)
+  // 기록이 전혀 없는 신규 선수는 등록일 이후 경기만 대상 (추가 직후 FA 전환 방지)
   const played=D.matches.filter(m=>m.redScore!==''&&m.blueScore!=='').sort((a,b)=>a.id<b.id?-1:1);
   Object.values(P).forEach(p=>{
     const reg=p.careerGames===0?parseKD(p.regDate):null;
@@ -803,6 +804,7 @@ function activeOf(team){return Object.values(P).filter(p=>p.team===team&&p.statu
 function isProtected(p){return p.role==='주장'||p.role==='부주장';}
 function isReleaseTarget(p){
   if(isProtected(p))return false;
+  if(p.team==='guest')return false;   // 용병은 FA 규정 미적용
   return p.relCnt>=ABSENCE_LIMIT&&p.absent>=ABSENCE_LIMIT;
 }
 function teamFunds(team){
@@ -881,8 +883,9 @@ function curPlayedList(){return curMatchList().filter(isPlayed);}
 function openMyPick(){
   const host=document.getElementById('pick-host');
   let html='';
-  [['red','🔴 RED TEAM'],['blue','🔵 BLUE TEAM']].forEach(([t,label])=>{
+  [['red','🔴 RED TEAM'],['blue','🔵 BLUE TEAM'],['guest','🟡 용병']].forEach(([t,label])=>{
     const arr=activeOf(t).sort((a,b)=>a.name.localeCompare(b.name,'ko'));
+    if(!arr.length)return;
     html+=`<div class="pick-team ${t}">${label}</div><div class="pick-grid">`;
     html+=arr.map(p=>`<div class="pick-cell ${t}" onclick="pickMe('${p.id}')">${p.name}</div>`).join('');
     html+='</div>';
@@ -917,7 +920,7 @@ function checkGradeUp(){
 function buildGrowthCard(p,compact){
   const g=gradeOf(p);
   const next=GRADES[p.gradeIdx+1];
-  const teamLabel=p.team==='red'?'RED TEAM':p.team==='blue'?'BLUE TEAM':'무소속';
+  const teamLabel=p.team==='red'?'RED TEAM':p.team==='blue'?'BLUE TEAM':'FA';
   const img=`<div class="g-img px"><img src="${g.img}" alt="" onerror="this.parentElement.innerHTML='<div class=\'ph\'><div class=\'pi\'>${g.emo}</div><div class=\'pp\'>${p.position||'-'}</div></div>'"></div>`;
   const role=p.role==='주장'?'<span class="g-role">주장</span>':p.role==='부주장'?'<span class="g-role v">부주장</span>':'';
   let xpHtml;
@@ -956,10 +959,11 @@ function buildGrowthCard(p,compact){
 function buildStatus(p){
   const cnt=p.relCnt;
   let cls,ico,t,d;
-  if(p.team==='free'){cls='warn';ico='🚫';t='무소속';d='복귀는 운영진에게 문의하세요';}
-  else if(isProtected(p)){cls='safe';ico='🛡️';t='보호 대상';d='주장·부주장은 방출 면제';}
-  else if(cnt>=ABSENCE_LIMIT&&p.absent>=ABSENCE_LIMIT){cls='danger';ico='🚨';t='방출 대상';d=`최근 ${ABSENCE_LIMIT}경기 연속 결장 — 규정상 방출`;}
-  else if(cnt>=ABSENCE_LIMIT-1&&p.absent===ABSENCE_LIMIT-1){cls='warn';ico='⚠️';t='경고';d='다음 경기 결장 시 방출';}
+  if(p.team==='free'){cls='warn';ico='🚫';t='FA';d='복귀는 운영진에게 문의하세요';}
+  else if(p.team==='guest'){cls='safe';ico='🟡';t='용병';d='소속 미정 · 팀 영입 시 정식 선수로 전환';}
+  else if(isProtected(p)){cls='safe';ico='🛡️';t='보호 대상';d='주장·부주장은 FA 전환 면제';}
+  else if(cnt>=ABSENCE_LIMIT&&p.absent>=ABSENCE_LIMIT){cls='danger';ico='🚨';t='FA 전환 대상';d=`최근 ${ABSENCE_LIMIT}경기 연속 결장 — 규정상 FA 전환`;}
+  else if(cnt>=ABSENCE_LIMIT-1&&p.absent===ABSENCE_LIMIT-1){cls='warn';ico='⚠️';t='경고';d='다음 경기 결장 시 FA 전환';}
   else{cls='safe';ico='✅';t='안전';d=p.absent>0?`연속 ${p.absent}경기 결장 · 여유 있음`:'최근 경기 출전 중';}
   return `<div class="status ${cls}"><span class="ico">${ico}</span><div style="flex:1"><div class="st-t">${t}</div><div class="st-d">${d}</div></div></div>`;
 }
@@ -1133,8 +1137,13 @@ function renderPlayers(){
   };
   let html=`<div class="plist">${head}${act.map((p,idx)=>item(p,idx+1,'act')).join('')||'<div class="foot" style="padding:18px">활성 선수 없음</div>'}</div>`;
   if(freed.length){
-    html+=`<div class="sec" style="margin-top:18px">무소속 · 결장 강등 <span class="tag">최근 ${ABSENCE_LIMIT}경기 결장으로 무소속 분류</span></div>`;
+    html+=`<div class="sec" style="margin-top:18px">FA · 자유계약 <span class="tag">최근 ${ABSENCE_LIMIT}경기 결장으로 FA 전환</span></div>`;
     html+=`<div class="plist">${freed.map(p=>item(p,'·','freed')).join('')}</div>`;
+  }
+  const guests=activeOf('guest').sort((a,b)=>b.xp-a.xp);
+  if(guests.length){
+    html+=`<div class="sec" style="margin-top:18px">🟡 용병 <span class="tag">소속 미정 · 수당·XP 정상 적립</span></div>`;
+    html+=`<div class="plist">${guests.map(p=>item(p,'·','guest')).join('')}</div>`;
   }
   html+=`<div class="foot">주장·부주장 상단 고정 · 이하 XP순 · 결장 강등도 수당·XP는 보존</div>`;
   host.innerHTML=html;
@@ -1306,7 +1315,8 @@ function buildAllowInputs(){
   const host=document.getElementById('adm-plist');
   admState={};
   if(!admMatchId){host.innerHTML='';admRecalc();return;}
-  const players=activeOf(admTeam).sort((a,b)=>b.seasonMV-a.seasonMV);
+  const players=[...activeOf(admTeam).sort((a,b)=>b.seasonMV-a.seasonMV),
+    ...activeOf('guest').sort((a,b)=>a.name.localeCompare(b.name,'ko'))];
   host.innerHTML=players.map((p,i)=>{
     const prev=p.seasonRows[admMatchId];
     const on=prev!==undefined;
@@ -1323,7 +1333,7 @@ function buildAllowInputs(){
     }
     return `<div class="prow ${on?'':'off'}" id="arow${i}">
       <div class="tg ${on?'on':''}" onclick="admToggle(${i},'${p.id}')" id="atg${i}"></div>
-      <div class="pinfo"><div class="pn">${p.name}<span class="pp">${p.position||'-'}</span></div>
+      <div class="pinfo"><div class="pn">${p.name}${p.team==='guest'?'<span class="pp" style="color:var(--gold)">🟡 용병</span>':`<span class="pp">${p.position||'-'}</span>`}</div>
         <div class="quick" id="aq${i}" style="${on?'':'display:none'}">${quickHtml(i,p.id)}</div></div>
       <div class="amt"><input type="number" id="aamt${i}" value="${prev||0}" ${on?'':'disabled'} oninput="admInput(${i},'${p.id}')"><span class="u">BRO</span></div>
     </div>`;
@@ -1535,6 +1545,14 @@ function renderGoalList(){
       <span class="gcount num ${c===0?'zero':''}">${c}</span>
       <button onclick="goalPlus('${mTeam}','${nm}')">＋</button></div></div>`;
   });
+  // 용병 득점
+  activeOf('guest').sort((a,b)=>a.name.localeCompare(b.name,'ko')).forEach(p=>{
+    const c=mGoals[mTeam][p.name]||0;
+    html+=`<div class="grow ${c>0?'has':''}"><div class="gn">${p.name}<span class="gm">🟡 용병</span></div>
+      <div class="gctl"><button onclick="goalMinus('${mTeam}','${p.name}')">−</button>
+      <span class="gcount num ${c===0?'zero':''}">${c}</span>
+      <button onclick="goalPlus('${mTeam}','${p.name}')">＋</button></div></div>`;
+  });
   // 자책골 행 (상대 선수 이름(자책) — 우리 팀 득점으로 카운트, 골·XP 미반영)
   Object.keys(mGoals[mTeam]).filter(n=>/\(자책\)$/.test(n)&&mGoals[mTeam][n]>0).forEach(nm=>{
     const c=mGoals[mTeam][nm];
@@ -1636,16 +1654,18 @@ function renderRoster(){
     const dots=ms.map(m=>`<span class="ad ${p.attend[m.id]?'on':'miss'}"></span>`).join('')||'<span style="font-size:9px;color:var(--muted)">경기 전</span>';
     const danger=isReleaseTarget(p);
     const tag=p.role==='주장'?'<span class="rtag">주장</span>':p.role==='부주장'?'<span class="rtag">부주장</span>':'';
-    const btn=isProtected(p)?'':`<button class="rbtn out" onclick="release('${p.id}','${p.name.replace(/'/g,"\\'")}')">방출</button>`;
+    const btn=isProtected(p)?'':(rTeam==='guest'
+      ?`<button class="rbtn red" onclick="recall('${p.id}','${p.name.replace(/'/g,"\\'")}','red')">레드로</button><button class="rbtn blue" onclick="recall('${p.id}','${p.name.replace(/'/g,"\\'")}','blue')">블루로</button>`
+      :`<button class="rbtn out" onclick="release('${p.id}','${p.name.replace(/'/g,"\\'")}')">FA 전환</button>`);
     return `<div class="ritem ${danger?'danger-row':''}">
       <div class="rnm">${danger?'🚨 ':''}${p.name}${p.position?`<span class="rp">${p.position}</span>`:''}</div>
       ${tag}<div class="att" title="최근 ${ABSENCE_LIMIT}경기">${dots}</div>${btn}</div>`;
   }).join('')||'<div class="foot">선수 없음</div>';
-  // 무소속
+  // FA
   const free=Object.values(P).filter(p=>p.team==='free');
   const host=document.getElementById('adm-free-host');
   if(free.length){
-    host.innerHTML=`<div class="sec2" style="margin-top:18px">무소속 풀 <span>${free.length}명</span></div>
+    host.innerHTML=`<div class="sec2" style="margin-top:18px">FA 풀 <span>${free.length}명</span></div>
       <div class="rlist">`+free.map(p=>`<div class="ritem"><div class="rnm">${p.name}</div>
         <button class="rbtn red" onclick="recall('${p.id}','${p.name.replace(/'/g,"\\'")}','red')">레드로</button>
         <button class="rbtn blue" onclick="recall('${p.id}','${p.name.replace(/'/g,"\\'")}','blue')">블루로</button></div>`).join('')+`</div>`;
@@ -1666,13 +1686,13 @@ async function addPlayer(){
   }catch(e){msg.className='adm-msg err';msg.textContent='실패: '+e.message;}
 }
 async function release(pid,name){
-  if(!confirm(`${name} 선수를 방출할까요?\n\n· 무소속 풀로 이동 (복귀 가능)\n· 누적 수당·XP는 보존`))return;
+  if(!confirm(`${name} 선수를 FA 전환할까요?\n\n· FA 풀로 이동 (복귀 가능)\n· 누적 수당·XP는 보존`))return;
   try{
     const j=await api({action:'setTeam',password:admPw,pid,toTeam:'free',fromTeam:rTeam});
     if(!j.ok)throw new Error(j.error);
-    toast('🚪 '+name+' 방출 완료');
+    toast('🚪 '+name+' FA 전환 완료');
     load().then(renderRoster);
-  }catch(e){alert('방출 실패: '+e.message);}
+  }catch(e){alert('FA 전환 실패: '+e.message);}
 }
 async function recall(pid,name,toTeam){
   const tk=toTeam==='red'?'레드':'블루';
