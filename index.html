@@ -675,8 +675,9 @@ button{font-family:inherit}
 
 <script>
 // ═══════ 설정 ═══════
-const DEFAULT_URL='https://script.google.com/macros/s/AKfycbxBkdHr-M1JGpN1vvhS-ui9FdR9tyIUZUU8H9-2D5Xz46zSnRzuqCpQfPNMGTWjxQWe/exec';
-let URL=DEFAULT_URL||localStorage.getItem('we3_url')||'';
+const DEFAULT_URL='https://script.google.com/macros/s/AKfycbzh4fFD9JafD2hX7ffutEumOGMg8jKojxP3wfpXjT3LmR_ctbN8-AuBmBgWVRa77ke-/exec';
+let URL=DEFAULT_URL;   // 항상 최신 배포 사용 (localStorage 옛 주소 무시)
+localStorage.setItem('we3_url',DEFAULT_URL);
 const ABSENCE_LIMIT=3, QUICK=[500,1000,2000,3000];
 // K7 성장 등급
 const GRADES=[
