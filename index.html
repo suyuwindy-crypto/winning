@@ -581,7 +581,8 @@ button{font-family:inherit}
   <div id="adm-match" class="adm-body" style="display:none">
     <div class="segc" id="adm-mmode">
       <button class="on" data-mm="result" onclick="setMMode('result')">🏁 결과 입력</button>
-      <button data-mm="schedule" onclick="setMMode('schedule')">📅 일정 등록</button>
+      <button data-mm="schedule" onclick="setMMode('schedule')">📅 일정</button>
+      <button data-mm="edit" onclick="setMMode('edit')">✏️ 수정</button>
     </div>
     <div class="rsel">
       <span class="rsel-lbl" id="adm-m-round">새 경기</span>
@@ -960,7 +961,8 @@ function buildStatus(p){
   const cnt=p.relCnt;
   let cls,ico,t,d;
   if(p.team==='free'){cls='warn';ico='🚫';t='FA';d='복귀는 운영진에게 문의하세요';}
-  else if(p.team==='guest'){cls='safe';ico='🟡';t='용병';d='소속 미정 · 팀 영입 시 정식 선수로 전환';}
+  else if(p.team==='guest'&&p.careerGames>=3){cls='warn';ico='🚨';t='소속 결정 필요';d=`용병 ${p.careerGames}회 출전 — 규정상 주장 협의로 팀 배정`;}
+  else if(p.team==='guest'){cls='safe';ico='🟡';t='용병';d=`${p.careerGames}회 출전 · 3회 도달 시 주장 협의로 소속 결정`;}
   else if(isProtected(p)){cls='safe';ico='🛡️';t='보호 대상';d='주장·부주장은 FA 전환 면제';}
   else if(cnt>=ABSENCE_LIMIT&&p.absent>=ABSENCE_LIMIT){cls='danger';ico='🚨';t='FA 전환 대상';d=`최근 ${ABSENCE_LIMIT}경기 연속 결장 — 규정상 FA 전환`;}
   else if(cnt>=ABSENCE_LIMIT-1&&p.absent===ABSENCE_LIMIT-1){cls='warn';ico='⚠️';t='경고';d='다음 경기 결장 시 FA 전환';}
@@ -1120,9 +1122,10 @@ function renderPlayers(){
   const item=(p,rank,kind)=>{
     const i=gi++;
     const warn=kind==='act'&&p.relCnt>=ABSENCE_LIMIT-1&&p.absent===ABSENCE_LIMIT-1&&!isProtected(p);
+    const gpick=kind==='guest'&&p.careerGames>=3;   // 용병 3회 출전 → 소속 결정 필요
     const me=p.id===MY;
-    const nameStyle=kind==='freed'?'color:#FF7A7A':warn?'color:var(--warn)':'';
-    const mark=kind==='freed'?'🚫 ':warn?'⚠️ ':'';
+    const nameStyle=kind==='freed'?'color:#FF7A7A':(warn||gpick)?'color:var(--warn)':'';
+    const mark=kind==='freed'?'🚫 ':gpick?'🚨 ':warn?'⚠️ ':'';
     return `<div class="pl-item" id="pli${i}">
       <div class="pl-line" style="${me?'background:var(--lime-dim)':''}" onclick="togglePlayer(${i})">
         <span class="pli-c c-rank${(kind==='act'&&rank<=3)?' t3':''}">${rank}</span>
@@ -1142,7 +1145,7 @@ function renderPlayers(){
   }
   const guests=activeOf('guest').sort((a,b)=>b.xp-a.xp);
   if(guests.length){
-    html+=`<div class="sec" style="margin-top:18px">🟡 용병 <span class="tag">소속 미정 · 수당·XP 정상 적립</span></div>`;
+    html+=`<div class="sec" style="margin-top:18px">🟡 용병 <span class="tag">3회 출전 시 주장 협의로 소속 결정</span></div>`;
     html+=`<div class="plist">${guests.map(p=>item(p,'·','guest')).join('')}</div>`;
   }
   html+=`<div class="foot">주장·부주장 상단 고정 · 이하 XP순 · 결장 강등도 수당·XP는 보존</div>`;
@@ -1407,13 +1410,40 @@ async function saveAllowance(){
 
 // ── 경기 등록 ──
 let mTeam='red',mGoals={red:{},blue:{}},mManual={red:[],blue:[]},mMode='result',mTargetId=null;
-let schedEditId='';
+let schedEditId='',editTargetId=null;
 function setMMode(mm){
   mMode=mm;
   document.querySelectorAll('#adm-mmode button').forEach(b=>b.classList.toggle('on',b.dataset.mm===mm));
-  document.getElementById('adm-m-resultblock').style.display=mm==='result'?'block':'none';
-  if(mm==='schedule')buildSchedEdit();else buildSchedChips();
+  document.getElementById('adm-m-resultblock').style.display=(mm==='result'||mm==='edit')?'block':'none';
+  document.querySelectorAll('#adm-match .mom-row').forEach(el=>el.style.display=mm==='edit'?'none':'flex');
+  if(mm==='schedule')buildSchedEdit();
+  else if(mm==='edit')buildEditChips();
+  else buildSchedChips();
   updateMLabel();
+}
+function buildEditChips(){
+  const host=document.getElementById('adm-sched-chips');
+  const played=curPlayedList().slice().reverse();
+  if(!played.length){host.innerHTML='<div class="foot" style="padding:8px 0">이번 시즌 치러진 경기가 없어요</div>';editTargetId=null;return;}
+  if(!editTargetId||!played.find(m=>m.id===editTargetId))editTargetId=played[0].id;
+  host.innerHTML='<div style="font-size:11px;color:var(--muted);font-weight:700;margin:2px 0 7px">수정할 경기 선택 · 저장 시 보상 자동 재계산 (MOM·수당은 유지)</div><div class="rchips">'+
+    played.map(m=>`<div class="rchip ${m.id===editTargetId?'on':''}" onclick="pickEditMatch('${m.id}')"><div class="rr">R${m.round}</div><div class="rd">${(m.date||'').replace(/^\d+\.\s*/,'')}</div></div>`).join('')+'</div>';
+  loadEditMatch();
+}
+function pickEditMatch(id){editTargetId=id;buildEditChips();updateMLabel();}
+function loadEditMatch(){
+  const m=curPlayedList().find(x=>x.id===editTargetId);
+  if(!m)return;
+  document.getElementById('adm-m-date').value=isoOf(m.date);
+  mGoals={red:{},blue:{}};mManual={red:[],blue:[]};
+  [['red',m.redGoals],['blue',m.blueGoals]].forEach(([t,arr])=>{
+    const roster=[...activeOf(t),...activeOf('guest')].map(p=>p.name);
+    arr.forEach(nm=>{
+      mGoals[t][nm]=(mGoals[t][nm]||0)+1;
+      if(!roster.includes(nm)&&!/\(자책\)$/.test(nm)&&!mManual[t].includes(nm))mManual[t].push(nm);
+    });
+  });
+  renderGoalList();updateScore();
 }
 function buildSchedEdit(){
   const host=document.getElementById('adm-sched-chips');
@@ -1500,13 +1530,18 @@ function updateMLabel(){
     el.textContent=t?`📅 R${t.round} 일정 수정`:`📅 새 일정 · ${D.season} R${curMatchList().length+1}`;
     return;
   }
+  if(mMode==='edit'){
+    const em=curPlayedList().find(m=>m.id===editTargetId);
+    el.textContent=em?`✏️ R${em.round} 결과 수정`:'✏️ 결과 수정';
+    return;
+  }
   const t=curMatchList().find(m=>m.id===mTargetId);
   el.textContent=t?`🏁 R${t.round} 결과 입력`:`🏁 새 경기 · ${D.season} R${curMatchList().length+1}`;
 }
 function initMatchForm(){
   mGoals={red:{},blue:{}};mManual={red:[],blue:[]};
   document.getElementById('adm-m-date').value=new Date().toISOString().slice(0,10);
-  mTargetId=null;ogOpen=false;schedEditId='';
+  mTargetId=null;ogOpen=false;schedEditId='';editTargetId=null;
   const teamOpts=t=>'<option value="">— 선택 안 함 —</option>'+activeOf(t)
     .map(p=>`<option value="${p.id}">${p.name}${p.position?' ('+p.position+')':''}</option>`).join('');
   document.getElementById('adm-mom-defr').innerHTML=teamOpts('red');
@@ -1625,15 +1660,21 @@ async function saveMatch(){
   const btn=document.getElementById('adm-save');
   btn.disabled=true;btn.textContent='저장 중…';
   try{
-    const j=await api({action:'saveMatch',password:admPw,matchId:mTargetId||'',date,redScore:rs,blueScore:bs,
-      redGoals:JSON.stringify(redGoals),blueGoals:JSON.stringify(blueGoals),
-      momDefR:document.getElementById('adm-mom-defr').value,momMidR:document.getElementById('adm-mom-midr').value,
-      momDefB:document.getElementById('adm-mom-defb').value,momMidB:document.getElementById('adm-mom-midb').value});
+    const params=mMode==='edit'
+      ?{action:'editResult',password:admPw,matchId:editTargetId,date,redScore:rs,blueScore:bs,
+        redGoals:JSON.stringify(redGoals),blueGoals:JSON.stringify(blueGoals)}
+      :{action:'saveMatch',password:admPw,matchId:mTargetId||'',date,redScore:rs,blueScore:bs,
+        redGoals:JSON.stringify(redGoals),blueGoals:JSON.stringify(blueGoals),
+        momDefR:document.getElementById('adm-mom-defr').value,momMidR:document.getElementById('adm-mom-midr').value,
+        momDefB:document.getElementById('adm-mom-defb').value,momMidB:document.getElementById('adm-mom-midb').value};
+    const j=await api(params);
     if(!j.ok)throw new Error(j.error);
     btn.textContent='✓ 저장됨';
-    let msg=`✓ R${j.round} 저장 (${j.winner==='red'?'레드 승':j.winner==='blue'?'블루 승':'무승부'})`;
+    let msg=mMode==='edit'
+      ?`✓ R${j.round} 결과 수정 완료 (${j.winner==='red'?'레드 승':j.winner==='blue'?'블루 승':'무승부'}) — 보상 재계산됨`
+      :`✓ R${j.round} 저장 (${j.winner==='red'?'레드 승':j.winner==='blue'?'블루 승':'무승부'})`;
     if(j.penalty)msg+='\n💸 '+j.penalty;
-    setTimeout(()=>alert(msg+'\n\n이제 💰 수당 탭에서 이 경기 수당을 입력하세요.'),300);
+    setTimeout(()=>alert(msg+(mMode==='edit'?'':'\n\n이제 💰 수당 탭에서 이 경기 수당을 입력하세요.')),300);
     setTimeout(()=>{btn.textContent='저장';btn.disabled=false;load().then(initMatchForm);},1000);
   }catch(e){alert('저장 실패: '+e.message);btn.textContent='저장';btn.disabled=false;}
 }
@@ -1652,7 +1693,7 @@ function renderRoster(){
   const ms=playedAll().slice(-ABSENCE_LIMIT);
   document.getElementById('adm-rlist').innerHTML=players.map(p=>{
     const dots=ms.map(m=>`<span class="ad ${p.attend[m.id]?'on':'miss'}"></span>`).join('')||'<span style="font-size:9px;color:var(--muted)">경기 전</span>';
-    const danger=isReleaseTarget(p);
+    const danger=rTeam==='guest'?p.careerGames>=3:isReleaseTarget(p);
     const tag=p.role==='주장'?'<span class="rtag">주장</span>':p.role==='부주장'?'<span class="rtag">부주장</span>':'';
     const btn=isProtected(p)?'':(rTeam==='guest'
       ?`<button class="rbtn red" onclick="recall('${p.id}','${p.name.replace(/'/g,"\\'")}','red')">레드로</button><button class="rbtn blue" onclick="recall('${p.id}','${p.name.replace(/'/g,"\\'")}','blue')">블루로</button>`
@@ -1795,7 +1836,7 @@ async function answerOffer(pid,ans){
   }catch(e){alert('실패: '+e.message);}
 }
 async function doBuyout(buyer,seller,pid,name,price){
-  if(!confirm(`${name} 선수를 약 ${fmt(price)} BRO에 바이아웃할까요?\n\n· 최종 가격은 서버가 재계산\n· 7일 내 추가 영입 불가 · 영입 후 2경기 보호`))return;
+  if(!confirm(`${name} 선수를 약 ${fmt(price)} BRO에 바이아웃할까요?\n\n· 최종 가격은 서버가 재계산\n· 7일 내 추가 영입 불가 · 영입 후 5경기 보호`))return;
   try{
     const j=await api({action:'buyout',password:admPw,buyer,seller,pid});
     if(!j.ok)throw new Error(j.error);
