@@ -1503,7 +1503,8 @@ function buildMomLate(){
     `<div class="rchip ${m.id===momTargetId?'on':''}" onclick="pickMomMatch('${m.id}')"><div class="rr">R${m.round}</div><div class="rd">${(m.date||'').replace(/^\d+\.\s*/,'')}</div></div>`).join('');
   const t=played.find(m=>m.id===momTargetId);
   const tOpts=tm=>'<option value="">— 선택 안 함 —</option>'+activeOf(tm)
-    .map(p=>`<option value="${p.id}">${p.name}${p.position?' ('+p.position+')':''}</option>`).join('');
+    .map(p=>`<option value="${p.id}">${p.name}${p.position?' ('+p.position+')':''}</option>`).join('')+
+    activeOf('guest').map(p=>`<option value="${p.id}">🟡 ${p.name} (용병)</option>`).join('');
   const els={defr2:'red',midr2:'red',defb2:'blue',midb2:'blue'};
   Object.keys(els).forEach(id=>{document.getElementById('adm-mom-'+id).innerHTML=tOpts(els[id]);});
   document.getElementById('adm-mom-defr2').value=t&&t.momDefR?t.momDefR:'';
@@ -1543,7 +1544,8 @@ function initMatchForm(){
   document.getElementById('adm-m-date').value=new Date().toISOString().slice(0,10);
   mTargetId=null;ogOpen=false;schedEditId='';editTargetId=null;
   const teamOpts=t=>'<option value="">— 선택 안 함 —</option>'+activeOf(t)
-    .map(p=>`<option value="${p.id}">${p.name}${p.position?' ('+p.position+')':''}</option>`).join('');
+    .map(p=>`<option value="${p.id}">${p.name}${p.position?' ('+p.position+')':''}</option>`).join('')+
+    activeOf('guest').map(p=>`<option value="${p.id}">🟡 ${p.name} (용병)</option>`).join('');
   document.getElementById('adm-mom-defr').innerHTML=teamOpts('red');
   document.getElementById('adm-mom-midr').innerHTML=teamOpts('red');
   document.getElementById('adm-mom-defb').innerHTML=teamOpts('blue');
@@ -1669,6 +1671,7 @@ async function saveMatch(){
         momDefB:document.getElementById('adm-mom-defb').value,momMidB:document.getElementById('adm-mom-midb').value};
     const j=await api(params);
     if(!j.ok)throw new Error(j.error);
+    if(!j.matchId)throw new Error('백엔드가 구버전이에요 — Apps Script에서 "새 버전"으로 재배포하세요');
     btn.textContent='✓ 저장됨';
     let msg=mMode==='edit'
       ?`✓ R${j.round} 결과 수정 완료 (${j.winner==='red'?'레드 승':j.winner==='blue'?'블루 승':'무승부'}) — 보상 재계산됨`
