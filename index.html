@@ -1712,8 +1712,10 @@ function renderRoster(){
   if(free.length){
     host.innerHTML=`<div class="sec2" style="margin-top:18px">FA 풀 <span>${free.length}명</span></div>
       <div class="rlist">`+free.map(p=>`<div class="ritem"><div class="rnm">${p.name}</div>
-        <button class="rbtn red" onclick="recall('${p.id}','${p.name.replace(/'/g,"\\'")}','red')">레드로</button>
-        <button class="rbtn blue" onclick="recall('${p.id}','${p.name.replace(/'/g,"\\'")}','blue')">블루로</button></div>`).join('')+`</div>`;
+        <button class="rbtn red" onclick="recall('${p.id}','${p.name.replace(/'/g,"\\'")}','red')">레드</button>
+        <button class="rbtn blue" onclick="recall('${p.id}','${p.name.replace(/'/g,"\\'")}','blue')">블루</button>
+        <button class="rbtn" style="background:rgba(255,210,74,.2);color:var(--gold)" onclick="recall('${p.id}','${p.name.replace(/'/g,"\\'")}','guest')">용병</button>
+        <button class="rbtn out" onclick="delPlayer('${p.id}','${p.name.replace(/'/g,"\\'")}')">🗑</button></div>`).join('')+`</div>`;
   }else host.innerHTML='';
 }
 async function addPlayer(){
@@ -1740,12 +1742,15 @@ async function release(pid,name){
   }catch(e){alert('FA 전환 실패: '+e.message);}
 }
 async function recall(pid,name,toTeam){
-  const tk=toTeam==='red'?'레드':'블루';
-  if(!confirm(`${name} 선수를 ${tk}로 복귀시킬까요?\n\n· 무료 영입 · 커리어 XP 그대로 유지`))return;
+  const tk=toTeam==='red'?'레드':toTeam==='blue'?'블루':'용병';
+  const msg=toTeam==='guest'
+    ?`${name} 선수를 용병으로 전환할까요?\n\n· 소속 없이 양 팀 경기 참여 가능\n· 커리어 XP 유지`
+    :`${name} 선수를 ${tk}로 복귀시킬까요?\n\n· 무료 영입 · 커리어 XP 그대로 유지`;
+  if(!confirm(msg))return;
   try{
     const j=await api({action:'setTeam',password:admPw,pid,toTeam});
     if(!j.ok)throw new Error(j.error);
-    toast('✓ '+name+' → '+tk+' 복귀');
+    toast(toTeam==='guest'?('🟡 '+name+' 용병 전환'):('✓ '+name+' → '+tk+' 복귀'));
     load().then(renderRoster);
   }catch(e){alert('복귀 실패: '+e.message);}
 }
@@ -1815,6 +1820,15 @@ function renderOffers(myTeam){
   }
   if(html)html+='<div style="height:16px"></div>';
   host.innerHTML=html;
+}
+async function delPlayer(pid,name){
+  if(!confirm(`${name} 선수를 명단에서 완전 삭제할까요?\n\n· 잘못 등록한 경우에만 사용\n· 경기 기록이 있으면 서버가 거부해요`))return;
+  try{
+    const j=await api({action:'deletePlayer',password:admPw,pid});
+    if(!j.ok)throw new Error(j.error);
+    toast('🗑 '+name+' 삭제됨');
+    load().then(renderRoster);
+  }catch(e){alert('삭제 실패: '+e.message);}
 }
 async function doOffer(buyer,pid,name){
   const v=prompt(name+' 선수에게 제안할 금액 (BRO):');
