@@ -520,6 +520,8 @@ button{font-family:inherit}
     <div class="ledger-summary" id="ledger-summary"></div>
     <div class="ledger-wrap" id="ledger-wrap"></div>
     <div class="foot">← → 가로로 넘겨 경기별 수당 확인 · 이번 시즌 기준</div>
+    <div class="sec">자금 변동 내역 <span class="tag">경기보상 · 유지비 · 이적 · 주장보상</span></div>
+    <div class="dtbl-wrap" id="fund-log-host"></div>
   </div>
 
   <div class="tabbar">
@@ -1194,6 +1196,7 @@ function renderLedger(){
      <div class="ls-box"><div class="ls-l">가용자금</div><div class="ls-v" style="color:var(--grass)">${fmt(teamFunds(team))}</div></div>`;
   if(!ms.length){
     document.getElementById('ledger-wrap').innerHTML='<div class="foot" style="padding:20px 18px 20px 0">이번 시즌 경기가 아직 없어요. 경기 등록 후 수당이 쌓이면 표가 채워져요.</div>';
+    renderFundLog(team);
     return;
   }
   let head='<tr><th class="c-name">선수</th>';
@@ -1218,6 +1221,17 @@ function renderLedger(){
   });
   foot+=`<td>${fmt(totMV)}</td><td>-</td><td>-</td></tr>`;
   document.getElementById('ledger-wrap').innerHTML=`<table class="ledger"><thead>${head}</thead><tbody>${body}</tbody><tfoot>${foot}</tfoot></table>`;
+  renderFundLog(team);
+}
+function renderFundLog(team){
+  const host=document.getElementById('fund-log-host');
+  const rows=D.funds.filter(f=>f.team===team).slice().reverse().slice(0,40);
+  if(!rows.length){host.innerHTML='<div class="foot" style="padding:18px">내역 없음</div>';return;}
+  const ico={'초기':'🏦','경기보상':'🏆','유지비':'⚖️','바이아웃':'💸','오퍼영입':'💌','주장보상':'👑'};
+  host.innerHTML='<table class="dtbl"><thead><tr><th>구분</th><th>내용</th><th class="r">금액</th></tr></thead><tbody>'+
+    rows.map(f=>`<tr><td class="d-name" style="white-space:nowrap">${ico[f.type]||'•'} ${f.type}</td>
+      <td style="font-size:12px;color:var(--txt2)">${f.memo||''}<div style="font-size:10px;color:var(--muted);margin-top:2px">${f.date||''}</div></td>
+      <td class="r num" style="font-weight:700;color:${f.amount<0?'#FF7A7A':'var(--lime)'}">${f.amount<0?'':'+'}${fmt(f.amount)}</td></tr>`).join('')+'</tbody></table>';
 }
 
 // ═══════ 탭 전환 ═══════
@@ -1315,16 +1329,29 @@ function buildMatchChips(){
     <div class="rr">R${m.round}</div><div class="rd">${m.date.replace(/^\d+\.\s*/,'')}</div></div>`).join('');
 }
 function admPickMatch(id){admMatchId=id;buildMatchChips();buildAllowInputs();}
+function allowRow(matchId,pid,team){return D.allowances.find(a=>a.matchId===matchId&&a.pid===pid&&a.team===team);}
 function buildAllowInputs(){
   const host=document.getElementById('adm-plist');
   admState={};
   if(!admMatchId){host.innerHTML='';admRecalc();return;}
   const players=[...activeOf(admTeam).sort((a,b)=>b.seasonMV-a.seasonMV),
     ...activeOf('guest').sort((a,b)=>a.name.localeCompare(b.name,'ko'))];
+  const oppTeam=admTeam==='red'?'blue':'red';
   host.innerHTML=players.map((p,i)=>{
-    const prev=p.seasonRows[admMatchId];
-    const on=prev!==undefined;
+    const mine=allowRow(admMatchId,p.id,admTeam);
+    const prev=mine?mine.amount:undefined;
+    const on=!!mine;
     const cap=p.role==='주장';
+    // 용병이 이 경기에 이미 상대 팀으로 출석 → 이 팀에선 잠금
+    if(p.team==='guest'&&!mine&&allowRow(admMatchId,p.id,oppTeam)){
+      return `<div class="prow off" id="arow${i}" style="opacity:.55">
+        <div class="tg" style="pointer-events:none;opacity:.4"></div>
+        <div class="pinfo"><div class="pn">${p.name}<span class="pp" style="color:var(--gold)">🟡 용병</span></div>
+          <div style="font-size:10.5px;color:var(--txt2);font-weight:700;margin-top:4px">${oppTeam==='red'?'🔴 레드':'🔵 블루'}로 출전 처리됨 · 이 팀에선 선택 불가</div>
+          <span id="aq${i}" style="display:none"></span></div>
+        <div class="amt"><input type="number" id="aamt${i}" value="0" disabled><span class="u">BRO</span></div>
+      </div>`;
+    }
     admState[p.id]={name:p.name,on,amount:cap?0:(prev||0),cap};
     if(cap){
       return `<div class="prow ${on?'':'off'}" id="arow${i}">
@@ -1377,7 +1404,7 @@ function admRecalc(){
   document.getElementById('adm-cnt').textContent=cnt;
   document.getElementById('adm-sum').textContent=fmt(sum);
   let old=0;
-  activeOf(admTeam).forEach(p=>{old+=p.seasonRows[admMatchId]||0;});
+  D.allowances.filter(a=>a.matchId===admMatchId&&a.team===admTeam).forEach(a=>{old+=a.amount||0;});
   const after=teamFunds(admTeam)+old-sum;
   const bEl=document.getElementById('adm-budget');
   const saveBtn=document.getElementById('adm-save');
