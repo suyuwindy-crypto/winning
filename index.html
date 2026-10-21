@@ -803,7 +803,7 @@ function derive(){
     p.absent=Math.min(s,rel.length);
     p.relCnt=rel.length;
     // 용병 출전 수 = 마지막 3연속 결장(FA·미가입 구간) 이후 출전만 집계 — 정식 선수 시절 기록 제외
-    if(p.team==='guest'){
+    if(p.team==='guest'||p.team==='free'){
       let gap=0,cnt=0;
       played.forEach(m=>{
         if(p.attend[m.id]){ if(gap>=3)cnt=0; cnt++; gap=0; }
@@ -973,7 +973,8 @@ function buildGrowthCard(p,compact){
 function buildStatus(p){
   const cnt=p.relCnt;
   let cls,ico,t,d;
-  if(p.team==='free'){cls='warn';ico='🚫';t='FA';d='복귀는 운영진에게 문의하세요';}
+  if(p.team==='free'&&p.guestGames>=3){cls='warn';ico='🎯';t='FA · 영입 대상';d=`FA 후 용병으로 ${p.guestGames}경기 출전 — 양 팀 영입 가능 (주장 협의)`;}
+  else if(p.team==='free'){cls='warn';ico='🚫';t='FA';d=`3연속 결장으로 FA · 이후 용병 ${p.guestGames||0}경기 출전 (3경기부터 영입 대상)`;}
   else if(p.team==='guest'&&p.guestGames>=3){cls='warn';ico='🎯';t='영입 대상';d=`용병으로 ${p.guestGames}경기 출전 — 양 팀 영입 가능 (주장 협의)`;}
   else if(p.team==='guest'){cls='safe';ico='🟡';t='용병';d=`용병으로 ${p.guestGames||0}경기 출전 · 3경기부터 영입 대상`;}
   else if(isProtected(p)){cls='safe';ico='🛡️';t='보호 대상';d='주장·부주장은 FA 전환 면제';}
@@ -1128,7 +1129,8 @@ function renderPlayers(){
     return ra-rb||b.xp-a.xp;
   });
   const act=all.filter(p=>!isReleaseTarget(p));
-  const freed=all.filter(p=>isReleaseTarget(p)).sort((a,b)=>b.seasonMV-a.seasonMV);
+  const lastTeam=p=>{const r=D.allowances.filter(a=>a.pid===p.id&&a.team!=='guest');return r.length?r[r.length-1].team:null;};
+  const freed=[...all.filter(p=>isReleaseTarget(p)),...activeOf('free').filter(p=>lastTeam(p)===playersTeam)].sort((a,b)=>b.seasonMV-a.seasonMV);
   if(!all.length){host.innerHTML='<div class="foot" style="padding:24px">선수 없음</div>';return;}
   const head='<div class="pl-head"><span class="pli-c c-rank">#</span><span class="pli-c c-name">선수</span><span class="pli-c c-grade">등급</span><span class="pli-c c-mv">시즌MV</span><span class="pli-c c-chev"></span></div>';
   let gi=0;
@@ -1346,7 +1348,8 @@ function buildAllowInputs(){
   if(!admMatchId){host.innerHTML='';admRecalc();return;}
   // 이 경기 당시 이 팀으로 뛴 기록이 있는 선수(이후 이적·FA·용병 전환)도 포함 — 재저장 시 기록이 지워지지 않게
   const base=[...activeOf(admTeam).sort((a,b)=>b.seasonMV-a.seasonMV),
-    ...activeOf('guest').sort((a,b)=>a.name.localeCompare(b.name,'ko'))];
+    ...activeOf('guest').sort((a,b)=>a.name.localeCompare(b.name,'ko')),
+    ...activeOf('free').sort((a,b)=>a.name.localeCompare(b.name,'ko'))];
   const baseIds=new Set(base.map(p=>p.id));
   const former=D.allowances.filter(a=>a.matchId===admMatchId&&a.team===admTeam&&P[a.pid]&&!baseIds.has(a.pid)).map(a=>P[a.pid]);
   const players=[...base,...former];
@@ -1357,7 +1360,7 @@ function buildAllowInputs(){
     const on=!!mine;
     const cap=p.role==='주장';
     // 용병이 이 경기에 이미 상대 팀으로 출석 → 이 팀에선 잠금
-    if(p.team==='guest'&&!mine&&allowRow(admMatchId,p.id,oppTeam)){
+    if((p.team==='guest'||p.team==='free')&&!mine&&allowRow(admMatchId,p.id,oppTeam)){
       return `<div class="prow off" id="arow${i}" style="opacity:.55">
         <div class="tg" style="pointer-events:none;opacity:.4"></div>
         <div class="pinfo"><div class="pn">${p.name}<span class="pp" style="color:var(--gold)">🟡 용병</span></div>
@@ -1378,7 +1381,7 @@ function buildAllowInputs(){
     }
     return `<div class="prow ${on?'':'off'}" id="arow${i}">
       <div class="tg ${on?'on':''}" onclick="admToggle(${i},'${p.id}')" id="atg${i}"></div>
-      <div class="pinfo"><div class="pn">${p.name}${p.team==='guest'?'<span class="pp" style="color:var(--gold)">🟡 용병</span>':p.team!==admTeam?`<span class="pp" style="color:var(--txt2)">당시 소속 · 현재 ${p.team==='red'?'레드':p.team==='blue'?'블루':'FA'}</span>`:`<span class="pp">${p.position||'-'}</span>`}</div>
+      <div class="pinfo"><div class="pn">${p.name}${p.team==='guest'?'<span class="pp" style="color:var(--gold)">🟡 용병</span>':p.team==='free'?'<span class="pp" style="color:var(--gold)">FA · 용병 출전</span>':p.team!==admTeam?`<span class="pp" style="color:var(--txt2)">당시 소속 · 현재 ${p.team==='red'?'레드':p.team==='blue'?'블루':'FA'}</span>`:`<span class="pp">${p.position||'-'}</span>`}</div>
         <div class="quick" id="aq${i}" style="${on?'':'display:none'}">${quickHtml(i,p.id)}</div></div>
       <div class="amt"><input type="number" id="aamt${i}" value="${prev||0}" ${on?'':'disabled'} oninput="admInput(${i},'${p.id}')"><span class="u">BRO</span></div>
     </div>`;
@@ -1798,7 +1801,7 @@ async function recall(pid,name,toTeam){
 
 function renderGuestTargets(myTeam){
   const host=document.getElementById('adm-t-guests');
-  const list=activeOf('guest').filter(p=>p.guestGames>=3).sort((a,b)=>b.guestGames-a.guestGames);
+  const list=[...activeOf('guest'),...activeOf('free')].filter(p=>p.guestGames>=3).sort((a,b)=>b.guestGames-a.guestGames);
   if(!list.length){host.innerHTML='';return;}
   const tk=myTeam==='red'?'레드':'블루';
   host.innerHTML=`<div class="sec2">🎯 영입 대상 용병 <span>(3경기 이상 · 이적료 없음 · 주장 협의 후 영입)</span></div><div class="rlist">`+
