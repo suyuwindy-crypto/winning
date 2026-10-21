@@ -654,6 +654,7 @@ button{font-family:inherit}
   <div id="adm-trade" class="adm-body" style="display:none">
     <div class="info-trade" id="adm-t-myteam"></div>
     <div id="adm-t-offers"></div>
+    <div id="adm-t-guests"></div>
     <div class="sec2">⚠️ 우리 팀 위험 <span id="adm-t-riskcnt"></span></div>
     <div class="dtbl-wrap" id="adm-t-mine" style="margin:0 0 16px"></div>
     <div class="sec2">💸 영입 대상 <span id="adm-t-oppname"></span></div>
@@ -964,7 +965,7 @@ function buildStatus(p){
   const cnt=p.relCnt;
   let cls,ico,t,d;
   if(p.team==='free'){cls='warn';ico='🚫';t='FA';d='복귀는 운영진에게 문의하세요';}
-  else if(p.team==='guest'&&p.careerGames>=3){cls='warn';ico='🚨';t='소속 결정 필요';d=`용병 ${p.careerGames}회 출전 — 규정상 주장 협의로 팀 배정`;}
+  else if(p.team==='guest'&&p.careerGames>=3){cls='warn';ico='🎯';t='영입 대상';d=`용병 ${p.careerGames}회 출전 — 양 팀 영입 가능 (주장 협의)`;}
   else if(p.team==='guest'){cls='safe';ico='🟡';t='용병';d=`${p.careerGames}회 출전 · 3회 도달 시 주장 협의로 소속 결정`;}
   else if(isProtected(p)){cls='safe';ico='🛡️';t='보호 대상';d='주장·부주장은 FA 전환 면제';}
   else if(cnt>=ABSENCE_LIMIT&&p.absent>=ABSENCE_LIMIT){cls='danger';ico='🚨';t='FA 전환 대상';d=`최근 ${ABSENCE_LIMIT}경기 연속 결장 — 규정상 FA 전환`;}
@@ -1128,7 +1129,7 @@ function renderPlayers(){
     const gpick=kind==='guest'&&p.careerGames>=3;   // 용병 3회 출전 → 소속 결정 필요
     const me=p.id===MY;
     const nameStyle=kind==='freed'?'color:#FF7A7A':(warn||gpick)?'color:var(--warn)':'';
-    const mark=kind==='freed'?'🚫 ':gpick?'🚨 ':warn?'⚠️ ':'';
+    const mark=kind==='freed'?'🚫 ':gpick?'🎯 ':warn?'⚠️ ':'';
     return `<div class="pl-item" id="pli${i}">
       <div class="pl-line" style="${me?'background:var(--lime-dim)':''}" onclick="togglePlayer(${i})">
         <span class="pli-c c-rank${(kind==='act'&&rank<=3)?' t3':''}">${rank}</span>
@@ -1148,7 +1149,7 @@ function renderPlayers(){
   }
   const guests=activeOf('guest').sort((a,b)=>b.xp-a.xp);
   if(guests.length){
-    html+=`<div class="sec" style="margin-top:18px">🟡 용병 <span class="tag">3회 출전 시 주장 협의로 소속 결정</span></div>`;
+    html+=`<div class="sec" style="margin-top:18px">🟡 용병 <span class="tag">🎯 3경기 이상 출전 = 영입 대상</span></div>`;
     html+=`<div class="plist">${guests.map(p=>item(p,'·','guest')).join('')}</div>`;
   }
   html+=`<div class="foot">주장·부주장 상단 고정 · 이하 XP순 · 결장 강등도 수당·XP는 보존</div>`;
@@ -1782,11 +1783,33 @@ async function recall(pid,name,toTeam){
   }catch(e){alert('복귀 실패: '+e.message);}
 }
 
+function renderGuestTargets(myTeam){
+  const host=document.getElementById('adm-t-guests');
+  const list=activeOf('guest').filter(p=>p.careerGames>=3).sort((a,b)=>b.careerGames-a.careerGames);
+  if(!list.length){host.innerHTML='';return;}
+  const tk=myTeam==='red'?'레드':'블루';
+  host.innerHTML=`<div class="sec2">🎯 영입 대상 용병 <span>(3경기 이상 · 이적료 없음 · 주장 협의 후 영입)</span></div><div class="rlist">`+
+    list.map(p=>`<div class="ritem"><div class="rnm">${p.name}<span class="rp">${p.careerGames}경기 · 수당 ${fmt(p.careerPay)}</span></div>
+      <button class="rbtn ${myTeam}" onclick="recruitGuest('${p.id}','${p.name.replace(/'/g,"\\'")}','${myTeam}')">${tk}로 영입</button></div>`).join('')+
+    '</div><div style="height:16px"></div>';
+}
+async function recruitGuest(pid,name,team){
+  const tk=team==='red'?'레드':'블루';
+  if(!confirm(`${name} 용병을 ${tk}로 영입할까요?\n\n· 이적료 없음 · 커리어 XP 유지\n· 상대 주장과 협의된 경우에만 진행하세요`))return;
+  try{
+    const j=await api({action:'setTeam',password:admPw,pid,toTeam:team});
+    if(!j.ok)throw new Error(j.error);
+    toast('🎯 '+name+' → '+tk+' 영입');
+    load().then(()=>renderTrade(team));
+  }catch(e){alert('영입 실패: '+e.message);}
+}
+
 // ── 영입 ──
 let tradeTeam='red';
 function renderTrade(myTeam){
   tradeTeam=myTeam;
   renderOffers(myTeam);
+  renderGuestTargets(myTeam);
   const opp=myTeam==='red'?'blue':'red';
   const myAvail=teamFunds(myTeam),oppAvail=teamFunds(opp);
   document.getElementById('adm-t-myteam').innerHTML=
