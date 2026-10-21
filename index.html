@@ -1344,8 +1344,12 @@ function buildAllowInputs(){
   const host=document.getElementById('adm-plist');
   admState={};
   if(!admMatchId){host.innerHTML='';admRecalc();return;}
-  const players=[...activeOf(admTeam).sort((a,b)=>b.seasonMV-a.seasonMV),
+  // 이 경기 당시 이 팀으로 뛴 기록이 있는 선수(이후 이적·FA·용병 전환)도 포함 — 재저장 시 기록이 지워지지 않게
+  const base=[...activeOf(admTeam).sort((a,b)=>b.seasonMV-a.seasonMV),
     ...activeOf('guest').sort((a,b)=>a.name.localeCompare(b.name,'ko'))];
+  const baseIds=new Set(base.map(p=>p.id));
+  const former=D.allowances.filter(a=>a.matchId===admMatchId&&a.team===admTeam&&P[a.pid]&&!baseIds.has(a.pid)).map(a=>P[a.pid]);
+  const players=[...base,...former];
   const oppTeam=admTeam==='red'?'blue':'red';
   host.innerHTML=players.map((p,i)=>{
     const mine=allowRow(admMatchId,p.id,admTeam);
@@ -1374,7 +1378,7 @@ function buildAllowInputs(){
     }
     return `<div class="prow ${on?'':'off'}" id="arow${i}">
       <div class="tg ${on?'on':''}" onclick="admToggle(${i},'${p.id}')" id="atg${i}"></div>
-      <div class="pinfo"><div class="pn">${p.name}${p.team==='guest'?'<span class="pp" style="color:var(--gold)">🟡 용병</span>':`<span class="pp">${p.position||'-'}</span>`}</div>
+      <div class="pinfo"><div class="pn">${p.name}${p.team==='guest'?'<span class="pp" style="color:var(--gold)">🟡 용병</span>':p.team!==admTeam?`<span class="pp" style="color:var(--txt2)">당시 소속 · 현재 ${p.team==='red'?'레드':p.team==='blue'?'블루':'FA'}</span>`:`<span class="pp">${p.position||'-'}</span>`}</div>
         <div class="quick" id="aq${i}" style="${on?'':'display:none'}">${quickHtml(i,p.id)}</div></div>
       <div class="amt"><input type="number" id="aamt${i}" value="${prev||0}" ${on?'':'disabled'} oninput="admInput(${i},'${p.id}')"><span class="u">BRO</span></div>
     </div>`;
