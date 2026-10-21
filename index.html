@@ -802,6 +802,15 @@ function derive(){
     }
     p.absent=Math.min(s,rel.length);
     p.relCnt=rel.length;
+    // 용병 출전 수 = 마지막 3연속 결장(FA·미가입 구간) 이후 출전만 집계 — 정식 선수 시절 기록 제외
+    if(p.team==='guest'){
+      let gap=0,cnt=0;
+      played.forEach(m=>{
+        if(p.attend[m.id]){ if(gap>=3)cnt=0; cnt++; gap=0; }
+        else gap++;
+      });
+      p.guestGames=cnt;
+    }
   });
 }
 function curMatchList(){return D.matches.filter(m=>m.season===D.season).sort((a,b)=>a.round-b.round);}
@@ -965,8 +974,8 @@ function buildStatus(p){
   const cnt=p.relCnt;
   let cls,ico,t,d;
   if(p.team==='free'){cls='warn';ico='🚫';t='FA';d='복귀는 운영진에게 문의하세요';}
-  else if(p.team==='guest'&&p.careerGames>=3){cls='warn';ico='🎯';t='영입 대상';d=`용병 ${p.careerGames}회 출전 — 양 팀 영입 가능 (주장 협의)`;}
-  else if(p.team==='guest'){cls='safe';ico='🟡';t='용병';d=`${p.careerGames}회 출전 · 3회 도달 시 주장 협의로 소속 결정`;}
+  else if(p.team==='guest'&&p.guestGames>=3){cls='warn';ico='🎯';t='영입 대상';d=`용병으로 ${p.guestGames}경기 출전 — 양 팀 영입 가능 (주장 협의)`;}
+  else if(p.team==='guest'){cls='safe';ico='🟡';t='용병';d=`용병으로 ${p.guestGames||0}경기 출전 · 3경기부터 영입 대상`;}
   else if(isProtected(p)){cls='safe';ico='🛡️';t='보호 대상';d='주장·부주장은 FA 전환 면제';}
   else if(cnt>=ABSENCE_LIMIT&&p.absent>=ABSENCE_LIMIT){cls='danger';ico='🚨';t='FA 전환 대상';d=`최근 ${ABSENCE_LIMIT}경기 연속 결장 — 규정상 FA 전환`;}
   else if(cnt>=ABSENCE_LIMIT-1&&p.absent===ABSENCE_LIMIT-1){cls='warn';ico='⚠️';t='경고';d='다음 경기 결장 시 FA 전환';}
@@ -1126,7 +1135,7 @@ function renderPlayers(){
   const item=(p,rank,kind)=>{
     const i=gi++;
     const warn=kind==='act'&&p.relCnt>=ABSENCE_LIMIT-1&&p.absent===ABSENCE_LIMIT-1&&!isProtected(p);
-    const gpick=kind==='guest'&&p.careerGames>=3;   // 용병 3회 출전 → 소속 결정 필요
+    const gpick=kind==='guest'&&p.guestGames>=3;   // 용병 3회 출전 → 소속 결정 필요
     const me=p.id===MY;
     const nameStyle=kind==='freed'?'color:#FF7A7A':(warn||gpick)?'color:var(--warn)':'';
     const mark=kind==='freed'?'🚫 ':gpick?'🎯 ':warn?'⚠️ ':'';
@@ -1725,7 +1734,7 @@ function renderRoster(){
   const ms=playedAll().slice(-ABSENCE_LIMIT);
   document.getElementById('adm-rlist').innerHTML=players.map(p=>{
     const dots=ms.map(m=>`<span class="ad ${p.attend[m.id]?'on':'miss'}"></span>`).join('')||'<span style="font-size:9px;color:var(--muted)">경기 전</span>';
-    const danger=rTeam==='guest'?p.careerGames>=3:isReleaseTarget(p);
+    const danger=rTeam==='guest'?p.guestGames>=3:isReleaseTarget(p);
     const tag=p.role==='주장'?'<span class="rtag">주장</span>':p.role==='부주장'?'<span class="rtag">부주장</span>':'';
     const btn=isProtected(p)?'':(rTeam==='guest'
       ?`<button class="rbtn red" onclick="recall('${p.id}','${p.name.replace(/'/g,"\\'")}','red')">레드로</button><button class="rbtn blue" onclick="recall('${p.id}','${p.name.replace(/'/g,"\\'")}','blue')">블루로</button>`
@@ -1785,11 +1794,11 @@ async function recall(pid,name,toTeam){
 
 function renderGuestTargets(myTeam){
   const host=document.getElementById('adm-t-guests');
-  const list=activeOf('guest').filter(p=>p.careerGames>=3).sort((a,b)=>b.careerGames-a.careerGames);
+  const list=activeOf('guest').filter(p=>p.guestGames>=3).sort((a,b)=>b.guestGames-a.guestGames);
   if(!list.length){host.innerHTML='';return;}
   const tk=myTeam==='red'?'레드':'블루';
   host.innerHTML=`<div class="sec2">🎯 영입 대상 용병 <span>(3경기 이상 · 이적료 없음 · 주장 협의 후 영입)</span></div><div class="rlist">`+
-    list.map(p=>`<div class="ritem"><div class="rnm">${p.name}<span class="rp">${p.careerGames}경기 · 수당 ${fmt(p.careerPay)}</span></div>
+    list.map(p=>`<div class="ritem"><div class="rnm">${p.name}<span class="rp">용병 ${p.guestGames}경기</span></div>
       <button class="rbtn ${myTeam}" onclick="recruitGuest('${p.id}','${p.name.replace(/'/g,"\\'")}','${myTeam}')">${tk}로 영입</button></div>`).join('')+
     '</div><div style="height:16px"></div>';
 }
