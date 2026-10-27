@@ -815,6 +815,10 @@ function derive(){
 }
 function curMatchList(){return D.matches.filter(m=>m.season===D.season).sort((a,b)=>a.round-b.round);}
 function activeOf(team){return Object.values(P).filter(p=>p.team===team&&p.status==='active');}
+// 용병 풀 = 처음부터 용병(guest) + 3연속 결장으로 풀린 선수(free) — 규칙 동일, 화면에서는 모두 '용병'
+function guestPool(){return [...activeOf('guest'),...activeOf('free')];}
+function exTeamOf(p){if(p.team!=='free')return null;const r=D.allowances.filter(a=>a.pid===p.id&&(a.team==='red'||a.team==='blue'));return r.length?r[r.length-1].team:null;}
+function exTag(p){const t=exTeamOf(p);return t?(' · 전 '+(t==='red'?'레드':'블루')):'';}
 function isProtected(p){return p.role==='주장'||p.role==='부주장';}
 function isReleaseTarget(p){
   if(isProtected(p))return false;
@@ -934,7 +938,7 @@ function checkGradeUp(){
 function buildGrowthCard(p,compact){
   const g=gradeOf(p);
   const next=GRADES[p.gradeIdx+1];
-  const teamLabel=p.team==='red'?'RED TEAM':p.team==='blue'?'BLUE TEAM':'FA';
+  const teamLabel=p.team==='red'?'RED TEAM':p.team==='blue'?'BLUE TEAM':'🟡 용병';
   const img=`<div class="g-img px"><img src="${g.img}" alt="" onerror="this.parentElement.innerHTML='<div class=\'ph\'><div class=\'pi\'>${g.emo}</div><div class=\'pp\'>${p.position||'-'}</div></div>'"></div>`;
   const role=p.role==='주장'?'<span class="g-role">주장</span>':p.role==='부주장'?'<span class="g-role v">부주장</span>':'';
   let xpHtml;
@@ -973,13 +977,11 @@ function buildGrowthCard(p,compact){
 function buildStatus(p){
   const cnt=p.relCnt;
   let cls,ico,t,d;
-  if(p.team==='free'&&p.guestGames>=3){cls='warn';ico='🎯';t='FA · 영입 대상';d=`FA 후 용병으로 ${p.guestGames}경기 출전 — 양 팀 영입 가능 (주장 협의)`;}
-  else if(p.team==='free'){cls='warn';ico='🚫';t='FA';d=`3연속 결장으로 FA · 이후 용병 ${p.guestGames||0}경기 출전 (3경기부터 영입 대상)`;}
-  else if(p.team==='guest'&&p.guestGames>=3){cls='warn';ico='🎯';t='영입 대상';d=`용병으로 ${p.guestGames}경기 출전 — 양 팀 영입 가능 (주장 협의)`;}
-  else if(p.team==='guest'){cls='safe';ico='🟡';t='용병';d=`용병으로 ${p.guestGames||0}경기 출전 · 3경기부터 영입 대상`;}
-  else if(isProtected(p)){cls='safe';ico='🛡️';t='보호 대상';d='주장·부주장은 FA 전환 면제';}
-  else if(cnt>=ABSENCE_LIMIT&&p.absent>=ABSENCE_LIMIT){cls='danger';ico='🚨';t='FA 전환 대상';d=`최근 ${ABSENCE_LIMIT}경기 연속 결장 — 규정상 FA 전환`;}
-  else if(cnt>=ABSENCE_LIMIT-1&&p.absent===ABSENCE_LIMIT-1){cls='warn';ico='⚠️';t='경고';d='다음 경기 결장 시 FA 전환';}
+  if((p.team==='guest'||p.team==='free')&&p.guestGames>=3){cls='warn';ico='🎯';t='용병 · 영입 대상'+exTag(p);d=`용병으로 ${p.guestGames}경기 출전 — 양 팀 영입 가능 (주장 협의)`;}
+  else if(p.team==='guest'||p.team==='free'){cls='safe';ico='🟡';t='용병'+exTag(p);d=(p.team==='free'?'3연속 결장으로 용병 전환 · ':'')+`용병으로 ${p.guestGames||0}경기 출전 · 3경기부터 영입 대상`;}
+  else if(isProtected(p)){cls='safe';ico='🛡️';t='보호 대상';d='주장·부주장은 용병 전환 면제';}
+  else if(cnt>=ABSENCE_LIMIT&&p.absent>=ABSENCE_LIMIT){cls='danger';ico='🚨';t='용병 전환 대상';d=`최근 ${ABSENCE_LIMIT}경기 연속 결장 — 다음 결과 등록 때 용병으로 전환`;}
+  else if(cnt>=ABSENCE_LIMIT-1&&p.absent===ABSENCE_LIMIT-1){cls='warn';ico='⚠️';t='경고';d='다음 경기 결장 시 용병 전환';}
   else{cls='safe';ico='✅';t='안전';d=p.absent>0?`연속 ${p.absent}경기 결장 · 여유 있음`:'최근 경기 출전 중';}
   return `<div class="status ${cls}"><span class="ico">${ico}</span><div style="flex:1"><div class="st-t">${t}</div><div class="st-d">${d}</div></div></div>`;
 }
@@ -1130,7 +1132,7 @@ function renderPlayers(){
   });
   const act=all.filter(p=>!isReleaseTarget(p));
   const lastTeam=p=>{const r=D.allowances.filter(a=>a.pid===p.id&&a.team!=='guest');return r.length?r[r.length-1].team:null;};
-  const freed=[...all.filter(p=>isReleaseTarget(p)),...activeOf('free').filter(p=>lastTeam(p)===playersTeam)].sort((a,b)=>b.seasonMV-a.seasonMV);
+  const freed=all.filter(p=>isReleaseTarget(p)).sort((a,b)=>b.seasonMV-a.seasonMV);
   if(!all.length){host.innerHTML='<div class="foot" style="padding:24px">선수 없음</div>';return;}
   const head='<div class="pl-head"><span class="pli-c c-rank">#</span><span class="pli-c c-name">선수</span><span class="pli-c c-grade">등급</span><span class="pli-c c-mv">시즌MV</span><span class="pli-c c-chev"></span></div>';
   let gi=0;
@@ -1144,7 +1146,7 @@ function renderPlayers(){
     return `<div class="pl-item" id="pli${i}">
       <div class="pl-line" style="${me?'background:var(--lime-dim)':''}" onclick="togglePlayer(${i})">
         <span class="pli-c c-rank${(kind==='act'&&rank<=3)?' t3':''}">${rank}</span>
-        <span class="pli-c c-name" style="${nameStyle}">${mark}${p.name}${roleBadge(p)}</span>
+        <span class="pli-c c-name" style="${nameStyle}">${mark}${p.name}${roleBadge(p)}${kind==='guest'&&exTag(p)?`<span style="font-size:10px;color:var(--txt2);margin-left:4px">${exTag(p).slice(3)}</span>`:''}</span>
         <span class="pli-c c-grade">${gradeBadge(p)}</span>
         <span class="pli-c c-mv">${fmt(p.seasonMV)}</span>
         <span class="pli-c c-chev"><span class="chev-i">⌄</span></span>
@@ -1155,12 +1157,12 @@ function renderPlayers(){
   };
   let html=`<div class="plist">${head}${act.map((p,idx)=>item(p,idx+1,'act')).join('')||'<div class="foot" style="padding:18px">활성 선수 없음</div>'}</div>`;
   if(freed.length){
-    html+=`<div class="sec" style="margin-top:18px">FA · 자유계약 <span class="tag">최근 ${ABSENCE_LIMIT}경기 결장으로 FA 전환</span></div>`;
+    html+=`<div class="sec" style="margin-top:18px">🚨 용병 전환 대상 <span class="tag">최근 ${ABSENCE_LIMIT}경기 연속 결장</span></div>`;
     html+=`<div class="plist">${freed.map(p=>item(p,'·','freed')).join('')}</div>`;
   }
-  const guests=activeOf('guest').sort((a,b)=>b.xp-a.xp);
+  const guests=guestPool().sort((a,b)=>b.guestGames-a.guestGames||b.xp-a.xp);
   if(guests.length){
-    html+=`<div class="sec" style="margin-top:18px">🟡 용병 <span class="tag">🎯 3경기 이상 출전 = 영입 대상</span></div>`;
+    html+=`<div class="sec" style="margin-top:18px">🟡 용병 <span class="tag">3연속 결장 선수 포함 · 🎯 3경기 이상 출전 = 영입 대상</span></div>`;
     html+=`<div class="plist">${guests.map(p=>item(p,'·','guest')).join('')}</div>`;
   }
   html+=`<div class="foot">주장·부주장 상단 고정 · 이하 XP순 · 결장 강등도 수당·XP는 보존</div>`;
@@ -1348,8 +1350,7 @@ function buildAllowInputs(){
   if(!admMatchId){host.innerHTML='';admRecalc();return;}
   // 이 경기 당시 이 팀으로 뛴 기록이 있는 선수(이후 이적·FA·용병 전환)도 포함 — 재저장 시 기록이 지워지지 않게
   const base=[...activeOf(admTeam).sort((a,b)=>b.seasonMV-a.seasonMV),
-    ...activeOf('guest').sort((a,b)=>a.name.localeCompare(b.name,'ko')),
-    ...activeOf('free').sort((a,b)=>a.name.localeCompare(b.name,'ko'))];
+    ...guestPool().sort((a,b)=>a.name.localeCompare(b.name,'ko'))];
   const baseIds=new Set(base.map(p=>p.id));
   const former=D.allowances.filter(a=>a.matchId===admMatchId&&a.team===admTeam&&P[a.pid]&&!baseIds.has(a.pid)).map(a=>P[a.pid]);
   const players=[...base,...former];
@@ -1381,7 +1382,7 @@ function buildAllowInputs(){
     }
     return `<div class="prow ${on?'':'off'}" id="arow${i}">
       <div class="tg ${on?'on':''}" onclick="admToggle(${i},'${p.id}')" id="atg${i}"></div>
-      <div class="pinfo"><div class="pn">${p.name}${p.team==='guest'?'<span class="pp" style="color:var(--gold)">🟡 용병</span>':p.team==='free'?'<span class="pp" style="color:var(--gold)">FA · 용병 출전</span>':p.team!==admTeam?`<span class="pp" style="color:var(--txt2)">당시 소속 · 현재 ${p.team==='red'?'레드':p.team==='blue'?'블루':'FA'}</span>`:`<span class="pp">${p.position||'-'}</span>`}</div>
+      <div class="pinfo"><div class="pn">${p.name}${(p.team==='guest'||p.team==='free')?`<span class="pp" style="color:var(--gold)">🟡 용병${exTag(p)}</span>`:p.team!==admTeam?`<span class="pp" style="color:var(--txt2)">당시 소속 · 현재 ${p.team==='red'?'레드':p.team==='blue'?'블루':'용병'}</span>`:`<span class="pp">${p.position||'-'}</span>`}</div>
         <div class="quick" id="aq${i}" style="${on?'':'display:none'}">${quickHtml(i,p.id)}</div></div>
       <div class="amt"><input type="number" id="aamt${i}" value="${prev||0}" ${on?'':'disabled'} oninput="admInput(${i},'${p.id}')"><span class="u">BRO</span></div>
     </div>`;
@@ -1482,7 +1483,7 @@ function loadEditMatch(){
   document.getElementById('adm-m-date').value=isoOf(m.date);
   mGoals={red:{},blue:{}};mManual={red:[],blue:[]};
   [['red',m.redGoals],['blue',m.blueGoals]].forEach(([t,arr])=>{
-    const roster=[...activeOf(t),...activeOf('guest')].map(p=>p.name);
+    const roster=[...activeOf(t),...guestPool()].map(p=>p.name);
     arr.forEach(nm=>{
       mGoals[t][nm]=(mGoals[t][nm]||0)+1;
       if(!roster.includes(nm)&&!/\(자책\)$/.test(nm)&&!mManual[t].includes(nm))mManual[t].push(nm);
@@ -1549,7 +1550,7 @@ function buildMomLate(){
   const t=played.find(m=>m.id===momTargetId);
   const tOpts=tm=>'<option value="">— 선택 안 함 —</option>'+activeOf(tm)
     .map(p=>`<option value="${p.id}">${p.name}${p.position?' ('+p.position+')':''}</option>`).join('')+
-    activeOf('guest').map(p=>`<option value="${p.id}">🟡 ${p.name} (용병)</option>`).join('');
+    guestPool().map(p=>`<option value="${p.id}">🟡 ${p.name} (용병)</option>`).join('');
   const els={defr2:'red',midr2:'red',defb2:'blue',midb2:'blue'};
   Object.keys(els).forEach(id=>{document.getElementById('adm-mom-'+id).innerHTML=tOpts(els[id]);});
   document.getElementById('adm-mom-defr2').value=t&&t.momDefR?t.momDefR:'';
@@ -1590,7 +1591,7 @@ function initMatchForm(){
   mTargetId=null;ogOpen=false;schedEditId='';editTargetId=null;
   const teamOpts=t=>'<option value="">— 선택 안 함 —</option>'+activeOf(t)
     .map(p=>`<option value="${p.id}">${p.name}${p.position?' ('+p.position+')':''}</option>`).join('')+
-    activeOf('guest').map(p=>`<option value="${p.id}">🟡 ${p.name} (용병)</option>`).join('');
+    guestPool().map(p=>`<option value="${p.id}">🟡 ${p.name} (용병)</option>`).join('');
   document.getElementById('adm-mom-defr').innerHTML=teamOpts('red');
   document.getElementById('adm-mom-midr').innerHTML=teamOpts('red');
   document.getElementById('adm-mom-defb').innerHTML=teamOpts('blue');
@@ -1628,7 +1629,7 @@ function renderGoalList(){
       <button onclick="goalPlus('${mTeam}','${nm}')">＋</button></div></div>`;
   });
   // 용병 득점
-  activeOf('guest').sort((a,b)=>a.name.localeCompare(b.name,'ko')).forEach(p=>{
+  guestPool().sort((a,b)=>a.name.localeCompare(b.name,'ko')).forEach(p=>{
     const c=mGoals[mTeam][p.name]||0;
     html+=`<div class="grow ${c>0?'has':''}"><div class="gn">${p.name}<span class="gm">🟡 용병</span></div>
       <div class="gctl"><button onclick="goalMinus('${mTeam}','${p.name}')">−</button>
@@ -1736,7 +1737,7 @@ function admRSetTeam(t){
   renderRoster();
 }
 function renderRoster(){
-  const players=activeOf(rTeam).sort((a,b)=>b.xp-a.xp);
+  const players=(rTeam==='guest'?guestPool():activeOf(rTeam)).sort((a,b)=>b.xp-a.xp);
   document.getElementById('adm-r-count').textContent='('+players.length+'명)';
   const ms=playedAll().slice(-ABSENCE_LIMIT);
   document.getElementById('adm-rlist').innerHTML=players.map(p=>{
@@ -1744,14 +1745,14 @@ function renderRoster(){
     const danger=rTeam==='guest'?p.guestGames>=3:isReleaseTarget(p);
     const tag=p.role==='주장'?'<span class="rtag">주장</span>':p.role==='부주장'?'<span class="rtag">부주장</span>':'';
     const btn=isProtected(p)?'':(rTeam==='guest'
-      ?`<button class="rbtn red" onclick="recall('${p.id}','${p.name.replace(/'/g,"\\'")}','red')">레드로</button><button class="rbtn blue" onclick="recall('${p.id}','${p.name.replace(/'/g,"\\'")}','blue')">블루로</button>`
-      :`<button class="rbtn out" onclick="release('${p.id}','${p.name.replace(/'/g,"\\'")}')">FA 전환</button>`);
+      ?`<button class="rbtn red" onclick="recall('${p.id}','${p.name.replace(/'/g,"\\'")}','red')">레드로</button><button class="rbtn blue" onclick="recall('${p.id}','${p.name.replace(/'/g,"\\'")}','blue')">블루로</button><button class="rbtn out" onclick="delPlayer('${p.id}','${p.name.replace(/'/g,"\\'")}')">🗑</button>`
+      :`<button class="rbtn out" onclick="release('${p.id}','${p.name.replace(/'/g,"\\'")}')">용병 전환</button>`);
     return `<div class="ritem ${danger?'danger-row':''}">
-      <div class="rnm">${danger?'🚨 ':''}${p.name}${p.position?`<span class="rp">${p.position}</span>`:''}</div>
+      <div class="rnm">${danger?'🚨 ':''}${p.name}${p.position?`<span class="rp">${p.position}</span>`:''}${exTag(p)?`<span class="rp">${exTag(p).slice(3)}</span>`:''}</div>
       ${tag}<div class="att" title="최근 ${ABSENCE_LIMIT}경기">${dots}</div>${btn}</div>`;
   }).join('')||'<div class="foot">선수 없음</div>';
   // FA
-  const free=Object.values(P).filter(p=>p.team==='free');
+  const free=[];   // 3연속 결장 선수는 🟡 용병 탭에 함께 표시
   const host=document.getElementById('adm-free-host');
   if(free.length){
     host.innerHTML=`<div class="sec2" style="margin-top:18px">FA 풀 <span>${free.length}명</span></div>
@@ -1777,13 +1778,13 @@ async function addPlayer(){
   }catch(e){msg.className='adm-msg err';msg.textContent='실패: '+e.message;}
 }
 async function release(pid,name){
-  if(!confirm(`${name} 선수를 FA 전환할까요?\n\n· FA 풀로 이동 (복귀 가능)\n· 누적 수당·XP는 보존`))return;
+  if(!confirm(`${name} 선수를 용병으로 전환할까요?\n\n· 용병으로 이동 (양 팀 출전 가능 · 3경기 출전 시 영입 대상)\n· 누적 수당·XP는 보존`))return;
   try{
     const j=await api({action:'setTeam',password:admPw,pid,toTeam:'free',fromTeam:rTeam});
     if(!j.ok)throw new Error(j.error);
-    toast('🚪 '+name+' FA 전환 완료');
+    toast('🚪 '+name+' 용병 전환 완료');
     load().then(renderRoster);
-  }catch(e){alert('FA 전환 실패: '+e.message);}
+  }catch(e){alert('용병 전환 실패: '+e.message);}
 }
 async function recall(pid,name,toTeam){
   const tk=toTeam==='red'?'레드':toTeam==='blue'?'블루':'용병';
@@ -1805,7 +1806,7 @@ function renderGuestTargets(myTeam){
   if(!list.length){host.innerHTML='';return;}
   const tk=myTeam==='red'?'레드':'블루';
   host.innerHTML=`<div class="sec2">🎯 영입 대상 용병 <span>(3경기 이상 · 이적료 없음 · 주장 협의 후 영입)</span></div><div class="rlist">`+
-    list.map(p=>`<div class="ritem"><div class="rnm">${p.name}<span class="rp">용병 ${p.guestGames}경기</span></div>
+    list.map(p=>`<div class="ritem"><div class="rnm">${p.name}<span class="rp">용병 ${p.guestGames}경기${exTag(p)}</span></div>
       <button class="rbtn ${myTeam}" onclick="recruitGuest('${p.id}','${p.name.replace(/'/g,"\\'")}','${myTeam}')">${tk}로 영입</button></div>`).join('')+
     '</div><div style="height:16px"></div>';
 }
