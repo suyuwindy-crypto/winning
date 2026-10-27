@@ -804,11 +804,14 @@ function derive(){
     p.relCnt=rel.length;
     // 용병 출전 수 = 마지막 3연속 결장(FA·미가입 구간) 이후 출전만 집계 — 정식 선수 시절 기록 제외
     if(p.team==='guest'||p.team==='free'){
-      let gap=0,cnt=0;
+      // 3연속 결장 구간이 지나야 '용병 기간' 시작 — 그 전(정식 선수 시절) 출전은 0으로 리셋
+      let gap=0,cnt=0,seen=false;
       played.forEach(m=>{
-        if(p.attend[m.id]){ if(gap>=3)cnt=0; cnt++; gap=0; }
+        if(p.attend[m.id]){ if(gap>=3){cnt=0;seen=true;} cnt++; gap=0; }
         else gap++;
       });
+      if(gap>=3){cnt=0;}                       // 지금 결장 중이면 용병 출전 0
+      if(p.team==='free'&&!seen&&gap<3)cnt=0;  // 결장 구간 없이 전환된 선수: 팀 시절 기록 제외
       p.guestGames=cnt;
     }
   });
