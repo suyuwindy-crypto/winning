@@ -746,6 +746,7 @@ function derive(){
     P[p.id]={...p,seasonMV:0,seasonRows:{},seasonGames:0,careerPay:0,careerGames:0,
       goals:0,moms:0,cleans:0,xp:0,gradeIdx:0,absent:0,attend:{},seasonPayG:0,careerPayG:0};
   });
+  applyCurrentCaptains();
   const mById={};
   D.matches.forEach(m=>mById[m.id]=m);
   // 수당 → 시즌/커리어
@@ -822,6 +823,17 @@ function activeOf(team){return Object.values(P).filter(p=>p.team===team&&p.statu
 function guestPool(){return [...activeOf('guest'),...activeOf('free')];}
 function exTeamOf(p){if(p.team!=='free')return null;const r=D.allowances.filter(a=>a.pid===p.id&&(a.team==='red'||a.team==='blue'));return r.length?r[r.length-1].team:null;}
 function exTag(p){const t=exTeamOf(p);return t?(' · 전 '+(t==='red'?'레드':'블루')):'';}
+// 현재 주장 = CAP_ERAS 마지막 시대 (시트 역할 갱신 전에도 앱은 즉시 반영)
+function applyCurrentCaptains(){
+  Object.keys(CAP_ERAS).forEach(team=>{
+    const cur=CAP_ERAS[team][CAP_ERAS[team].length-1].pid;
+    Object.values(P).forEach(p=>{
+      if(p.team!==team)return;
+      if(p.id===cur)p.role='주장';
+      else if(p.role==='주장')p.role='선수';   // 전임 주장 → 일반 선수 (수당 정상 지급)
+    });
+  });
+}
 function isProtected(p){return p.role==='주장'||p.role==='부주장';}
 function isReleaseTarget(p){
   if(isProtected(p))return false;
@@ -838,7 +850,7 @@ function teamEarned(team){return D.funds.filter(x=>x.team===team).reduce((s,x)=>
 // 주장 교체 시: 이전 주장 until에 교체일 기입 + 새 주장 {pid, until:null} 추가 (백엔드 CAP_ERAS도 동일하게!)
 const CAP_ERAS={
   red:[{pid:'P37',until:'2026-07-22'},{pid:'P04',until:null}],   // 서범종 → 문현민 (7/22 교체)
-  blue:[{pid:'P36',until:'2026-05-31'},{pid:'P28',until:null}],  // 이임표 → 이호진 (6월 교체)
+  blue:[{pid:'P36',until:'2026-05-31'},{pid:'P28',until:'2026-10-31'},{pid:'P29',until:null}],  // 이임표 → 이호진 (6월) → 조광민 (11/1 R8부터)
 };
 function parseKD(s){
   if(s instanceof Date)return s.getTime();
