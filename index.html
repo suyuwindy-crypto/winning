@@ -853,6 +853,12 @@ const CAP_ERAS={
   blue:[{pid:'P36',until:'2026-05-31'},{pid:'P28',until:'2026-10-31'},{pid:'P29',until:null}],  // 이임표 → 이호진 (6월) → 조광민 (11/1 R8부터)
 };
 // 경기 당시 소속 추정: 트레이드로그 → 직전·직후 수당 기록 → 현재 소속
+function capPidAt(team,m){
+  const eras=CAP_ERAS[team];if(!eras)return null;
+  const t=parseKD(m.date);
+  for(const e of eras){ if(!e.until||t===null||t<=new Date(e.until+'T23:59:59').getTime())return e.pid; }
+  return eras[eras.length-1].pid;
+}
 function teamAt(p,m){
   const t0=parseKD(m.date);if(t0===null)return p.team;
   const tr=(D.trades||[]).filter(x=>x.pid===p.id).map(x=>({t:parseKD(x.date),from:x.from,to:x.to})).filter(x=>x.t!==null).sort((a,b)=>a.t-b.t);
@@ -1348,9 +1354,18 @@ function admMenu(m){
   else if(m==='trade')renderTrade(fix||'red');
   else if(m==='settle')renderSettle();
 }
-function admSave(){
-  const mode=document.getElementById('adm-save').getAttribute('data-mode');
-  if(mode==='match')saveMatch();else saveAllowance();
+// 중복 저장 방지 — 상단/하단 저장 버튼 연타 시 동시 요청이 겹치면 시트 행이 엉킴
+let admSaving=false;
+async function admSave(){
+  if(admSaving)return;
+  admSaving=true;
+  const sb=document.getElementById('sb-save');sb.disabled=true;
+  try{
+    const mode=document.getElementById('adm-save').getAttribute('data-mode');
+    if(mode==='match')await saveMatch();else await saveAllowance();
+  }finally{
+    setTimeout(()=>{admSaving=false;sb.disabled=false;},1500);
+  }
 }
 
 // ── 수당 ──
@@ -1396,7 +1411,8 @@ function buildAllowInputs(){
     const mine=allowRow(admMatchId,p.id,admTeam);
     const prev=mine?mine.amount:undefined;
     const on=!!mine;
-    const cap=p.role==='주장';
+    const mAtC=D.matches.find(m=>m.id===admMatchId);
+    const cap=mAtC?capPidAt(admTeam,mAtC)===p.id:p.role==='주장';   // 그 경기 당시 주장 기준
     // 용병이 이 경기에 이미 상대 팀으로 출석 → 이 팀에선 잠금
     if((p.team==='guest'||p.team==='free')&&!mine&&allowRow(admMatchId,p.id,oppTeam)){
       return `<div class="prow off" id="arow${i}" style="opacity:.55">
